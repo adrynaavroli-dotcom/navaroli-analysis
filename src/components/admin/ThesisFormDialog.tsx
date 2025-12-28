@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,6 +44,7 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingPrice, setIsFetchingPrice] = useState(false);
   
   // Form state
   const [ticker, setTicker] = useState('');
@@ -102,6 +103,47 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
       setIsPublished(false);
     }
   }, [thesis, open]);
+
+  const fetchStockPrice = async () => {
+    if (!ticker.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Introduce un ticker primero',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsFetchingPrice(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-stock-price', {
+        body: { ticker: ticker.trim() },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      setCurrentPrice(data.currentPrice.toString());
+      if (!companyName) {
+        setCompanyName(data.companyName);
+      }
+      setCurrency(data.currency);
+
+      toast({
+        title: 'Precio actualizado',
+        description: `${data.companyName}: $${data.currentPrice} (${data.changePercent > 0 ? '+' : ''}${data.changePercent}%)`,
+      });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Error al obtener el precio';
+      toast({
+        title: 'Error',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsFetchingPrice(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -219,13 +261,29 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="ticker">Ticker *</Label>
-                  <Input
-                    id="ticker"
-                    value={ticker}
-                    onChange={(e) => setTicker(e.target.value)}
-                    placeholder="AAPL"
-                    required
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="ticker"
+                      value={ticker}
+                      onChange={(e) => setTicker(e.target.value)}
+                      placeholder="AAPL"
+                      required
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={fetchStockPrice}
+                      disabled={isFetchingPrice}
+                      title="Buscar precio actual"
+                    >
+                      {isFetchingPrice ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Search className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="company">Company Name *</Label>
