@@ -182,43 +182,43 @@ export default function ThesisDetail() {
                   {thesis.metrics.market_cap && (
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm text-muted-foreground">Market Cap</span>
-                      <span className="text-sm font-mono font-medium">{thesis.metrics.market_cap}</span>
+                      <span className="text-sm font-medium">{thesis.metrics.market_cap}</span>
                     </div>
                   )}
                   {thesis.metrics.per > 0 && (
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm text-muted-foreground">P/E Ratio</span>
-                      <span className="text-sm font-mono font-medium">{thesis.metrics.per.toFixed(1)}x</span>
+                      <span className="text-sm font-medium">{thesis.metrics.per.toFixed(1)}x</span>
                     </div>
                   )}
                   {thesis.metrics.ev_ebitda > 0 && (
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm text-muted-foreground">EV/EBITDA</span>
-                      <span className="text-sm font-mono font-medium">{thesis.metrics.ev_ebitda.toFixed(1)}x</span>
+                      <span className="text-sm font-medium">{thesis.metrics.ev_ebitda.toFixed(1)}x</span>
                     </div>
                   )}
                   {thesis.metrics.roic > 0 && (
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm text-muted-foreground">ROIC</span>
-                      <span className="text-sm font-mono font-medium">{thesis.metrics.roic.toFixed(1)}%</span>
+                      <span className="text-sm font-medium">{thesis.metrics.roic.toFixed(1)}%</span>
                     </div>
                   )}
                   {thesis.metrics.revenue_growth > 0 && (
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm text-muted-foreground">Revenue Growth</span>
-                      <span className="text-sm font-mono font-medium">{thesis.metrics.revenue_growth.toFixed(1)}%</span>
+                      <span className="text-sm font-medium">{thesis.metrics.revenue_growth.toFixed(1)}%</span>
                     </div>
                   )}
                   {thesis.metrics.gross_margin > 0 && (
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm text-muted-foreground">Gross Margin</span>
-                      <span className="text-sm font-mono font-medium">{thesis.metrics.gross_margin.toFixed(1)}%</span>
+                      <span className="text-sm font-medium">{thesis.metrics.gross_margin.toFixed(1)}%</span>
                     </div>
                   )}
                   {thesis.metrics.fcf_yield > 0 && (
                     <div className="flex items-center justify-between py-2">
                       <span className="text-sm text-muted-foreground">FCF Yield</span>
-                      <span className="text-sm font-mono font-medium">{thesis.metrics.fcf_yield.toFixed(1)}%</span>
+                      <span className="text-sm font-medium">{thesis.metrics.fcf_yield.toFixed(1)}%</span>
                     </div>
                   )}
                 </div>
