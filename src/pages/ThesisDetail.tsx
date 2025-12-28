@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useThesis } from '@/hooks/useTheses';
+import { PurchaseTracker } from '@/components/thesis/PurchaseTracker';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 export default function ThesisDetail() {
@@ -224,6 +225,13 @@ export default function ThesisDetail() {
                 </div>
               </div>
             )}
+
+            {/* Purchase Tracker */}
+            <PurchaseTracker
+              thesisId={thesis.id}
+              currentPrice={thesis.current_price}
+              currency={thesis.currency}
+            />
           </aside>
 
           {/* Right Column - Deep Analysis (70%) */}
