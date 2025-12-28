@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { MarkdownTextarea } from './MarkdownTextarea';
 import {
   Dialog,
   DialogContent,
@@ -407,10 +408,10 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
             <TabsContent value="content" className="space-y-4 mt-4">
               <div className="space-y-2">
                 <Label htmlFor="summary">Executive Summary (Markdown)</Label>
-                <Textarea
+                <MarkdownTextarea
                   id="summary"
                   value={executiveSummary}
-                  onChange={(e) => setExecutiveSummary(e.target.value)}
+                  onChange={setExecutiveSummary}
                   placeholder="Brief overview of the investment thesis..."
                   rows={4}
                 />
@@ -418,10 +419,10 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
 
               <div className="space-y-2">
                 <Label htmlFor="case">Investment Case (Markdown)</Label>
-                <Textarea
+                <MarkdownTextarea
                   id="case"
                   value={investmentCase}
-                  onChange={(e) => setInvestmentCase(e.target.value)}
+                  onChange={setInvestmentCase}
                   placeholder="Detailed investment case..."
                   rows={6}
                 />
@@ -429,10 +430,10 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
 
               <div className="space-y-2">
                 <Label htmlFor="valuation">Valuation (Markdown)</Label>
-                <Textarea
+                <MarkdownTextarea
                   id="valuation"
                   value={valuation}
-                  onChange={(e) => setValuation(e.target.value)}
+                  onChange={setValuation}
                   placeholder="Valuation methodology and analysis..."
                   rows={4}
                 />
@@ -440,10 +441,10 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
 
               <div className="space-y-2">
                 <Label htmlFor="risks">Risks (Markdown)</Label>
-                <Textarea
+                <MarkdownTextarea
                   id="risks"
                   value={risks}
-                  onChange={(e) => setRisks(e.target.value)}
+                  onChange={setRisks}
                   placeholder="Key risks to the investment thesis..."
                   rows={4}
                 />
