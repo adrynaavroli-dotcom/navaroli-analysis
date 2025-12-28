@@ -125,6 +125,50 @@ export type Database = {
         }
         Relationships: []
       }
+      thesis_purchases: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          price_per_share: number
+          purchase_date: string
+          shares: number
+          thesis_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          price_per_share: number
+          purchase_date?: string
+          shares: number
+          thesis_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          price_per_share?: number
+          purchase_date?: string
+          shares?: number
+          thesis_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thesis_purchases_thesis_id_fkey"
+            columns: ["thesis_id"]
+            isOneToOne: false
+            referencedRelation: "theses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
