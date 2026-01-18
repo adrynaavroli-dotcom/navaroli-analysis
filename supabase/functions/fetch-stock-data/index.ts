@@ -24,6 +24,7 @@ interface StockQuote {
   revenueGrowth: number | null;
   sector: string | null;
   industry: string | null;
+  earningsDate: string | null;
 }
 
 serve(async (req) => {
@@ -117,7 +118,7 @@ serve(async (req) => {
     const sparklineData = closePrices.filter((p: number | null) => p !== null);
 
     // Fetch detailed quote data with financial metrics
-    const quoteSummaryUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${sanitizedTicker}?modules=defaultKeyStatistics,financialData,summaryDetail,price`;
+    const quoteSummaryUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${sanitizedTicker}?modules=defaultKeyStatistics,financialData,summaryDetail,price,calendarEvents`;
     
     let metrics: Partial<StockQuote> = {};
     
@@ -138,6 +139,17 @@ serve(async (req) => {
           const summaryDetail = result.summaryDetail || {};
           const priceData = result.price || {};
 
+          // Get next earnings date from calendarEvents
+          let earningsDate: string | null = null;
+          const calendarEvents = result.calendarEvents;
+          if (calendarEvents?.earnings?.earningsDate) {
+            const earningsDates = calendarEvents.earnings.earningsDate;
+            if (earningsDates.length > 0 && earningsDates[0]?.raw) {
+              const timestamp = earningsDates[0].raw * 1000;
+              earningsDate = new Date(timestamp).toISOString().split('T')[0];
+            }
+          }
+
           metrics = {
             marketCap: priceData.marketCap?.raw || summaryDetail.marketCap?.raw || null,
             trailingPE: summaryDetail.trailingPE?.raw || null,
@@ -150,6 +162,7 @@ serve(async (req) => {
             revenueGrowth: financialData.revenueGrowth?.raw || null,
             sector: priceData.sector || null,
             industry: priceData.industry || null,
+            earningsDate,
           };
         }
       }
@@ -178,6 +191,7 @@ serve(async (req) => {
       revenueGrowth: metrics.revenueGrowth || null,
       sector: metrics.sector || null,
       industry: metrics.industry || null,
+      earningsDate: metrics.earningsDate || null,
     };
 
     return new Response(
