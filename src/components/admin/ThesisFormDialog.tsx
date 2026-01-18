@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2, Search, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -105,7 +105,15 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
     }
   }, [thesis, open]);
 
-  const fetchStockPrice = async () => {
+  const formatMarketCap = (value: number | null): string => {
+    if (!value) return '';
+    if (value >= 1e12) return `${(value / 1e12).toFixed(2)}T`;
+    if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`;
+    if (value >= 1e6) return `${(value / 1e6).toFixed(2)}M`;
+    return value.toString();
+  };
+
+  const fetchStockData = async (autoFillMetrics: boolean = false) => {
     if (!ticker.trim()) {
       toast({
         title: 'Error',
@@ -117,25 +125,53 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
 
     setIsFetchingPrice(true);
     try {
-      const { data, error } = await supabase.functions.invoke('fetch-stock-price', {
+      const { data, error } = await supabase.functions.invoke('fetch-stock-data', {
         body: { ticker: ticker.trim() },
       });
 
       if (error) throw error;
       if (data.error) throw new Error(data.error);
 
+      // Update price info
       setCurrentPrice(data.currentPrice.toString());
       if (!companyName) {
         setCompanyName(data.companyName);
       }
       setCurrency(data.currency);
+      
+      // Auto-fill sector if empty
+      if (!sector && data.sector) {
+        setSector(data.sector);
+      }
 
-      toast({
-        title: 'Precio actualizado',
-        description: `${data.companyName}: $${data.currentPrice} (${data.changePercent > 0 ? '+' : ''}${data.changePercent}%)`,
-      });
+      // Auto-fill metrics if requested
+      if (autoFillMetrics) {
+        const newMetrics = {
+          per: data.trailingPE ? parseFloat(data.trailingPE.toFixed(2)) : 0,
+          ev_ebitda: data.enterpriseToEbitda ? parseFloat(data.enterpriseToEbitda.toFixed(2)) : 0,
+          roic: data.returnOnEquity ? parseFloat((data.returnOnEquity * 100).toFixed(2)) : 0,
+          revenue_growth: data.revenueGrowth ? parseFloat((data.revenueGrowth * 100).toFixed(2)) : 0,
+          gross_margin: data.grossMargins ? parseFloat((data.grossMargins * 100).toFixed(2)) : 0,
+          fcf_yield: 0, // Not available from Yahoo Finance
+          market_cap: formatMarketCap(data.marketCap),
+          forward_pe: data.forwardPE ? parseFloat(data.forwardPE.toFixed(2)) : 0,
+          price_to_book: data.priceToBook ? parseFloat(data.priceToBook.toFixed(2)) : 0,
+          profit_margin: data.profitMargins ? parseFloat((data.profitMargins * 100).toFixed(2)) : 0,
+        };
+        setMetricsJson(JSON.stringify(newMetrics, null, 2));
+        
+        toast({
+          title: 'Datos actualizados',
+          description: `Precio y métricas cargadas para ${data.companyName}`,
+        });
+      } else {
+        toast({
+          title: 'Precio actualizado',
+          description: `${data.companyName}: ${data.currency} ${data.currentPrice} (${data.changePercent > 0 ? '+' : ''}${data.changePercent}%)`,
+        });
+      }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error al obtener el precio';
+      const message = error instanceof Error ? error.message : 'Error al obtener los datos';
       toast({
         title: 'Error',
         description: message,
@@ -274,7 +310,7 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={fetchStockPrice}
+                      onClick={() => fetchStockData(false)}
                       disabled={isFetchingPrice}
                       title="Buscar precio actual"
                     >
@@ -453,7 +489,24 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
 
             <TabsContent value="metrics" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="metrics">Metrics (JSON)</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="metrics">Metrics (JSON)</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchStockData(true)}
+                    disabled={isFetchingPrice || !ticker.trim()}
+                    title="Auto-completar métricas desde Yahoo Finance"
+                  >
+                    {isFetchingPrice ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    )}
+                    Auto-completar
+                  </Button>
+                </div>
                 <Textarea
                   id="metrics"
                   value={metricsJson}
@@ -463,7 +516,7 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
                   className="font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Expected fields: per, ev_ebitda, roic, revenue_growth, gross_margin, fcf_yield, market_cap
+                  Campos: per, ev_ebitda, roic, revenue_growth, gross_margin, fcf_yield, market_cap, forward_pe, price_to_book, profit_margin
                 </p>
               </div>
             </TabsContent>
