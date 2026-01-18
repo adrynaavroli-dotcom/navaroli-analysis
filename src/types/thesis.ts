@@ -10,6 +10,10 @@ export interface ThesisMetrics {
   gross_margin: number;
   fcf_yield: number;
   market_cap: string;
+  earnings_date?: string;
+  forward_pe?: number;
+  price_to_book?: number;
+  profit_margin?: number;
 }
 
 export interface ChartDataPoint {

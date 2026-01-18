@@ -157,6 +157,7 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
           forward_pe: data.forwardPE ? parseFloat(data.forwardPE.toFixed(2)) : 0,
           price_to_book: data.priceToBook ? parseFloat(data.priceToBook.toFixed(2)) : 0,
           profit_margin: data.profitMargins ? parseFloat((data.profitMargins * 100).toFixed(2)) : 0,
+          earnings_date: data.earningsDate || undefined,
         };
         setMetricsJson(JSON.stringify(newMetrics, null, 2));
         

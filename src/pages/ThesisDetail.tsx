@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, TrendingDown, Calendar, Target, DollarSign, Loader2 } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, Calendar, Target, DollarSign, Loader2, CalendarClock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -226,6 +226,27 @@ export default function ThesisDetail() {
               </div>
             )}
 
+            {/* Next Earnings */}
+            {thesis.metrics?.earnings_date && (
+              <div className="bento-card p-6 border-l-4 border-l-primary">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                  <CalendarClock className="h-4 w-4" />
+                  Next Earnings
+                </h3>
+                <p className="text-xl font-semibold">
+                  {new Date(thesis.metrics.earnings_date).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Earnings call date
+                </p>
+              </div>
+            )}
+
             {/* Purchase Tracker */}
             <PurchaseTracker
               thesisId={thesis.id}
@@ -286,11 +307,11 @@ export default function ThesisDetail() {
             {/* Content Tabs */}
             <div className="bento-card p-6">
               <Tabs defaultValue="summary" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="summary">Summary</TabsTrigger>
-                  <TabsTrigger value="case">Investment Case</TabsTrigger>
-                  <TabsTrigger value="valuation">Valuation</TabsTrigger>
-                  <TabsTrigger value="risks">Risks</TabsTrigger>
+                <TabsList className="w-full flex flex-wrap h-auto gap-1 sm:grid sm:grid-cols-4">
+                  <TabsTrigger value="summary" className="flex-1 min-w-[80px] text-xs sm:text-sm">Summary</TabsTrigger>
+                  <TabsTrigger value="case" className="flex-1 min-w-[80px] text-xs sm:text-sm">Investment Case</TabsTrigger>
+                  <TabsTrigger value="valuation" className="flex-1 min-w-[80px] text-xs sm:text-sm">Valuation</TabsTrigger>
+                  <TabsTrigger value="risks" className="flex-1 min-w-[80px] text-xs sm:text-sm">Risks</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="summary" className="mt-6">
