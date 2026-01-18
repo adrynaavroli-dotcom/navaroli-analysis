@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Search, RefreshCw } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { MarkdownTextarea } from './MarkdownTextarea';
+import { MetricsFormSection } from './MetricsFormSection';
+import { ChartDataFormSection } from './ChartDataFormSection';
 import {
   Dialog,
   DialogContent,
@@ -22,7 +23,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Thesis, ThesisDirection, InvestmentStrategy, MarketCapCategory } from '@/types/thesis';
+import type { Json } from '@/integrations/supabase/types';
+import { Thesis, ThesisDirection, InvestmentStrategy, MarketCapCategory, ThesisMetrics, ThesisChartData } from '@/types/thesis';
+import { Switch } from '@/components/ui/switch';
 
 interface ThesisFormDialogProps {
   open: boolean;
@@ -31,7 +34,7 @@ interface ThesisFormDialogProps {
   onSuccess: () => void;
 }
 
-const defaultMetrics = {
+const defaultMetrics: ThesisMetrics = {
   per: 0,
   ev_ebitda: 0,
   roic: 0,
@@ -39,6 +42,11 @@ const defaultMetrics = {
   gross_margin: 0,
   fcf_yield: 0,
   market_cap: '',
+};
+
+const defaultChartData: ThesisChartData = {
+  revenue: [],
+  margins: [],
 };
 
 export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: ThesisFormDialogProps) {
@@ -61,8 +69,8 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
   const [investmentCase, setInvestmentCase] = useState('');
   const [valuation, setValuation] = useState('');
   const [risks, setRisks] = useState('');
-  const [metricsJson, setMetricsJson] = useState(JSON.stringify(defaultMetrics, null, 2));
-  const [chartDataJson, setChartDataJson] = useState('{}');
+  const [metrics, setMetrics] = useState<ThesisMetrics>(defaultMetrics);
+  const [chartData, setChartData] = useState<ThesisChartData>(defaultChartData);
   const [isPublished, setIsPublished] = useState(false);
 
   // Populate form when editing
@@ -81,8 +89,8 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
       setInvestmentCase(thesis.investment_case || '');
       setValuation(thesis.valuation || '');
       setRisks(thesis.risks || '');
-      setMetricsJson(JSON.stringify(thesis.metrics || defaultMetrics, null, 2));
-      setChartDataJson(JSON.stringify(thesis.chart_data || {}, null, 2));
+      setMetrics(thesis.metrics || defaultMetrics);
+      setChartData(thesis.chart_data || defaultChartData);
       setIsPublished(thesis.is_published);
     } else {
       // Reset form for new thesis
@@ -99,8 +107,8 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
       setInvestmentCase('');
       setValuation('');
       setRisks('');
-      setMetricsJson(JSON.stringify(defaultMetrics, null, 2));
-      setChartDataJson('{}');
+      setMetrics(defaultMetrics);
+      setChartData(defaultChartData);
       setIsPublished(false);
     }
   }, [thesis, open]);
@@ -113,7 +121,7 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
     return value.toString();
   };
 
-  const fetchStockData = async (autoFillMetrics: boolean = false) => {
+  const fetchStockData = async () => {
     if (!ticker.trim()) {
       toast({
         title: 'Error',
@@ -144,33 +152,20 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
         setSector(data.sector);
       }
 
-      // Auto-fill metrics if requested
-      if (autoFillMetrics) {
-        const newMetrics = {
-          per: data.trailingPE ? parseFloat(data.trailingPE.toFixed(2)) : 0,
-          ev_ebitda: data.enterpriseToEbitda ? parseFloat(data.enterpriseToEbitda.toFixed(2)) : 0,
-          roic: data.returnOnEquity ? parseFloat((data.returnOnEquity * 100).toFixed(2)) : 0,
-          revenue_growth: data.revenueGrowth ? parseFloat((data.revenueGrowth * 100).toFixed(2)) : 0,
-          gross_margin: data.grossMargins ? parseFloat((data.grossMargins * 100).toFixed(2)) : 0,
-          fcf_yield: 0, // Not available from Yahoo Finance
-          market_cap: formatMarketCap(data.marketCap),
-          forward_pe: data.forwardPE ? parseFloat(data.forwardPE.toFixed(2)) : 0,
-          price_to_book: data.priceToBook ? parseFloat(data.priceToBook.toFixed(2)) : 0,
-          profit_margin: data.profitMargins ? parseFloat((data.profitMargins * 100).toFixed(2)) : 0,
-          earnings_date: data.earningsDate || undefined,
-        };
-        setMetricsJson(JSON.stringify(newMetrics, null, 2));
-        
-        toast({
-          title: 'Datos actualizados',
-          description: `Precio y métricas cargadas para ${data.companyName}`,
-        });
-      } else {
-        toast({
-          title: 'Precio actualizado',
-          description: `${data.companyName}: ${data.currency} ${data.currentPrice} (${data.changePercent > 0 ? '+' : ''}${data.changePercent}%)`,
-        });
-      }
+      // Update metrics with available data
+      setMetrics(prev => ({
+        ...prev,
+        per: data.trailingPE ? parseFloat(data.trailingPE.toFixed(2)) : prev.per,
+        forward_pe: data.forwardPE ? parseFloat(data.forwardPE.toFixed(2)) : prev.forward_pe,
+        price_to_book: data.priceToBook ? parseFloat(data.priceToBook.toFixed(2)) : prev.price_to_book,
+        market_cap: formatMarketCap(data.marketCap) || prev.market_cap,
+        earnings_date: data.earningsDate || prev.earnings_date,
+      }));
+
+      toast({
+        title: 'Datos actualizados',
+        description: `${data.companyName}: ${data.currency} ${data.currentPrice}`,
+      });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Error al obtener los datos';
       toast({
@@ -190,34 +185,6 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
     setIsLoading(true);
 
     try {
-      // Parse JSON fields
-      let metrics = defaultMetrics;
-      let chartData = {};
-      
-      try {
-        metrics = JSON.parse(metricsJson);
-      } catch {
-        toast({
-          title: 'Invalid JSON',
-          description: 'Metrics JSON is invalid',
-          variant: 'destructive',
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        chartData = JSON.parse(chartDataJson);
-      } catch {
-        toast({
-          title: 'Invalid JSON',
-          description: 'Chart Data JSON is invalid',
-          variant: 'destructive',
-        });
-        setIsLoading(false);
-        return;
-      }
-
       const thesisData = {
         ticker: ticker.toUpperCase(),
         company_name: companyName,
@@ -232,9 +199,9 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
         investment_case: investmentCase || null,
         valuation: valuation || null,
         risks: risks || null,
-        metrics,
-        chart_data: chartData,
-        sparkline_data: thesis?.sparkline_data || [],
+        metrics: JSON.parse(JSON.stringify(metrics)) as Json,
+        chart_data: JSON.parse(JSON.stringify(chartData)) as Json,
+        sparkline_data: (thesis?.sparkline_data || []) as unknown as Json,
         is_published: isPublished,
         user_id: user.id,
       };
@@ -249,8 +216,8 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
         if (error) throw error;
 
         toast({
-          title: 'Updated',
-          description: 'Thesis has been updated',
+          title: 'Actualizado',
+          description: 'La tesis ha sido actualizada',
         });
       } else {
         // Create
@@ -261,8 +228,8 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
         if (error) throw error;
 
         toast({
-          title: 'Created',
-          description: 'Thesis has been created',
+          title: 'Creada',
+          description: 'La tesis ha sido creada',
         });
       }
 
@@ -271,7 +238,7 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message || 'Something went wrong',
+        description: error.message || 'Algo ha fallado',
         variant: 'destructive',
       });
     } finally {
@@ -283,16 +250,16 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{thesis ? 'Edit Thesis' : 'New Thesis'}</DialogTitle>
+          <DialogTitle>{thesis ? 'Editar Tesis' : 'Nueva Tesis'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <Tabs defaultValue="basic" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="basic">Basic</TabsTrigger>
-              <TabsTrigger value="content">Content</TabsTrigger>
-              <TabsTrigger value="metrics">Metrics</TabsTrigger>
-              <TabsTrigger value="charts">Charts</TabsTrigger>
+              <TabsTrigger value="basic">Básico</TabsTrigger>
+              <TabsTrigger value="content">Contenido</TabsTrigger>
+              <TabsTrigger value="metrics">Métricas</TabsTrigger>
+              <TabsTrigger value="charts">Gráficos</TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic" className="space-y-4 mt-4">
@@ -311,9 +278,9 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => fetchStockData(false)}
+                      onClick={fetchStockData}
                       disabled={isFetchingPrice}
-                      title="Buscar precio actual"
+                      title="Buscar precio y datos básicos"
                     >
                       {isFetchingPrice ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -322,9 +289,12 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
                       )}
                     </Button>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Busca para obtener precio, nombre y sector automáticamente
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="company">Company Name *</Label>
+                  <Label htmlFor="company">Nombre de la Empresa *</Label>
                   <Input
                     id="company"
                     value={companyName}
@@ -347,7 +317,7 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Direction *</Label>
+                  <Label>Dirección *</Label>
                   <Select value={direction} onValueChange={(v) => setDirection(v as ThesisDirection)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -362,7 +332,7 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Strategy *</Label>
+                  <Label>Estrategia *</Label>
                   <Select value={strategy} onValueChange={(v) => setStrategy(v as InvestmentStrategy)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -395,7 +365,7 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="currentPrice">Current Price *</Label>
+                  <Label htmlFor="currentPrice">Precio Actual *</Label>
                   <Input
                     id="currentPrice"
                     type="number"
@@ -407,7 +377,7 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="targetPrice">Target Price</Label>
+                  <Label htmlFor="targetPrice">Precio Objetivo</Label>
                   <Input
                     id="targetPrice"
                     type="number"
@@ -418,7 +388,7 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
+                  <Label htmlFor="currency">Moneda</Label>
                   <Input
                     id="currency"
                     value={currency}
@@ -428,127 +398,87 @@ export function ThesisFormDialog({ open, onOpenChange, thesis, onSuccess }: Thes
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                <div className="space-y-0.5">
+                  <Label htmlFor="published" className="cursor-pointer font-medium">
+                    Publicar tesis
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Las tesis publicadas son visibles para todos los usuarios
+                  </p>
+                </div>
+                <Switch
                   id="published"
                   checked={isPublished}
-                  onChange={(e) => setIsPublished(e.target.checked)}
-                  className="h-4 w-4 rounded border-input"
+                  onCheckedChange={setIsPublished}
                 />
-                <Label htmlFor="published" className="cursor-pointer">
-                  Publish immediately
-                </Label>
               </div>
             </TabsContent>
 
             <TabsContent value="content" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="summary">Executive Summary (Markdown)</Label>
+                <Label htmlFor="summary">Resumen Ejecutivo (Markdown)</Label>
                 <MarkdownTextarea
                   id="summary"
                   value={executiveSummary}
                   onChange={setExecutiveSummary}
-                  placeholder="Brief overview of the investment thesis..."
+                  placeholder="Breve resumen de la tesis de inversión..."
                   rows={4}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="case">Investment Case (Markdown)</Label>
+                <Label htmlFor="case">Caso de Inversión (Markdown)</Label>
                 <MarkdownTextarea
                   id="case"
                   value={investmentCase}
                   onChange={setInvestmentCase}
-                  placeholder="Detailed investment case..."
+                  placeholder="Caso de inversión detallado..."
                   rows={6}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="valuation">Valuation (Markdown)</Label>
+                <Label htmlFor="valuation">Valoración (Markdown)</Label>
                 <MarkdownTextarea
                   id="valuation"
                   value={valuation}
                   onChange={setValuation}
-                  placeholder="Valuation methodology and analysis..."
+                  placeholder="Metodología y análisis de valoración..."
                   rows={4}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="risks">Risks (Markdown)</Label>
+                <Label htmlFor="risks">Riesgos (Markdown)</Label>
                 <MarkdownTextarea
                   id="risks"
                   value={risks}
                   onChange={setRisks}
-                  placeholder="Key risks to the investment thesis..."
+                  placeholder="Principales riesgos de la tesis..."
                   rows={4}
                 />
               </div>
             </TabsContent>
 
-            <TabsContent value="metrics" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="metrics">Metrics (JSON)</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchStockData(true)}
-                    disabled={isFetchingPrice || !ticker.trim()}
-                    title="Auto-completar métricas desde Yahoo Finance"
-                  >
-                    {isFetchingPrice ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                    )}
-                    Auto-completar
-                  </Button>
-                </div>
-                <Textarea
-                  id="metrics"
-                  value={metricsJson}
-                  onChange={(e) => setMetricsJson(e.target.value)}
-                  placeholder="{}"
-                  rows={12}
-                  className="font-mono text-sm"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Campos: per, ev_ebitda, roic, revenue_growth, gross_margin, fcf_yield, market_cap, forward_pe, price_to_book, profit_margin
-                </p>
-              </div>
+            <TabsContent value="metrics" className="mt-4">
+              <MetricsFormSection metrics={metrics} onChange={setMetrics} />
             </TabsContent>
 
-            <TabsContent value="charts" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="chartData">Chart Data (JSON)</Label>
-                <Textarea
-                  id="chartData"
-                  value={chartDataJson}
-                  onChange={(e) => setChartDataJson(e.target.value)}
-                  placeholder="{}"
-                  rows={12}
-                  className="font-mono text-sm"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Example: {"{"}"revenue": [{"{"}"year": "2020", "value": 100{"}"}], "margins": [{"{"}"year": "2020", "value": 25{"}"}]{"}"}
-                </p>
-              </div>
+            <TabsContent value="charts" className="mt-4">
+              <ChartDataFormSection chartData={chartData} onChange={setChartData} />
             </TabsContent>
           </Tabs>
 
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              Cancelar
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                thesis ? 'Update Thesis' : 'Create Thesis'
+                thesis ? 'Actualizar Tesis' : 'Crear Tesis'
               )}
             </Button>
           </div>
