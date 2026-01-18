@@ -117,54 +117,59 @@ serve(async (req) => {
     const closePrices = chartResult.indicators?.quote?.[0]?.close || [];
     const sparklineData = closePrices.filter((p: number | null) => p !== null);
 
-    // Fetch detailed quote data with financial metrics
-    const quoteSummaryUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${sanitizedTicker}?modules=defaultKeyStatistics,financialData,summaryDetail,price,calendarEvents`;
+    // Fetch detailed quote data with financial metrics using v7 API
+    const quoteDetailsUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${sanitizedTicker}&crumb=`;
     
     let metrics: Partial<StockQuote> = {};
     
     try {
-      const summaryResponse = await fetch(quoteSummaryUrl, {
+      const detailsResponse = await fetch(quoteDetailsUrl, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': '*/*',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Origin': 'https://finance.yahoo.com',
+          'Referer': 'https://finance.yahoo.com/',
         },
       });
       
-      if (summaryResponse.ok) {
-        const summaryData = await summaryResponse.json();
-        const result = summaryData.quoteSummary?.result?.[0];
+      console.log(`Quote details response status: ${detailsResponse.status}`);
+      
+      if (detailsResponse.ok) {
+        const detailsData = await detailsResponse.json();
+        const quote = detailsData.quoteResponse?.result?.[0];
         
-        if (result) {
-          const keyStats = result.defaultKeyStatistics || {};
-          const financialData = result.financialData || {};
-          const summaryDetail = result.summaryDetail || {};
-          const priceData = result.price || {};
+        if (quote) {
+          console.log(`Found quote data for ${sanitizedTicker}: marketCap=${quote.marketCap}, trailingPE=${quote.trailingPE}`);
 
-          // Get next earnings date from calendarEvents
+          // Get next earnings date
           let earningsDate: string | null = null;
-          const calendarEvents = result.calendarEvents;
-          if (calendarEvents?.earnings?.earningsDate) {
-            const earningsDates = calendarEvents.earnings.earningsDate;
-            if (earningsDates.length > 0 && earningsDates[0]?.raw) {
-              const timestamp = earningsDates[0].raw * 1000;
-              earningsDate = new Date(timestamp).toISOString().split('T')[0];
-            }
+          if (quote.earningsTimestamp) {
+            earningsDate = new Date(quote.earningsTimestamp * 1000).toISOString().split('T')[0];
+          } else if (quote.earningsTimestampStart) {
+            earningsDate = new Date(quote.earningsTimestampStart * 1000).toISOString().split('T')[0];
           }
 
           metrics = {
-            marketCap: priceData.marketCap?.raw || summaryDetail.marketCap?.raw || null,
-            trailingPE: summaryDetail.trailingPE?.raw || null,
-            forwardPE: keyStats.forwardPE?.raw || summaryDetail.forwardPE?.raw || null,
-            priceToBook: keyStats.priceToBook?.raw || null,
-            enterpriseToEbitda: keyStats.enterpriseToEbitda?.raw || null,
-            profitMargins: financialData.profitMargins?.raw || null,
-            grossMargins: financialData.grossMargins?.raw || null,
-            returnOnEquity: financialData.returnOnEquity?.raw || null,
-            revenueGrowth: financialData.revenueGrowth?.raw || null,
-            sector: priceData.sector || null,
-            industry: priceData.industry || null,
+            marketCap: quote.marketCap || null,
+            trailingPE: quote.trailingPE || null,
+            forwardPE: quote.forwardPE || null,
+            priceToBook: quote.priceToBook || null,
+            enterpriseToEbitda: null, // Not available in v7 quote
+            profitMargins: null, // Not available in v7 quote
+            grossMargins: null, // Not available in v7 quote
+            returnOnEquity: null, // Not available in v7 quote
+            revenueGrowth: null, // Not available in v7 quote
+            sector: quote.sector || null,
+            industry: quote.industry || null,
             earningsDate,
           };
+        } else {
+          console.warn('No quote data in response:', JSON.stringify(detailsData));
         }
+      } else {
+        const errorText = await detailsResponse.text();
+        console.warn(`Quote details API returned ${detailsResponse.status}: ${errorText.substring(0, 200)}`);
       }
     } catch (metricsError) {
       console.warn('Could not fetch detailed metrics:', metricsError);
