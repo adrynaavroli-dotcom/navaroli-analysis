@@ -6,6 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { usePageContent } from '@/hooks/usePageContent';
+import { Skeleton } from '@/components/ui/skeleton';
+
+interface ContactContent {
+  title: string;
+  subtitle: string;
+  email: string;
+  linkedin_url: string;
+  open_to_opportunities: boolean;
+  opportunities_text: string;
+}
 
 export default function Contact() {
   const [name, setName] = useState('');
@@ -13,6 +24,9 @@ export default function Contact() {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  
+  const { data: pageContent, isLoading: contentLoading } = usePageContent('contact');
+  const content = pageContent?.content as unknown as ContactContent | undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +46,9 @@ export default function Contact() {
     setIsLoading(false);
   };
 
+  const contactEmail = content?.email || 'contact@example.com';
+  const linkedinUrl = content?.linkedin_url || 'https://linkedin.com';
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -41,13 +58,22 @@ export default function Contact() {
         <section className="py-16 md:py-24">
           <div className="container">
             <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-                Get in Touch
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                Interested in discussing investment opportunities or my research? 
-                I would love to hear from you.
-              </p>
+              {contentLoading ? (
+                <>
+                  <Skeleton className="h-10 w-48 mx-auto mb-4" />
+                  <Skeleton className="h-6 w-96 mx-auto" />
+                </>
+              ) : (
+                <>
+                  <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+                    {content?.title || 'Get in Touch'}
+                  </h1>
+                  <p className="text-lg text-muted-foreground">
+                    {content?.subtitle || 
+                      'Interested in discussing investment opportunities or my research? I would love to hear from you.'}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </section>
@@ -72,45 +98,49 @@ export default function Contact() {
                           For professional inquiries and opportunities
                         </p>
                         <a 
-                          href="mailto:contact@example.com" 
+                          href={`mailto:${contactEmail}`}
                           className="text-sm text-primary hover:underline"
                         >
-                          contact@example.com
+                          {contactEmail}
                         </a>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bento-card p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Linkedin className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium mb-1">LinkedIn</h3>
-                        <p className="text-muted-foreground text-sm mb-2">
-                          Connect for professional networking
-                        </p>
-                        <a 
-                          href="https://linkedin.com" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary hover:underline"
-                        >
-                          View Profile →
-                        </a>
+                  {linkedinUrl && (
+                    <div className="bento-card p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Linkedin className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium mb-1">LinkedIn</h3>
+                          <p className="text-muted-foreground text-sm mb-2">
+                            Connect for professional networking
+                          </p>
+                          <a 
+                            href={linkedinUrl}
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline"
+                          >
+                            View Profile →
+                          </a>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
-                <div className="mt-8 p-6 bg-muted/30 rounded-lg border">
-                  <h3 className="font-medium mb-2">Open to Opportunities</h3>
-                  <p className="text-sm text-muted-foreground">
-                    I am currently seeking positions in equity research, portfolio management, 
-                    and investment analysis. Open to full-time roles and consulting projects.
-                  </p>
-                </div>
+                {(content?.open_to_opportunities !== false) && (
+                  <div className="mt-8 p-6 bg-muted/30 rounded-lg border">
+                    <h3 className="font-medium mb-2">Open to Opportunities</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {content?.opportunities_text || 
+                        'I am currently seeking positions in equity research, portfolio management, and investment analysis. Open to full-time roles and consulting projects.'}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Contact Form */}
