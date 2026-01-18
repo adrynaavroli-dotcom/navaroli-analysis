@@ -9,7 +9,15 @@ import { FilterBar } from '@/components/thesis/FilterBar';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useTheses } from '@/hooks/useTheses';
+import { usePageContent } from '@/hooks/usePageContent';
 import { ThesisFilters } from '@/types/thesis';
+
+interface HomeContent {
+  hero_title: string;
+  hero_subtitle: string;
+  thesis_section_title: string;
+  footer_text: string;
+}
 
 export default function Index() {
   const [filters, setFilters] = useState<ThesisFilters>({
@@ -20,6 +28,8 @@ export default function Index() {
   });
 
   const { data: theses, isLoading, error } = useTheses(filters);
+  const { data: pageContent } = usePageContent('home');
+  const content = pageContent?.content as unknown as HomeContent | undefined;
 
   const availableSectors = useMemo(() => {
     if (!theses) return [];
@@ -50,7 +60,7 @@ export default function Index() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight mb-1">
-                  Thesis Library
+                  {content?.thesis_section_title || 'Thesis Library'}
                 </h2>
                 <p className="text-muted-foreground">
                   {isLoading
@@ -162,7 +172,7 @@ export default function Index() {
                 © {new Date().getFullYear()} Investment Analysis. All rights reserved.
               </p>
               <p className="text-xs text-muted-foreground">
-                This is a portfolio demonstration. Not financial advice.
+                {content?.footer_text || 'This is a portfolio demonstration. Not financial advice.'}
               </p>
             </div>
           </div>

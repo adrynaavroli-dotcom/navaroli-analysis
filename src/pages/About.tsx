@@ -1,7 +1,22 @@
 import { Header } from '@/components/layout/Header';
 import { TrendingUp, Target, BookOpen, Award } from 'lucide-react';
+import { usePageContent } from '@/hooks/usePageContent';
+import { Skeleton } from '@/components/ui/skeleton';
+
+interface AboutContent {
+  title: string;
+  subtitle: string;
+  philosophy_title: string;
+  philosophy_content: string;
+  methodology_title: string;
+  methodology_content: string;
+  disclaimer: string;
+}
 
 export default function About() {
+  const { data: pageContent, isLoading } = usePageContent('about');
+  const content = pageContent?.content as unknown as AboutContent | undefined;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -11,13 +26,22 @@ export default function About() {
         <section className="py-16 md:py-24">
           <div className="container">
             <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-                About Investment Analysis
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                Institutional-grade equity research combining rigorous fundamental analysis 
-                with modern analytical frameworks.
-              </p>
+              {isLoading ? (
+                <>
+                  <Skeleton className="h-10 w-64 mx-auto mb-4" />
+                  <Skeleton className="h-6 w-96 mx-auto" />
+                </>
+              ) : (
+                <>
+                  <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+                    {content?.title || 'About Investment Analysis'}
+                  </h1>
+                  <p className="text-lg text-muted-foreground">
+                    {content?.subtitle || 
+                      'Institutional-grade equity research combining rigorous fundamental analysis with modern analytical frameworks.'}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </section>
@@ -28,21 +52,23 @@ export default function About() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight mb-4">
-                  Investment Philosophy
+                  {content?.philosophy_title || 'Investment Philosophy'}
                 </h2>
-                <p className="text-muted-foreground mb-4">
-                  Our approach focuses on identifying high-quality businesses trading at 
-                  reasonable valuations. We emphasize long-term value creation over 
-                  short-term market movements.
-                </p>
-                <p className="text-muted-foreground mb-4">
-                  Each thesis undergoes rigorous analysis covering competitive positioning, 
-                  financial health, management quality, and intrinsic value estimation.
-                </p>
-                <p className="text-muted-foreground">
-                  We believe in transparency and clearly communicate our investment rationale, 
-                  including potential risks and catalysts for each position.
-                </p>
+                <div className="text-muted-foreground space-y-4">
+                  {(content?.philosophy_content || 
+                    `Our approach focuses on identifying high-quality businesses trading at 
+                    reasonable valuations. We emphasize long-term value creation over 
+                    short-term market movements.
+
+                    Each thesis undergoes rigorous analysis covering competitive positioning, 
+                    financial health, management quality, and intrinsic value estimation.
+
+                    We believe in transparency and clearly communicate our investment rationale, 
+                    including potential risks and catalysts for each position.`
+                  ).split('\n\n').map((paragraph, i) => (
+                    <p key={i}>{paragraph}</p>
+                  ))}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bento-card p-6 text-center">
@@ -82,7 +108,7 @@ export default function About() {
         <section className="py-12 border-t bg-muted/30">
           <div className="container">
             <h2 className="text-2xl font-semibold tracking-tight mb-8 text-center">
-              Research Methodology
+              {content?.methodology_title || 'Research Methodology'}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <div className="bento-card p-6">
@@ -125,11 +151,12 @@ export default function About() {
             <div className="max-w-2xl mx-auto text-center">
               <h2 className="text-lg font-semibold mb-4">Disclaimer</h2>
               <p className="text-sm text-muted-foreground">
-                This platform is for educational and portfolio demonstration purposes only. 
-                The content presented here does not constitute financial advice, investment 
-                recommendations, or solicitation to buy or sell securities. Past performance 
-                is not indicative of future results. Always conduct your own research and 
-                consult with a qualified financial advisor before making investment decisions.
+                {content?.disclaimer || 
+                  `This platform is for educational and portfolio demonstration purposes only. 
+                  The content presented here does not constitute financial advice, investment 
+                  recommendations, or solicitation to buy or sell securities. Past performance 
+                  is not indicative of future results. Always conduct your own research and 
+                  consult with a qualified financial advisor before making investment decisions.`}
               </p>
             </div>
           </div>
