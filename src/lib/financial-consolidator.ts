@@ -58,31 +58,38 @@ export interface ConsolidationResult {
   warnings: string[];
 }
 
-// Extended synonyms for Markets.sh specific labels
+// Extended synonyms for Markets.sh specific labels (FMP, Yahoo Finance, etc.)
 const EXTENDED_SYNONYMS: Record<string, StandardVariableKey | 'operating_cash_flow' | 'short_term_debt' | 'long_term_debt' | 'net_debt'> = {
-  // Operating Cash Flow (not in base STANDARD_VARIABLES)
+  // Operating Cash Flow - FMP/Markets.sh specific
   'operating cash flow': 'operating_cash_flow' as StandardVariableKey,
   'cash from operations': 'operating_cash_flow' as StandardVariableKey,
   'cash flow from operations': 'operating_cash_flow' as StandardVariableKey,
   'cash flow from operating activities': 'operating_cash_flow' as StandardVariableKey,
   'net cash from operating activities': 'operating_cash_flow' as StandardVariableKey,
+  'net cash provided by operating activities': 'operating_cash_flow' as StandardVariableKey,
+  'net cash used for operating activities': 'operating_cash_flow' as StandardVariableKey,
+  'cash flows from operating activities': 'operating_cash_flow' as StandardVariableKey,
   'cfo': 'operating_cash_flow' as StandardVariableKey,
   
-  // Short/Long term debt
+  // Short/Long term debt - Balance Sheet specific
   'short term debt': 'short_term_debt' as StandardVariableKey,
   'short-term debt': 'short_term_debt' as StandardVariableKey,
+  'shorttermdebt': 'short_term_debt' as StandardVariableKey,
   'current debt': 'short_term_debt' as StandardVariableKey,
   'current portion of long term debt': 'short_term_debt' as StandardVariableKey,
   'long term debt': 'long_term_debt' as StandardVariableKey,
   'long-term debt': 'long_term_debt' as StandardVariableKey,
+  'longtermdebt': 'long_term_debt' as StandardVariableKey,
   'lt debt': 'long_term_debt' as StandardVariableKey,
   
   // Net Debt
   'net debt': 'net_debt' as StandardVariableKey,
   
-  // Additional Markets.sh specific labels
+  // Revenue variations
   'total revenue': 'revenue',
   'net revenues': 'revenue',
+  
+  // Net Income variations
   'net income to common': 'net_income',
   'net income attributable to common shareholders': 'net_income',
   'comprehensive income': 'net_income',
@@ -92,18 +99,52 @@ const EXTENDED_SYNONYMS: Record<string, StandardVariableKey | 'operating_cash_fl
   'total liabilities & equity': 'total_assets',
   'total liabilities and stockholders equity': 'total_assets',
   
+  // Total Equity - Balance Sheet specific (FMP)
+  'total stockholders equity': 'total_equity',
+  'totalstockholdersequity': 'total_equity',
+  'total shareholders equity': 'total_equity',
+  'stockholders equity': 'total_equity',
+  
+  // Cash - Balance Sheet specific
+  'cash and cash equivalents': 'cash',
+  'cashandcashequivalents': 'cash',
+  'cash and short term investments': 'cash',
+  'cashandshortterminvestments': 'cash',
+  
+  // Accounts Receivable - Balance Sheet specific
+  'net receivables': 'accounts_receivable',
+  'netreceivables': 'accounts_receivable',
+  'trade receivables': 'accounts_receivable',
+  
+  // Accounts Payable - Balance Sheet specific  
+  'account payables': 'accounts_payable',
+  'accountpayables': 'accounts_payable',
+  'trade payables': 'accounts_payable',
+  
   // FCF variations
   'free cash flow to firm': 'free_cash_flow',
   'fcff': 'free_cash_flow',
   'free cash flow to equity': 'free_cash_flow',
   'fcfe': 'free_cash_flow',
   
-  // CapEx variations
+  // CapEx variations - Cash Flow specific
   'capital expenditure': 'capex',
+  'capitalexpenditure': 'capex',
   'purchases of property and equipment': 'capex',
   'purchase of property plant and equipment': 'capex',
   'additions to property and equipment': 'capex',
   'property plant and equipment additions': 'capex',
+  'investments in property plant and equipment': 'capex',
+  'investmentsinpropertyplantandequipment': 'capex',
+  
+  // D&A - Cash Flow / Income Statement
+  'depreciation and amortization': 'depreciation',
+  'depreciationandamortization': 'depreciation',
+  'depreciation & amortization': 'depreciation',
+  
+  // Stock Based Compensation (useful for adjusted metrics)
+  'stock based compensation': 'stock_based_compensation' as StandardVariableKey,
+  'stockbasedcompensation': 'stock_based_compensation' as StandardVariableKey,
 };
 
 /**
