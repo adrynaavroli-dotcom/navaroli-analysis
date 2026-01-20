@@ -1,77 +1,135 @@
-import { useState, useMemo } from 'react';
-import { ArrowRight, Check, X, Search } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Check, X, Loader2, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { STANDARD_VARIABLES, type ParsedFileData } from '@/types/valuation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { ParsedFileData, StandardVariableKey } from '@/types/valuation';
+import { parseFinancialData, type ParsedFinancialData } from '@/lib/financial-parser';
+import { DataPreviewTable } from './DataPreviewTable';
+import { UnmappedRowsPanel } from './UnmappedRowsPanel';
 
 interface DataMappingPanelProps {
   parsedData: ParsedFileData;
-  mappings: Record<string, string>;
-  onMappingChange: (columnName: string, variableKey: string | null) => void;
-  onConfirm: () => void;
+  onConfirm: (data: {
+    normalizedData: ParsedFinancialData;
+    manualMappings: Record<string, string>;
+    manualValues: Record<string, Record<string, number | null>>;
+  }) => void;
   onCancel: () => void;
 }
 
 export function DataMappingPanel({
   parsedData,
-  mappings,
-  onMappingChange,
   onConfirm,
   onCancel,
 }: DataMappingPanelProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [isProcessing, setIsProcessing] = useState(true);
+  const [normalizedData, setNormalizedData] = useState<ParsedFinancialData | null>(null);
+  const [manualMappings, setManualMappings] = useState<Record<string, string>>({});
+  const [manualValues, setManualValues] = useState<Record<string, Record<string, number | null>>>({});
+  const [activeTab, setActiveTab] = useState('preview');
 
-  const filteredHeaders = useMemo(() => {
-    if (!searchTerm) return parsedData.headers;
-    return parsedData.headers.filter(h => 
-      h.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [parsedData.headers, searchTerm]);
+  // Parse and normalize data on mount
+  useEffect(() => {
+    setIsProcessing(true);
+    
+    // Use setTimeout to allow UI to update
+    const timer = setTimeout(() => {
+      const result = parseFinancialData(parsedData.headers, parsedData.rows);
+      setNormalizedData(result);
+      setIsProcessing(false);
+      
+      // If there are unmapped rows, switch to mapping tab
+      if (result.unmappedRows.length > 0 && result.metrics.length === 0) {
+        setActiveTab('mapping');
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [parsedData]);
 
-  const groupedVariables = useMemo(() => {
-    const groups: Record<string, typeof STANDARD_VARIABLES[number][]> = {};
-    STANDARD_VARIABLES.forEach(v => {
-      if (!groups[v.category]) groups[v.category] = [];
-      groups[v.category].push(v);
+  const handleMappingChange = useCallback((originalLabel: string, variableKey: string | null) => {
+    setManualMappings(prev => {
+      const next = { ...prev };
+      if (variableKey === null) {
+        delete next[originalLabel];
+      } else {
+        next[originalLabel] = variableKey;
+      }
+      return next;
     });
-    return groups;
   }, []);
 
-  const usedVariables = useMemo(() => {
-    return new Set(Object.values(mappings).filter(Boolean));
-  }, [mappings]);
+  const handleManualValueChange = useCallback((metric: string, year: string, value: number | null) => {
+    setManualValues(prev => ({
+      ...prev,
+      [metric]: {
+        ...(prev[metric] || {}),
+        [year]: value,
+      },
+    }));
+  }, []);
 
-  const mappedCount = Object.values(mappings).filter(Boolean).length;
+  const handleConfirm = useCallback(() => {
+    if (!normalizedData) return;
+    onConfirm({
+      normalizedData,
+      manualMappings,
+      manualValues,
+    });
+  }, [normalizedData, manualMappings, manualValues, onConfirm]);
 
-  const getSampleValue = (header: string) => {
-    for (const row of parsedData.rows.slice(0, 3)) {
-      const value = row[header];
-      if (value !== null && value !== undefined && value !== '') {
-        return String(value);
-      }
-    }
-    return '—';
-  };
+  const stats = useMemo(() => {
+    if (!normalizedData) return { autoMapped: 0, manualMapped: 0, unmapped: 0 };
+    
+    const autoMapped = normalizedData.metrics.length;
+    const manualMapped = Object.keys(manualMappings).length;
+    const unmapped = normalizedData.unmappedRows.length - manualMapped;
+    
+    return { autoMapped, manualMapped, unmapped };
+  }, [normalizedData, manualMappings]);
+
+  if (isProcessing) {
+    return (
+      <div className="border border-border rounded-lg bg-card p-8">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="text-center">
+            <p className="font-medium">Analyzing Financial Data...</p>
+            <p className="text-sm text-muted-foreground">
+              Detecting format and normalizing metrics
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!normalizedData) {
+    return (
+      <div className="border border-border rounded-lg bg-card p-6 text-center">
+        <p className="text-destructive">Failed to parse financial data</p>
+        <Button variant="outline" size="sm" onClick={onCancel} className="mt-4">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="border border-border rounded-lg bg-card">
+      {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="font-semibold">Map Columns to Variables</h3>
-            <p className="text-sm text-muted-foreground">
-              {parsedData.headers.length} columns detected • {mappedCount} mapped
+            <div className="flex items-center gap-2">
+              <Wand2 className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold">Smart Data Mapping</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              {normalizedData.orientation === 'years-in-columns' 
+                ? `Detected ${normalizedData.years.length} years of data`
+                : 'Manual mapping required'}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -79,83 +137,72 @@ export function DataMappingPanel({
               <X className="h-4 w-4 mr-1" />
               Cancel
             </Button>
-            <Button size="sm" onClick={onConfirm} disabled={mappedCount === 0}>
+            <Button size="sm" onClick={handleConfirm} disabled={stats.autoMapped + stats.manualMapped === 0}>
               <Check className="h-4 w-4 mr-1" />
               Confirm Mapping
             </Button>
           </div>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search columns..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
-          />
+
+        {/* Stats badges */}
+        <div className="flex gap-2">
+          <Badge variant="default" className="gap-1">
+            <Check className="h-3 w-3" />
+            {stats.autoMapped} Auto-mapped
+          </Badge>
+          {stats.manualMapped > 0 && (
+            <Badge variant="secondary" className="gap-1">
+              {stats.manualMapped} Manual
+            </Badge>
+          )}
+          {stats.unmapped > 0 && (
+            <Badge variant="outline" className="gap-1">
+              {stats.unmapped} Unmapped
+            </Badge>
+          )}
+          {normalizedData.years.length > 0 && (
+            <Badge variant="outline">
+              {normalizedData.years[0]} - {normalizedData.years[normalizedData.years.length - 1]}
+            </Badge>
+          )}
         </div>
       </div>
 
-      <ScrollArea className="h-[400px]">
-        <div className="p-4 space-y-3">
-          {filteredHeaders.map((header) => (
-            <div
-              key={header}
-              className="flex items-center gap-4 p-3 rounded-lg border border-border bg-background hover:bg-muted/30 transition-colors"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{header}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  Sample: {getSampleValue(header)}
-                </p>
-              </div>
-
-              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-
-              <div className="w-[220px] shrink-0">
-                <Select
-                  value={mappings[header] || 'unmapped'}
-                  onValueChange={(value) => 
-                    onMappingChange(header, value === 'unmapped' ? null : value)
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select variable..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unmapped">
-                      <span className="text-muted-foreground">— Not mapped —</span>
-                    </SelectItem>
-                    {Object.entries(groupedVariables).map(([category, variables]) => (
-                      <SelectGroup key={category}>
-                        <SelectLabel>{category}</SelectLabel>
-                        {variables.map((variable) => (
-                          <SelectItem
-                            key={variable.key}
-                            value={variable.key}
-                            disabled={usedVariables.has(variable.key) && mappings[header] !== variable.key}
-                          >
-                            {variable.label}
-                            {usedVariables.has(variable.key) && mappings[header] !== variable.key && (
-                              <span className="text-xs text-muted-foreground ml-2">(used)</span>
-                            )}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {mappings[header] && (
-                <Badge variant="secondary" className="shrink-0">
-                  Mapped
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="border-b border-border px-4">
+          <TabsList className="h-12 w-full justify-start bg-transparent">
+            <TabsTrigger value="preview" className="data-[state=active]:bg-muted">
+              Preview Table
+            </TabsTrigger>
+            <TabsTrigger value="mapping" className="data-[state=active]:bg-muted">
+              Map & Fill Missing
+              {stats.unmapped > 0 && (
+                <Badge variant="secondary" className="ml-2 h-5">
+                  {stats.unmapped}
                 </Badge>
               )}
-            </div>
-          ))}
+            </TabsTrigger>
+          </TabsList>
         </div>
-      </ScrollArea>
+
+        <TabsContent value="preview" className="p-4 mt-0">
+          <DataPreviewTable 
+            data={normalizedData} 
+            manualMappings={manualMappings}
+          />
+        </TabsContent>
+
+        <TabsContent value="mapping" className="p-4 mt-0">
+          <UnmappedRowsPanel
+            data={normalizedData}
+            manualMappings={manualMappings}
+            onMappingChange={handleMappingChange}
+            onManualValueChange={handleManualValueChange}
+            manualValues={manualValues}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
