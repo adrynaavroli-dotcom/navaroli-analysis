@@ -32,7 +32,6 @@ interface AboutContent {
 interface ContactContent {
   title: string;
   subtitle: string;
-  email: string;
   linkedin_url: string;
   open_to_opportunities: boolean;
   opportunities_text: string;
@@ -66,7 +65,6 @@ export function PageContentEditor() {
   const [contactContent, setContactContent] = useState<ContactContent>({
     title: '',
     subtitle: '',
-    email: '',
     linkedin_url: '',
     open_to_opportunities: true,
     opportunities_text: '',
@@ -343,24 +341,13 @@ export function PageContentEditor() {
                   onChange={(e) => setContactContent({ ...contactContent, subtitle: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={contactContent.email}
-                    onChange={(e) => setContactContent({ ...contactContent, email: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="linkedin_url">LinkedIn URL</Label>
-                  <Input
-                    id="linkedin_url"
-                    value={contactContent.linkedin_url}
-                    onChange={(e) => setContactContent({ ...contactContent, linkedin_url: e.target.value })}
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="linkedin_url">LinkedIn URL</Label>
+                <Input
+                  id="linkedin_url"
+                  value={contactContent.linkedin_url}
+                  onChange={(e) => setContactContent({ ...contactContent, linkedin_url: e.target.value })}
+                />
               </div>
               <div className="flex items-center space-x-2">
                 <Switch
