@@ -1,17 +1,19 @@
 import { useState, useMemo, useCallback } from 'react';
-import { BarChart3, Calculator, Grid3X3, TrendingUp, FileText, Printer, Upload, Pencil } from 'lucide-react';
+import { BarChart3, Calculator, Grid3X3, TrendingUp, FileText, Printer, Upload, Pencil, RefreshCw, Database } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HistoricalDataTable } from './HistoricalDataTable';
 import { DCFModelPanel } from './DCFModelPanel';
 import { SensitivityHeatmap } from './SensitivityHeatmap';
 import { TemplateKPIPanel } from './TemplateKPIPanel';
 import { AnalystNotebook } from './AnalystNotebook';
 import { ExportThesisModal } from './ExportThesisModal';
+import { UpdateDataModal } from './UpdateDataModal';
 import { 
   GrowthMarginsChart, 
   CapitalEfficiencyChart, 
@@ -31,6 +33,7 @@ interface ValuationDashboardProps {
   workspaceId?: string;
   userId?: string;
   initialNotes?: string;
+  onDataUpdated?: () => void;
 }
 
 // Map template types to KPI templates
@@ -51,6 +54,7 @@ export function ValuationDashboard({
   workspaceId,
   userId,
   initialNotes,
+  onDataUpdated,
 }: ValuationDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [marketCap, setMarketCap] = useState<number | null>(null);
@@ -59,12 +63,24 @@ export function ValuationDashboard({
   const [wacc, setWacc] = useState(8);
   const [terminalGrowth, setTerminalGrowth] = useState(2);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [updateDataModalOpen, setUpdateDataModalOpen] = useState(false);
 
   // Get latest year for quick stats
   const latestYear = useMemo(() => {
     if (years.length === 0) return null;
     const sorted = [...years].sort((a, b) => b.year.localeCompare(a.year));
     return sorted[0];
+  }, [years]);
+
+  // Get year range for display
+  const yearRange = useMemo(() => {
+    if (years.length === 0) return null;
+    const sorted = [...years].sort((a, b) => a.year.localeCompare(b.year));
+    return {
+      start: sorted[0].year,
+      end: sorted[sorted.length - 1].year,
+      count: sorted.length,
+    };
   }, [years]);
 
   // Auto-calculate market cap
@@ -81,12 +97,38 @@ export function ValuationDashboard({
     window.print();
   }, []);
 
+  const handleDataUpdated = useCallback(() => {
+    onDataUpdated?.();
+    setUpdateDataModalOpen(false);
+  }, [onDataUpdated]);
+
   if (years.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
         <p>No financial data loaded</p>
         <p className="text-sm mt-2">Upload financial statements to begin analysis</p>
+        {workspaceId && (
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => setUpdateDataModalOpen(true)}
+          >
+            <Database className="h-4 w-4 mr-2" />
+            Add Financial Data
+          </Button>
+        )}
+        
+        {workspaceId && (
+          <UpdateDataModal
+            open={updateDataModalOpen}
+            onOpenChange={setUpdateDataModalOpen}
+            workspaceId={workspaceId}
+            ticker={ticker}
+            existingYears={years}
+            onDataUpdated={handleDataUpdated}
+          />
+        )}
       </div>
     );
   }
@@ -100,12 +142,36 @@ export function ValuationDashboard({
             <h2 className="text-2xl font-semibold">{ticker}</h2>
             <Badge variant="outline">{companyName}</Badge>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {years.length} years of data • {templateType.toUpperCase()} analysis
-          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-sm text-muted-foreground">
+              {years.length} years of data • {templateType.toUpperCase()} analysis
+            </p>
+            {yearRange && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Badge variant="secondary" className="text-xs gap-1 cursor-help">
+                      <Database className="h-3 w-3" />
+                      {yearRange.start} - {yearRange.end}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{yearRange.count} years of historical data</p>
+                    <p className="text-xs text-muted-foreground">Click "Update Data" to add more years</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
+          {workspaceId && (
+            <Button variant="outline" size="sm" onClick={() => setUpdateDataModalOpen(true)}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Update Data
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={handlePrint}>
             <Printer className="h-4 w-4 mr-2" />
             PDF Report
@@ -309,6 +375,18 @@ export function ValuationDashboard({
           years={years}
           analystNotes={initialNotes}
           userId={userId}
+        />
+      )}
+
+      {/* Update Data Modal */}
+      {workspaceId && (
+        <UpdateDataModal
+          open={updateDataModalOpen}
+          onOpenChange={setUpdateDataModalOpen}
+          workspaceId={workspaceId}
+          ticker={ticker}
+          existingYears={years}
+          onDataUpdated={handleDataUpdated}
         />
       )}
     </div>
