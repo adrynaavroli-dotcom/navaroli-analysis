@@ -156,6 +156,9 @@ export const METRIC_SYNONYMS: Record<string, StandardVariableKey> = {
   'purchase of property': 'capex',
   'purchases of property and equipment': 'capex',
   'purchase of property plant and equipment': 'capex',
+  'investments in property plant and equipment': 'capex',
+  'investmentsinpropertyplantandequipment': 'capex',
+  'property plant and equipment purchases': 'capex',
   'inversiones': 'capex',
   
   // FCF synonyms

@@ -5,7 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MultiFileDropzone } from './MultiFileDropzone';
 import { ProcessingStatus } from './ProcessingStatus';
 import { HistoricalDataTable } from './HistoricalDataTable';
-import { consolidateFiles, type ProcessedFile, type ConsolidationResult } from '@/lib/financial-consolidator';
+import { JsonDataInput } from './JsonDataInput';
+import { consolidateFiles, type ProcessedFile, type ConsolidationResult, type ConsolidatedYear } from '@/lib/financial-consolidator';
 
 interface ConsolidationPanelProps {
   onConfirm: (result: ConsolidationResult) => void;
@@ -43,6 +44,18 @@ export function ConsolidationPanel({ onConfirm, onCancel }: ConsolidationPanelPr
       return () => clearTimeout(timer);
     }
   }, [processedFiles]);
+
+  // Handle JSON import
+  const handleJsonImport = useCallback((years: ConsolidatedYear[]) => {
+    const result: ConsolidationResult = {
+      years,
+      processedFiles: [],
+      calculatedMetrics: [],
+      warnings: [],
+    };
+    setConsolidationResult(result);
+    setActiveTab('preview');
+  }, []);
 
   const handleConfirm = useCallback(() => {
     if (consolidationResult) {
@@ -152,11 +165,24 @@ export function ConsolidationPanel({ onConfirm, onCancel }: ConsolidationPanelPr
         </div>
 
         <TabsContent value="upload" className="p-4 mt-0">
-          <MultiFileDropzone
-            onFilesProcessed={handleFilesProcessed}
-            onClear={handleClear}
-            processedFiles={processedFiles}
-          />
+          <Tabs defaultValue="files" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="files">Upload Files</TabsTrigger>
+              <TabsTrigger value="json">JSON Import</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="files">
+              <MultiFileDropzone
+                onFilesProcessed={handleFilesProcessed}
+                onClear={handleClear}
+                processedFiles={processedFiles}
+              />
+            </TabsContent>
+            
+            <TabsContent value="json">
+              <JsonDataInput onDataImport={handleJsonImport} />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="preview" className="p-4 mt-0">
