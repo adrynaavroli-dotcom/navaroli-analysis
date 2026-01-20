@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      analysis_workspaces: {
+        Row: {
+          column_mappings: Json | null
+          company_name: string
+          created_at: string
+          id: string
+          industry: string | null
+          raw_data: Json | null
+          template_type: Database["public"]["Enums"]["analysis_template_type"]
+          ticker: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          column_mappings?: Json | null
+          company_name: string
+          created_at?: string
+          id?: string
+          industry?: string | null
+          raw_data?: Json | null
+          template_type?: Database["public"]["Enums"]["analysis_template_type"]
+          ticker: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          column_mappings?: Json | null
+          company_name?: string
+          created_at?: string
+          id?: string
+          industry?: string | null
+          raw_data?: Json | null
+          template_type?: Database["public"]["Enums"]["analysis_template_type"]
+          ticker?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       page_content: {
         Row: {
           content: Json
@@ -201,6 +240,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      analysis_template_type:
+        | "dcf"
+        | "comparables"
+        | "lbo"
+        | "sum_of_parts"
+        | "custom"
       investment_strategy:
         | "value"
         | "growth"
@@ -336,6 +381,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      analysis_template_type: [
+        "dcf",
+        "comparables",
+        "lbo",
+        "sum_of_parts",
+        "custom",
+      ],
       investment_strategy: [
         "value",
         "growth",
