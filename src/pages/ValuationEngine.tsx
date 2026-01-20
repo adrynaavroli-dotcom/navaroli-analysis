@@ -22,10 +22,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { ValuationNav } from '@/components/valuation/ValuationNav';
-import { FileDropzone } from '@/components/valuation/FileDropzone';
-import { DataMappingPanel } from '@/components/valuation/DataMappingPanel';
-import type { AnalysisTemplateType, AnalysisWorkspace, ParsedFileData, NormalizedFinancialData } from '@/types/valuation';
-import type { ParsedFinancialData } from '@/lib/financial-parser';
+import { ConsolidationPanel } from '@/components/valuation/ConsolidationPanel';
+import type { AnalysisTemplateType, AnalysisWorkspace } from '@/types/valuation';
+import type { ConsolidationResult } from '@/lib/financial-consolidator';
 
 const TEMPLATE_OPTIONS: { value: AnalysisTemplateType; label: string }[] = [
   { value: 'dcf', label: 'DCF Model' },
@@ -50,12 +49,9 @@ export default function ValuationEngine() {
   const [industry, setIndustry] = useState('');
   const [templateType, setTemplateType] = useState<AnalysisTemplateType>('dcf');
 
-  // File upload state
-  const [parsedData, setParsedData] = useState<ParsedFileData | null>(null);
-  const [normalizedData, setNormalizedData] = useState<ParsedFinancialData | null>(null);
-  const [columnMappings, setColumnMappings] = useState<Record<string, string>>({});
-  const [manualValues, setManualValues] = useState<Record<string, Record<string, number | null>>>({});
-  const [showMapping, setShowMapping] = useState(false);
+  // Consolidation state
+  const [consolidationResult, setConsolidationResult] = useState<ConsolidationResult | null>(null);
+  const [showConsolidation, setShowConsolidation] = useState(false);
 
   const fetchWorkspaces = useCallback(async () => {
     if (!user) return;
@@ -77,49 +73,40 @@ export default function ValuationEngine() {
     if (user) fetchWorkspaces();
   }, [user, fetchWorkspaces]);
 
-  const handleFileProcessed = useCallback((data: ParsedFileData) => {
-    setParsedData(data);
-    setColumnMappings({});
-    setShowMapping(true);
-  }, []);
-
-  const handleClearFile = useCallback(() => {
-    setParsedData(null);
-    setNormalizedData(null);
-    setColumnMappings({});
-    setManualValues({});
-    setShowMapping(false);
-  }, []);
-
-  const handleConfirmMapping = useCallback((data: {
-    normalizedData: ParsedFinancialData;
-    manualMappings: Record<string, string>;
-    manualValues: Record<string, Record<string, number | null>>;
-  }) => {
-    setNormalizedData(data.normalizedData);
-    setColumnMappings(data.manualMappings);
-    setManualValues(data.manualValues);
-    setShowMapping(false);
-    toast({ title: 'Mapping saved', description: 'Financial data has been normalized and configured.' });
+  const handleConsolidationConfirm = useCallback((result: ConsolidationResult) => {
+    setConsolidationResult(result);
+    setShowConsolidation(false);
+    toast({ 
+      title: 'Data consolidated', 
+      description: `${result.years.length} years of financial data ready.` 
+    });
   }, [toast]);
+
+  const handleClearConsolidation = useCallback(() => {
+    setConsolidationResult(null);
+    setShowConsolidation(false);
+  }, []);
 
   const handleCreateWorkspace = async () => {
     if (!user || !ticker || !companyName) return;
 
     setSaving(true);
     
-    // Build the raw_data with both original and normalized data
+    // Build the raw_data with consolidated financial data
     const rawData: Record<string, unknown> = {};
-    if (parsedData) {
-      rawData.original = { headers: parsedData.headers, rows: parsedData.rows };
-    }
-    if (normalizedData) {
-      rawData.normalized = {
-        years: normalizedData.years,
-        metrics: normalizedData.metrics,
-        orientation: normalizedData.orientation,
+    
+    if (consolidationResult) {
+      rawData.consolidated = {
+        years: consolidationResult.years,
+        calculatedMetrics: consolidationResult.calculatedMetrics,
+        warnings: consolidationResult.warnings,
       };
-      rawData.manualValues = manualValues;
+      rawData.processedFiles = consolidationResult.processedFiles.map(f => ({
+        fileName: f.fileName,
+        statementType: f.statementType,
+        years: f.years,
+        rowCount: f.rowCount,
+      }));
     }
     
     const insertData = {
@@ -129,7 +116,7 @@ export default function ValuationEngine() {
       industry: industry || null,
       template_type: templateType,
       raw_data: rawData,
-      column_mappings: columnMappings,
+      column_mappings: {},
     };
     const { error } = await supabase.from('analysis_workspaces').insert(insertData as never);
 
@@ -149,11 +136,8 @@ export default function ValuationEngine() {
     setCompanyName('');
     setIndustry('');
     setTemplateType('dcf');
-    setParsedData(null);
-    setNormalizedData(null);
-    setColumnMappings({});
-    setManualValues({});
-    setShowMapping(false);
+    setConsolidationResult(null);
+    setShowConsolidation(false);
   };
 
   if (authLoading) {
@@ -189,7 +173,7 @@ export default function ValuationEngine() {
                   New Workspace
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create New Workspace</DialogTitle>
                 </DialogHeader>
@@ -243,20 +227,47 @@ export default function ValuationEngine() {
                     </div>
                   </div>
 
+                  {/* Consolidation Panel */}
                   <div className="space-y-2">
-                    <Label>Upload Financial Data</Label>
-                    <FileDropzone
-                      onFileProcessed={handleFileProcessed}
-                      onClear={handleClearFile}
-                      currentFile={parsedData?.fileName || null}
-                    />
+                    <Label>Financial Statements</Label>
+                    {!showConsolidation && !consolidationResult ? (
+                      <Button 
+                        variant="outline" 
+                        className="w-full h-20"
+                        onClick={() => setShowConsolidation(true)}
+                      >
+                        <div className="text-center">
+                          <p className="font-medium">Upload Financial Statements</p>
+                          <p className="text-xs text-muted-foreground">
+                            Income Statement, Balance Sheet, Cash Flow
+                          </p>
+                        </div>
+                      </Button>
+                    ) : consolidationResult && !showConsolidation ? (
+                      <div className="border border-border rounded-lg p-4 bg-muted/30">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-sm">
+                              {consolidationResult.years.length} years of data consolidated
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {consolidationResult.processedFiles.length} files • 
+                              {consolidationResult.calculatedMetrics.length > 0 && 
+                                ` ${consolidationResult.calculatedMetrics.length} calculated metrics`}
+                            </p>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={handleClearConsolidation}>
+                            Clear
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
 
-                  {showMapping && parsedData && (
-                    <DataMappingPanel
-                      parsedData={parsedData}
-                      onConfirm={handleConfirmMapping}
-                      onCancel={handleClearFile}
+                  {showConsolidation && (
+                    <ConsolidationPanel
+                      onConfirm={handleConsolidationConfirm}
+                      onCancel={handleClearConsolidation}
                     />
                   )}
 
