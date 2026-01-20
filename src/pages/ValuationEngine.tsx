@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -23,8 +23,9 @@ import {
 } from '@/components/ui/dialog';
 import { ValuationNav } from '@/components/valuation/ValuationNav';
 import { ConsolidationPanel } from '@/components/valuation/ConsolidationPanel';
+import { ValuationDashboard } from '@/components/valuation/ValuationDashboard';
 import type { AnalysisTemplateType, AnalysisWorkspace } from '@/types/valuation';
-import type { ConsolidationResult } from '@/lib/financial-consolidator';
+import type { ConsolidationResult, ConsolidatedYear } from '@/lib/financial-consolidator';
 
 const TEMPLATE_OPTIONS: { value: AnalysisTemplateType; label: string }[] = [
   { value: 'dcf', label: 'DCF Model' },
@@ -52,6 +53,9 @@ export default function ValuationEngine() {
   // Consolidation state
   const [consolidationResult, setConsolidationResult] = useState<ConsolidationResult | null>(null);
   const [showConsolidation, setShowConsolidation] = useState(false);
+
+  // Selected workspace for viewing
+  const [selectedWorkspace, setSelectedWorkspace] = useState<AnalysisWorkspace | null>(null);
 
   const fetchWorkspaces = useCallback(async () => {
     if (!user) return;
@@ -305,7 +309,8 @@ export default function ValuationEngine() {
               {workspaces.map((ws) => (
                 <div
                   key={ws.id}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg bg-card hover:bg-muted/30 transition-colors"
+                  className="flex items-center justify-between p-4 border border-border rounded-lg bg-card hover:bg-muted/30 transition-colors cursor-pointer"
+                  onClick={() => setSelectedWorkspace(ws)}
                 >
                   <div>
                     <div className="flex items-center gap-3">
@@ -322,6 +327,29 @@ export default function ValuationEngine() {
                 </div>
               ))}
             </div>
+          )}
+
+          {/* Workspace Dashboard View */}
+          {selectedWorkspace && (
+            <Dialog open={!!selectedWorkspace} onOpenChange={(open) => !open && setSelectedWorkspace(null)}>
+              <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
+                <DialogHeader>
+                  <div className="flex items-center gap-3">
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedWorkspace(null)}>
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <DialogTitle>{selectedWorkspace.ticker} - {selectedWorkspace.company_name}</DialogTitle>
+                  </div>
+                </DialogHeader>
+                <ValuationDashboard
+                  years={((selectedWorkspace.raw_data as Record<string, unknown>)?.consolidated as { years?: ConsolidatedYear[] })?.years ?? []}
+                  calculatedMetrics={((selectedWorkspace.raw_data as Record<string, unknown>)?.consolidated as { calculatedMetrics?: string[] })?.calculatedMetrics ?? []}
+                  templateType={selectedWorkspace.template_type}
+                  ticker={selectedWorkspace.ticker}
+                  companyName={selectedWorkspace.company_name}
+                />
+              </DialogContent>
+            </Dialog>
           )}
         </div>
       </main>
