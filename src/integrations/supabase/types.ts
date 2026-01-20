@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       analysis_workspaces: {
         Row: {
+          analyst_notes: string | null
           column_mappings: Json | null
           company_name: string
           created_at: string
@@ -28,6 +29,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          analyst_notes?: string | null
           column_mappings?: Json | null
           company_name: string
           created_at?: string
@@ -40,6 +42,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          analyst_notes?: string | null
           column_mappings?: Json | null
           company_name?: string
           created_at?: string
@@ -112,6 +115,83 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      public_thesis_data: {
+        Row: {
+          analyst_notes: string | null
+          capital_allocation_data: Json | null
+          capital_efficiency_data: Json | null
+          company_name: string
+          created_at: string
+          current_price: number | null
+          export_config: Json | null
+          fair_value: number | null
+          growth_margins_data: Json | null
+          id: string
+          implied_growth_rate: number | null
+          published_at: string | null
+          terminal_growth: number | null
+          ticker: string
+          updated_at: string
+          upside_percent: number | null
+          user_id: string
+          valuation_context_data: Json | null
+          wacc: number | null
+          workspace_id: string | null
+        }
+        Insert: {
+          analyst_notes?: string | null
+          capital_allocation_data?: Json | null
+          capital_efficiency_data?: Json | null
+          company_name: string
+          created_at?: string
+          current_price?: number | null
+          export_config?: Json | null
+          fair_value?: number | null
+          growth_margins_data?: Json | null
+          id?: string
+          implied_growth_rate?: number | null
+          published_at?: string | null
+          terminal_growth?: number | null
+          ticker: string
+          updated_at?: string
+          upside_percent?: number | null
+          user_id: string
+          valuation_context_data?: Json | null
+          wacc?: number | null
+          workspace_id?: string | null
+        }
+        Update: {
+          analyst_notes?: string | null
+          capital_allocation_data?: Json | null
+          capital_efficiency_data?: Json | null
+          company_name?: string
+          created_at?: string
+          current_price?: number | null
+          export_config?: Json | null
+          fair_value?: number | null
+          growth_margins_data?: Json | null
+          id?: string
+          implied_growth_rate?: number | null
+          published_at?: string | null
+          terminal_growth?: number | null
+          ticker?: string
+          updated_at?: string
+          upside_percent?: number | null
+          user_id?: string
+          valuation_context_data?: Json | null
+          wacc?: number | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_thesis_data_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "analysis_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       theses: {
         Row: {

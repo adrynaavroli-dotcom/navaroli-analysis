@@ -347,6 +347,9 @@ export default function ValuationEngine() {
                   templateType={selectedWorkspace.template_type}
                   ticker={selectedWorkspace.ticker}
                   companyName={selectedWorkspace.company_name}
+                  workspaceId={selectedWorkspace.id}
+                  userId={user?.id}
+                  initialNotes={(selectedWorkspace as unknown as { analyst_notes?: string }).analyst_notes}
                 />
               </DialogContent>
             </Dialog>

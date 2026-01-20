@@ -1,14 +1,23 @@
 import { useState, useMemo, useCallback } from 'react';
-import { BarChart3, Calculator, Grid3X3, TrendingUp, FileText, Settings } from 'lucide-react';
+import { BarChart3, Calculator, Grid3X3, TrendingUp, FileText, Printer, Upload, Pencil } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { HistoricalDataTable } from './HistoricalDataTable';
 import { DCFModelPanel } from './DCFModelPanel';
 import { SensitivityHeatmap } from './SensitivityHeatmap';
 import { TemplateKPIPanel } from './TemplateKPIPanel';
+import { AnalystNotebook } from './AnalystNotebook';
+import { ExportThesisModal } from './ExportThesisModal';
+import { 
+  GrowthMarginsChart, 
+  CapitalEfficiencyChart, 
+  CapitalAllocationChart, 
+  ValuationContextChart 
+} from './charts';
 import { formatLargeNumber } from '@/lib/valuationUtils';
 import type { ConsolidatedYear } from '@/lib/financial-consolidator';
 import type { AnalysisTemplateType } from '@/types/valuation';
@@ -19,6 +28,9 @@ interface ValuationDashboardProps {
   templateType: AnalysisTemplateType;
   ticker: string;
   companyName: string;
+  workspaceId?: string;
+  userId?: string;
+  initialNotes?: string;
 }
 
 // Map template types to KPI templates
@@ -36,11 +48,17 @@ export function ValuationDashboard({
   templateType,
   ticker,
   companyName,
+  workspaceId,
+  userId,
+  initialNotes,
 }: ValuationDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [marketCap, setMarketCap] = useState<number | null>(null);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [sharesOutstanding, setSharesOutstanding] = useState<number | null>(null);
+  const [wacc, setWacc] = useState(8);
+  const [terminalGrowth, setTerminalGrowth] = useState(2);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   // Get latest year for quick stats
   const latestYear = useMemo(() => {
@@ -59,6 +77,10 @@ export function ValuationDashboard({
 
   const kpiTemplate = TEMPLATE_MAP[templateType] || 'dcf';
 
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
   if (years.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -70,9 +92,9 @@ export function ValuationDashboard({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
+    <div className="space-y-6 print:space-y-4">
+      {/* Header with Actions */}
+      <div className="flex items-start justify-between print:hidden">
         <div>
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-semibold">{ticker}</h2>
@@ -83,70 +105,108 @@ export function ValuationDashboard({
           </p>
         </div>
 
-        {/* Quick Market Inputs */}
-        <Card className="w-auto">
-          <CardContent className="flex items-center gap-4 py-3">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="price" className="text-xs whitespace-nowrap">Price $</Label>
-              <Input
-                id="price"
-                type="number"
-                placeholder="65.15"
-                value={currentPrice ?? ''}
-                onChange={(e) => setCurrentPrice(e.target.value ? parseFloat(e.target.value) : null)}
-                className="w-20 h-8 text-sm"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="shares" className="text-xs whitespace-nowrap">Shares (M)</Label>
-              <Input
-                id="shares"
-                type="number"
-                placeholder="1000"
-                value={sharesOutstanding ?? ''}
-                onChange={(e) => setSharesOutstanding(e.target.value ? parseFloat(e.target.value) : null)}
-                className="w-20 h-8 text-sm"
-              />
-            </div>
-            {calculatedMarketCap && (
-              <div className="pl-2 border-l">
-                <p className="text-xs text-muted-foreground">Market Cap</p>
-                <p className="text-sm font-medium">{formatLargeNumber(calculatedMarketCap * 1e6)}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handlePrint}>
+            <Printer className="h-4 w-4 mr-2" />
+            PDF Report
+          </Button>
+          {workspaceId && userId && (
+            <Button size="sm" onClick={() => setExportModalOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Export to Public
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* Quick Stats */}
+      {/* Print Header */}
+      <div className="hidden print:block print:mb-6">
+        <div className="flex items-center justify-between border-b border-border pb-4">
+          <div>
+            <h1 className="text-3xl font-bold">{ticker}</h1>
+            <p className="text-lg text-muted-foreground">{companyName}</p>
+          </div>
+          <div className="text-right text-sm text-muted-foreground">
+            <p>{templateType.toUpperCase()} Analysis</p>
+            <p>{new Date().toLocaleDateString()}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Market Inputs */}
+      <Card className="print:hidden">
+        <CardContent className="flex flex-wrap items-center gap-4 py-3">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="price" className="text-xs whitespace-nowrap">Price $</Label>
+            <Input
+              id="price"
+              type="number"
+              placeholder="65.15"
+              value={currentPrice ?? ''}
+              onChange={(e) => setCurrentPrice(e.target.value ? parseFloat(e.target.value) : null)}
+              className="w-20 h-8 text-sm"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="shares" className="text-xs whitespace-nowrap">Shares (M)</Label>
+            <Input
+              id="shares"
+              type="number"
+              placeholder="1000"
+              value={sharesOutstanding ?? ''}
+              onChange={(e) => setSharesOutstanding(e.target.value ? parseFloat(e.target.value) : null)}
+              className="w-20 h-8 text-sm"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="wacc-input" className="text-xs whitespace-nowrap">WACC %</Label>
+            <Input
+              id="wacc-input"
+              type="number"
+              step="0.5"
+              value={wacc}
+              onChange={(e) => setWacc(parseFloat(e.target.value) || 8)}
+              className="w-16 h-8 text-sm"
+            />
+          </div>
+          {calculatedMarketCap && (
+            <div className="pl-2 border-l">
+              <p className="text-xs text-muted-foreground">Market Cap</p>
+              <p className="text-sm font-medium">{formatLargeNumber(calculatedMarketCap * 1e6)}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Quick Stats - Bento Grid */}
       {latestYear && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card>
-            <CardContent className="pt-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 print:grid-cols-5">
+          <Card className="bento-card">
+            <CardContent className="pt-4 pb-3">
               <p className="text-xs text-muted-foreground">Revenue ({latestYear.year})</p>
               <p className="text-lg font-semibold font-mono">{formatLargeNumber(latestYear.revenue)}</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-4">
+          <Card className="bento-card">
+            <CardContent className="pt-4 pb-3">
               <p className="text-xs text-muted-foreground">Net Income</p>
               <p className="text-lg font-semibold font-mono">{formatLargeNumber(latestYear.net_income)}</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-4">
+          <Card className="bento-card">
+            <CardContent className="pt-4 pb-3">
               <p className="text-xs text-muted-foreground">Free Cash Flow</p>
               <p className="text-lg font-semibold font-mono">{formatLargeNumber(latestYear.free_cash_flow)}</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-4">
+          <Card className="bento-card">
+            <CardContent className="pt-4 pb-3">
               <p className="text-xs text-muted-foreground">Total Debt</p>
               <p className="text-lg font-semibold font-mono">{formatLargeNumber(latestYear.total_debt)}</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-4">
+          <Card className="bento-card">
+            <CardContent className="pt-4 pb-3">
               <p className="text-xs text-muted-foreground">Cash</p>
               <p className="text-lg font-semibold font-mono">{formatLargeNumber(latestYear.cash)}</p>
             </CardContent>
@@ -154,9 +214,21 @@ export function ValuationDashboard({
         </div>
       )}
 
+      {/* Advanced Charts - Bento Grid 2x2 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:grid-cols-2">
+        <GrowthMarginsChart years={years} />
+        <CapitalEfficiencyChart years={years} wacc={wacc} />
+        <CapitalAllocationChart years={years} />
+        <ValuationContextChart 
+          years={years} 
+          currentPrice={currentPrice ?? undefined} 
+          sharesOutstanding={sharesOutstanding ?? undefined}
+        />
+      </div>
+
       {/* Main Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full justify-start bg-muted/50 p-1">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full print:hidden">
+        <TabsList className="w-full justify-start bg-muted/50 p-1 flex-wrap">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
             KPIs
@@ -173,6 +245,12 @@ export function ValuationDashboard({
             <Grid3X3 className="h-4 w-4" />
             Sensitivity
           </TabsTrigger>
+          {workspaceId && (
+            <TabsTrigger value="notes" className="flex items-center gap-2">
+              <Pencil className="h-4 w-4" />
+              Notes
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">
@@ -202,7 +280,37 @@ export function ValuationDashboard({
             currentPrice={currentPrice ?? undefined}
           />
         </TabsContent>
+
+        {workspaceId && (
+          <TabsContent value="notes" className="mt-6">
+            <AnalystNotebook workspaceId={workspaceId} initialNotes={initialNotes} />
+          </TabsContent>
+        )}
       </Tabs>
+
+      {/* Print-only sections */}
+      <div className="hidden print:block print:mt-8">
+        <h2 className="text-xl font-semibold mb-4">Key Performance Indicators</h2>
+        <TemplateKPIPanel
+          template={kpiTemplate}
+          years={years}
+          marketCap={calculatedMarketCap ? calculatedMarketCap * 1e6 : undefined}
+        />
+      </div>
+
+      {/* Export Modal */}
+      {workspaceId && userId && (
+        <ExportThesisModal
+          open={exportModalOpen}
+          onOpenChange={setExportModalOpen}
+          workspaceId={workspaceId}
+          ticker={ticker}
+          companyName={companyName}
+          years={years}
+          analystNotes={initialNotes}
+          userId={userId}
+        />
+      )}
     </div>
   );
 }
