@@ -3,6 +3,7 @@ import { TrendingUp, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { LanguageToggle } from '@/components/thesis/LanguageToggle';
 
 const navLinks = [
   { href: '/', label: 'Thesis' },
@@ -43,6 +44,7 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+          <LanguageToggle />
         </nav>
 
         {/* Mobile Menu Button */}
