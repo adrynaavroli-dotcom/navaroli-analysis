@@ -350,6 +350,18 @@ export default function ValuationEngine() {
                   workspaceId={selectedWorkspace.id}
                   userId={user?.id}
                   initialNotes={(selectedWorkspace as unknown as { analyst_notes?: string }).analyst_notes}
+                  onDataUpdated={() => {
+                    fetchWorkspaces();
+                    // Refresh the selected workspace
+                    supabase
+                      .from('analysis_workspaces')
+                      .select('*')
+                      .eq('id', selectedWorkspace.id)
+                      .single()
+                      .then(({ data }) => {
+                        if (data) setSelectedWorkspace(data as AnalysisWorkspace);
+                      });
+                  }}
                 />
               </DialogContent>
             </Dialog>
