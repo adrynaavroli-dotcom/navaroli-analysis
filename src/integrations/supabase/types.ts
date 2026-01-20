@@ -187,7 +187,7 @@ export type Database = {
           {
             foreignKeyName: "public_thesis_data_workspace_id_fkey"
             columns: ["workspace_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "analysis_workspaces"
             referencedColumns: ["id"]
           },
