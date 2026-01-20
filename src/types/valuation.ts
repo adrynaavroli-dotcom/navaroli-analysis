@@ -43,3 +43,19 @@ export const STANDARD_VARIABLES = [
 ] as const;
 
 export type StandardVariableKey = typeof STANDARD_VARIABLES[number]['key'];
+
+// Enhanced parsed data with normalized financials
+export interface NormalizedFinancialData {
+  years: string[];
+  metrics: Array<{
+    metric: StandardVariableKey;
+    originalLabel: string;
+    values: Record<string, number | null>;
+    autoMapped: boolean;
+  }>;
+  unmappedRows: Array<{
+    originalLabel: string;
+    values: Record<string, unknown>;
+  }>;
+  orientation: 'years-in-columns' | 'years-in-rows' | 'unknown';
+}

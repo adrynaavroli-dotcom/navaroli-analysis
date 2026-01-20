@@ -24,7 +24,8 @@ import {
 import { ValuationNav } from '@/components/valuation/ValuationNav';
 import { FileDropzone } from '@/components/valuation/FileDropzone';
 import { DataMappingPanel } from '@/components/valuation/DataMappingPanel';
-import type { AnalysisTemplateType, AnalysisWorkspace, ParsedFileData } from '@/types/valuation';
+import type { AnalysisTemplateType, AnalysisWorkspace, ParsedFileData, NormalizedFinancialData } from '@/types/valuation';
+import type { ParsedFinancialData } from '@/lib/financial-parser';
 
 const TEMPLATE_OPTIONS: { value: AnalysisTemplateType; label: string }[] = [
   { value: 'dcf', label: 'DCF Model' },
@@ -51,7 +52,9 @@ export default function ValuationEngine() {
 
   // File upload state
   const [parsedData, setParsedData] = useState<ParsedFileData | null>(null);
+  const [normalizedData, setNormalizedData] = useState<ParsedFinancialData | null>(null);
   const [columnMappings, setColumnMappings] = useState<Record<string, string>>({});
+  const [manualValues, setManualValues] = useState<Record<string, Record<string, number | null>>>({});
   const [showMapping, setShowMapping] = useState(false);
 
   const fetchWorkspaces = useCallback(async () => {
@@ -82,38 +85,50 @@ export default function ValuationEngine() {
 
   const handleClearFile = useCallback(() => {
     setParsedData(null);
+    setNormalizedData(null);
     setColumnMappings({});
+    setManualValues({});
     setShowMapping(false);
   }, []);
 
-  const handleMappingChange = useCallback((column: string, variable: string | null) => {
-    setColumnMappings(prev => {
-      const next = { ...prev };
-      if (variable === null) {
-        delete next[column];
-      } else {
-        next[column] = variable;
-      }
-      return next;
-    });
-  }, []);
-
-  const handleConfirmMapping = useCallback(() => {
+  const handleConfirmMapping = useCallback((data: {
+    normalizedData: ParsedFinancialData;
+    manualMappings: Record<string, string>;
+    manualValues: Record<string, Record<string, number | null>>;
+  }) => {
+    setNormalizedData(data.normalizedData);
+    setColumnMappings(data.manualMappings);
+    setManualValues(data.manualValues);
     setShowMapping(false);
-    toast({ title: 'Mapping saved', description: 'Column mappings have been configured.' });
+    toast({ title: 'Mapping saved', description: 'Financial data has been normalized and configured.' });
   }, [toast]);
 
   const handleCreateWorkspace = async () => {
     if (!user || !ticker || !companyName) return;
 
     setSaving(true);
+    
+    // Build the raw_data with both original and normalized data
+    const rawData: Record<string, unknown> = {};
+    if (parsedData) {
+      rawData.original = { headers: parsedData.headers, rows: parsedData.rows };
+    }
+    if (normalizedData) {
+      rawData.normalized = {
+        years: normalizedData.years,
+        metrics: normalizedData.metrics,
+        orientation: normalizedData.orientation,
+      };
+      rawData.manualValues = manualValues;
+    }
+    
     const insertData = {
       user_id: user.id,
       ticker: ticker.toUpperCase(),
       company_name: companyName,
       industry: industry || null,
       template_type: templateType,
-      raw_data: parsedData ? { headers: parsedData.headers, rows: parsedData.rows } : {},
+      raw_data: rawData,
       column_mappings: columnMappings,
     };
     const { error } = await supabase.from('analysis_workspaces').insert(insertData as never);
@@ -135,7 +150,9 @@ export default function ValuationEngine() {
     setIndustry('');
     setTemplateType('dcf');
     setParsedData(null);
+    setNormalizedData(null);
     setColumnMappings({});
+    setManualValues({});
     setShowMapping(false);
   };
 
@@ -238,8 +255,6 @@ export default function ValuationEngine() {
                   {showMapping && parsedData && (
                     <DataMappingPanel
                       parsedData={parsedData}
-                      mappings={columnMappings}
-                      onMappingChange={handleMappingChange}
                       onConfirm={handleConfirmMapping}
                       onCancel={handleClearFile}
                     />
