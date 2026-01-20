@@ -10,6 +10,7 @@ import Admin from "./pages/Admin";
 import ThesisDetail from "./pages/ThesisDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import ValuationEngine from "./pages/ValuationEngine";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/thesis/:id" element={<ThesisDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/valuation-engine" element={<ValuationEngine />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
