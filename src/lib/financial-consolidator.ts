@@ -5,7 +5,7 @@
  */
 
 import type { StandardVariableKey } from '@/types/valuation';
-import { normalizeMetricName, extractYearsFromHeaders, detectMetricColumn, isTickerMetadata } from './financial-parser';
+import { normalizeMetricName, extractYearsFromHeaders, createHeaderToYearMap, detectMetricColumn, isTickerMetadata } from './financial-parser';
 
 export type StatementType = 'income_statement' | 'balance_sheet' | 'cash_flow' | 'unknown';
 
@@ -169,6 +169,7 @@ export function processFile(
   fileName: string
 ): ProcessedFile {
   const years = extractYearsFromHeaders(headers);
+  const headerToYearMap = createHeaderToYearMap(headers);
   const metricColumn = detectMetricColumn(headers, rows);
   
   const metrics = new Map<StandardVariableKey, Record<string, number | null>>();
@@ -184,18 +185,20 @@ export function processFile(
       metricLabels.push(originalLabel);
       
       const values: Record<string, number | null> = {};
-      for (const year of years) {
-        const rawValue = row[year];
+      
+      // Use header-to-year map to properly extract values
+      for (const [originalHeader, normalizedYear] of headerToYearMap) {
+        const rawValue = row[originalHeader];
         if (rawValue === null || rawValue === undefined || rawValue === '') {
-          values[year] = null;
+          values[normalizedYear] = null;
         } else if (typeof rawValue === 'number') {
-          values[year] = rawValue;
+          values[normalizedYear] = rawValue;
         } else {
-          const cleaned = String(rawValue).replace(/[,$()]/g, '').trim();
-          // Handle negative numbers in parentheses
-          const isNegative = String(rawValue).includes('(') && String(rawValue).includes(')');
+          const strValue = String(rawValue);
+          const isNegative = strValue.includes('(') && strValue.includes(')');
+          const cleaned = strValue.replace(/[,$()]/g, '').trim();
           const parsed = parseFloat(cleaned);
-          values[year] = isNaN(parsed) ? null : (isNegative ? -Math.abs(parsed) : parsed);
+          values[normalizedYear] = isNaN(parsed) ? null : (isNegative ? -Math.abs(parsed) : parsed);
         }
       }
       
