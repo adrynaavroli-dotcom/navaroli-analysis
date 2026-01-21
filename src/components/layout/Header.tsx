@@ -7,6 +7,8 @@ import { LanguageToggle } from '@/components/thesis/LanguageToggle';
 
 const navLinks = [
   { href: '/', label: 'Thesis' },
+  { href: '/research', label: 'Research' },
+  { href: '/valuation-engine', label: 'Valuation' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ];

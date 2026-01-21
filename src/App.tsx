@@ -12,6 +12,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import ValuationEngine from "./pages/ValuationEngine";
 import PublicThesis from "./pages/PublicThesis";
+import PublicThesesList from "./pages/PublicThesesList";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/thesis/:id" element={<ThesisDetail />} />
+            <Route path="/research" element={<PublicThesesList />} />
             <Route path="/public-thesis/:ticker" element={<PublicThesis />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
