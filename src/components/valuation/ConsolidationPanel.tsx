@@ -6,14 +6,17 @@ import { MultiFileDropzone } from './MultiFileDropzone';
 import { ProcessingStatus } from './ProcessingStatus';
 import { HistoricalDataTable } from './HistoricalDataTable';
 import { JsonDataInput } from './JsonDataInput';
+import { DataFormatHelp } from './DataFormatHelp';
 import { consolidateFiles, type ProcessedFile, type ConsolidationResult, type ConsolidatedYear } from '@/lib/financial-consolidator';
+import type { AnalysisTemplateType } from '@/types/valuation';
 
 interface ConsolidationPanelProps {
   onConfirm: (result: ConsolidationResult) => void;
   onCancel: () => void;
+  templateType?: AnalysisTemplateType;
 }
 
-export function ConsolidationPanel({ onConfirm, onCancel }: ConsolidationPanelProps) {
+export function ConsolidationPanel({ onConfirm, onCancel, templateType = 'dcf' }: ConsolidationPanelProps) {
   const [processedFiles, setProcessedFiles] = useState<ProcessedFile[]>([]);
   const [consolidationResult, setConsolidationResult] = useState<ConsolidationResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -94,6 +97,7 @@ export function ConsolidationPanel({ onConfirm, onCancel }: ConsolidationPanelPr
             <div className="flex items-center gap-2">
               <Layers className="h-5 w-5 text-primary" />
               <h3 className="font-semibold">Financial Data Consolidation</h3>
+              <DataFormatHelp templateType={templateType} />
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               Upload Income Statement, Balance Sheet, and Cash Flow files

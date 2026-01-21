@@ -61,14 +61,33 @@ export default function PublicThesis() {
   const { data: thesis, isLoading, error } = useQuery({
     queryKey: ['public-thesis', ticker],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First try exact match, then case-insensitive
+      const upperTicker = ticker?.toUpperCase() || '';
+      
+      let { data, error: exactError } = await supabase
         .from('public_thesis_data')
         .select('*')
-        .ilike('ticker', ticker || '')
+        .eq('ticker', upperTicker)
         .not('published_at', 'is', null)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      // If no exact match, try case-insensitive
+      if (!data && !exactError) {
+        const { data: ilikeData, error: ilikeError } = await supabase
+          .from('public_thesis_data')
+          .select('*')
+          .ilike('ticker', ticker || '')
+          .not('published_at', 'is', null)
+          .maybeSingle();
+        
+        if (ilikeError) throw ilikeError;
+        data = ilikeData;
+      }
+      
+      if (!data) {
+        throw new Error('Thesis not found');
+      }
+      
       return data as unknown as PublicThesisData;
     },
     enabled: !!ticker,

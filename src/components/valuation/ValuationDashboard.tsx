@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { BarChart3, Calculator, Grid3X3, TrendingUp, FileText, Printer, Upload, Pencil, RefreshCw, Database } from 'lucide-react';
+import { BarChart3, Calculator, Grid3X3, TrendingUp, FileText, Printer, Upload, Pencil, RefreshCw, Database, Download, HelpCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,8 @@ import { TemplateKPIPanel } from './TemplateKPIPanel';
 import { AnalystNotebook } from './AnalystNotebook';
 import { ExportThesisModal } from './ExportThesisModal';
 import { UpdateDataModal } from './UpdateDataModal';
+import { AutoFetchPanel } from './AutoFetchPanel';
+import { DataFormatHelp } from './DataFormatHelp';
 import { 
   GrowthMarginsChart, 
   CapitalEfficiencyChart, 
@@ -64,6 +66,7 @@ export function ValuationDashboard({
   const [terminalGrowth, setTerminalGrowth] = useState(2);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [updateDataModalOpen, setUpdateDataModalOpen] = useState(false);
+  const [autoFetchOpen, setAutoFetchOpen] = useState(false);
 
   // Get latest year for quick stats
   const latestYear = useMemo(() => {
@@ -166,6 +169,11 @@ export function ValuationDashboard({
         </div>
 
         <div className="flex items-center gap-2">
+          <DataFormatHelp templateType={templateType} />
+          <Button variant="outline" size="sm" onClick={() => setAutoFetchOpen(true)}>
+            <Download className="h-4 w-4 mr-2" />
+            Auto-Fetch
+          </Button>
           {workspaceId && (
             <Button variant="outline" size="sm" onClick={() => setUpdateDataModalOpen(true)}>
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -389,6 +397,18 @@ export function ValuationDashboard({
           onDataUpdated={handleDataUpdated}
         />
       )}
+
+      {/* Auto-Fetch Panel */}
+      <AutoFetchPanel
+        open={autoFetchOpen}
+        onOpenChange={setAutoFetchOpen}
+        ticker={ticker}
+        onDataFetched={(data) => {
+          // Handle fetched data - could merge with existing
+          console.log('Fetched data:', data);
+          setAutoFetchOpen(false);
+        }}
+      />
     </div>
   );
 }
