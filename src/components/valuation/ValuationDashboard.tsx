@@ -18,6 +18,7 @@ import { UpdateDataModal } from './UpdateDataModal';
 import { AutoFetchPanel } from './AutoFetchPanel';
 import { DataFormatHelp } from './DataFormatHelp';
 import { ExportImportPanel } from './ExportImportPanel';
+import { PDFReportModal, getDefaultPDFConfig, type PDFReportConfig } from './PDFReportModal';
 import {
   GrowthMarginsChart, 
   CapitalEfficiencyChart, 
@@ -70,6 +71,8 @@ export function ValuationDashboard({
   const [updateDataModalOpen, setUpdateDataModalOpen] = useState(false);
   const [autoFetchOpen, setAutoFetchOpen] = useState(false);
   const [exportImportOpen, setExportImportOpen] = useState(false);
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [pdfConfig, setPdfConfig] = useState<PDFReportConfig>(getDefaultPDFConfig);
 
   // Get latest year for quick stats
   const latestYear = useMemo(() => {
@@ -187,7 +190,7 @@ export function ValuationDashboard({
               Update Data
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={handlePrint}>
+          <Button variant="outline" size="sm" onClick={() => setPdfModalOpen(true)}>
             <Printer className="h-4 w-4 mr-2" />
             PDF Report
           </Button>
@@ -297,14 +300,22 @@ export function ValuationDashboard({
 
       {/* Advanced Charts - Bento Grid 2x2 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:grid-cols-2">
-        <GrowthMarginsChart years={years} />
-        <CapitalEfficiencyChart years={years} wacc={wacc} />
-        <CapitalAllocationChart years={years} />
-        <ValuationContextChart 
-          years={years} 
-          currentPrice={currentPrice ?? undefined} 
-          sharesOutstanding={sharesOutstanding ?? undefined}
-        />
+        <div className={pdfConfig.growthMarginsChart ? '' : 'print:hidden'}>
+          <GrowthMarginsChart years={years} />
+        </div>
+        <div className={pdfConfig.capitalEfficiencyChart ? '' : 'print:hidden'}>
+          <CapitalEfficiencyChart years={years} wacc={wacc} />
+        </div>
+        <div className={pdfConfig.capitalAllocationChart ? '' : 'print:hidden'}>
+          <CapitalAllocationChart years={years} />
+        </div>
+        <div className={pdfConfig.valuationContextChart ? '' : 'print:hidden'}>
+          <ValuationContextChart 
+            years={years} 
+            currentPrice={currentPrice ?? undefined} 
+            sharesOutstanding={sharesOutstanding ?? undefined}
+          />
+        </div>
       </div>
 
       {/* Main Tabs */}
@@ -381,14 +392,67 @@ export function ValuationDashboard({
         )}
       </Tabs>
 
-      {/* Print-only sections */}
-      <div className="hidden print:block print:mt-8">
-        <h2 className="text-xl font-semibold mb-4">Key Performance Indicators</h2>
-        <TemplateKPIPanel
-          template={kpiTemplate}
-          years={years}
-          marketCap={calculatedMarketCap ? calculatedMarketCap * 1e6 : undefined}
-        />
+      {/* Print-only sections - rendered based on PDF config */}
+      <div className="hidden print:block print:space-y-8">
+        {pdfConfig.kpiPanel && (
+          <div className="print:break-inside-avoid">
+            <h2 className="text-xl font-semibold mb-4 border-b pb-2">Key Performance Indicators</h2>
+            <TemplateKPIPanel
+              template={kpiTemplate}
+              years={years}
+              marketCap={calculatedMarketCap ? calculatedMarketCap * 1e6 : undefined}
+            />
+          </div>
+        )}
+
+        {pdfConfig.historicalTable && (
+          <div className="print:break-before-page">
+            <h2 className="text-xl font-semibold mb-4 border-b pb-2">Historical Financial Data</h2>
+            <HistoricalDataTable years={years} calculatedMetrics={calculatedMetrics} />
+          </div>
+        )}
+
+        {pdfConfig.dcfModel && (
+          <div className="print:break-before-page">
+            <h2 className="text-xl font-semibold mb-4 border-b pb-2">DCF Valuation Model</h2>
+            <DCFModelPanel
+              years={years}
+              currentPrice={currentPrice ?? undefined}
+              sharesOutstanding={sharesOutstanding ?? undefined}
+            />
+          </div>
+        )}
+
+        {pdfConfig.lboModel && (
+          <div className="print:break-before-page">
+            <h2 className="text-xl font-semibold mb-4 border-b pb-2">LBO Model</h2>
+            <LBOModelPanel
+              years={years}
+              currentPrice={currentPrice ?? undefined}
+              sharesOutstanding={sharesOutstanding ?? undefined}
+            />
+          </div>
+        )}
+
+        {pdfConfig.sensitivityMatrix && (
+          <div className="print:break-before-page">
+            <h2 className="text-xl font-semibold mb-4 border-b pb-2">Sensitivity Analysis</h2>
+            <SensitivityHeatmap
+              years={years}
+              sharesOutstanding={sharesOutstanding ?? undefined}
+              currentPrice={currentPrice ?? undefined}
+            />
+          </div>
+        )}
+
+        {pdfConfig.analystNotes && initialNotes && (
+          <div className="print:break-before-page">
+            <h2 className="text-xl font-semibold mb-4 border-b pb-2">Analyst Notes</h2>
+            <div className="prose prose-sm max-w-none">
+              <div className="whitespace-pre-wrap text-sm">{initialNotes}</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Export Modal */}
@@ -444,6 +508,16 @@ export function ValuationDashboard({
           wacc,
           terminalGrowth,
         }}
+      />
+
+      {/* PDF Report Configuration Modal */}
+      <PDFReportModal
+        open={pdfModalOpen}
+        onOpenChange={setPdfModalOpen}
+        config={pdfConfig}
+        onConfigChange={setPdfConfig}
+        onPrint={handlePrint}
+        hasNotes={!!initialNotes}
       />
     </div>
   );
