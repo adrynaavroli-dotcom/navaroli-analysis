@@ -43,10 +43,13 @@ export default function ValuationEngine() {
   const {
     isOnline,
     hasCachedData,
+    pendingCount,
+    isSyncing,
     getCachedWorkspaces,
     cacheWorkspaces,
     cacheWorkspace,
     getCacheAge,
+    syncPendingChanges,
   } = useValuationCache();
 
   const [workspaces, setWorkspaces] = useState<AnalysisWorkspace[]>([]);
@@ -231,7 +234,10 @@ export default function ValuationEngine() {
                   isOnline={isOnline}
                   hasCachedData={hasCachedData}
                   cacheAge={getCacheAge()}
+                  pendingCount={pendingCount}
+                  isSyncing={isSyncing}
                   onRefresh={handleRefresh}
+                  onSync={syncPendingChanges}
                   isRefreshing={isRefreshing}
                 />
               </div>

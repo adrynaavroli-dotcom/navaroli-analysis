@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import type { AnalysisWorkspace } from '@/types/valuation';
 import type { ConsolidatedYear } from '@/lib/financial-consolidator';
 
 const CACHE_KEY = 'valuation_workspaces_cache';
 const CACHE_TIMESTAMP_KEY = 'valuation_cache_timestamp';
+const PENDING_CHANGES_KEY = 'valuation_pending_changes';
 const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface CachedWorkspace extends AnalysisWorkspace {
@@ -15,9 +17,20 @@ interface ValuationCache {
   lastSync: string;
 }
 
+export interface PendingChange {
+  id: string;
+  workspaceId: string;
+  type: 'create' | 'update' | 'delete';
+  data?: Partial<AnalysisWorkspace>;
+  timestamp: string;
+  retryCount: number;
+}
+
 export function useValuationCache() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [hasCachedData, setHasCachedData] = useState(false);
+  const [pendingChanges, setPendingChanges] = useState<PendingChange[]>([]);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Track online status
   useEffect(() => {
@@ -33,11 +46,100 @@ export function useValuationCache() {
     };
   }, []);
 
-  // Check if cache exists on mount
+  // Check if cache exists on mount and load pending changes
   useEffect(() => {
     const cached = localStorage.getItem(CACHE_KEY);
     setHasCachedData(!!cached);
+
+    const pending = localStorage.getItem(PENDING_CHANGES_KEY);
+    if (pending) {
+      try {
+        setPendingChanges(JSON.parse(pending));
+      } catch {
+        setPendingChanges([]);
+      }
+    }
   }, []);
+
+  // Auto-sync when coming back online
+  useEffect(() => {
+    if (isOnline && pendingChanges.length > 0) {
+      syncPendingChanges();
+    }
+  }, [isOnline]);
+
+  const savePendingChanges = useCallback((changes: PendingChange[]) => {
+    localStorage.setItem(PENDING_CHANGES_KEY, JSON.stringify(changes));
+    setPendingChanges(changes);
+  }, []);
+
+  const addPendingChange = useCallback((change: Omit<PendingChange, 'id' | 'timestamp' | 'retryCount'>) => {
+    const newChange: PendingChange = {
+      ...change,
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      retryCount: 0,
+    };
+
+    const existingChanges = [...pendingChanges];
+    
+    // If it's an update, replace any existing pending update for the same workspace
+    if (change.type === 'update') {
+      const existingIndex = existingChanges.findIndex(
+        c => c.workspaceId === change.workspaceId && c.type === 'update'
+      );
+      if (existingIndex >= 0) {
+        existingChanges[existingIndex] = newChange;
+        savePendingChanges(existingChanges);
+        return;
+      }
+    }
+
+    savePendingChanges([...existingChanges, newChange]);
+  }, [pendingChanges, savePendingChanges]);
+
+  const removePendingChange = useCallback((changeId: string) => {
+    const updated = pendingChanges.filter(c => c.id !== changeId);
+    savePendingChanges(updated);
+  }, [pendingChanges, savePendingChanges]);
+
+  const syncPendingChanges = useCallback(async () => {
+    if (pendingChanges.length === 0 || isSyncing || !isOnline) return;
+
+    setIsSyncing(true);
+    const failedChanges: PendingChange[] = [];
+
+    for (const change of pendingChanges) {
+      try {
+        if (change.type === 'update' && change.data) {
+          const { error } = await supabase
+            .from('analysis_workspaces')
+            .update(change.data as never)
+            .eq('id', change.workspaceId);
+
+          if (error) throw error;
+        } else if (change.type === 'delete') {
+          const { error } = await supabase
+            .from('analysis_workspaces')
+            .delete()
+            .eq('id', change.workspaceId);
+
+          if (error) throw error;
+        }
+        // Note: 'create' type is handled directly in the component
+      } catch (error) {
+        console.error('Sync failed for change:', change.id, error);
+        if (change.retryCount < 3) {
+          failedChanges.push({ ...change, retryCount: change.retryCount + 1 });
+        }
+      }
+    }
+
+    savePendingChanges(failedChanges);
+    setIsSyncing(false);
+
+    return failedChanges.length === 0;
+  }, [pendingChanges, isSyncing, isOnline, savePendingChanges]);
 
   const getCachedWorkspaces = useCallback((): AnalysisWorkspace[] => {
     try {
@@ -118,6 +220,11 @@ export function useValuationCache() {
     setHasCachedData(false);
   }, []);
 
+  const clearPendingChanges = useCallback(() => {
+    localStorage.removeItem(PENDING_CHANGES_KEY);
+    setPendingChanges([]);
+  }, []);
+
   const getCacheTimestamp = useCallback((): Date | null => {
     const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
     return timestamp ? new Date(timestamp) : null;
@@ -140,14 +247,21 @@ export function useValuationCache() {
   return {
     isOnline,
     hasCachedData,
+    pendingChanges,
+    pendingCount: pendingChanges.length,
+    isSyncing,
     getCachedWorkspaces,
     cacheWorkspaces,
     cacheWorkspace,
     getCachedWorkspace,
     removeCachedWorkspace,
     clearCache,
+    clearPendingChanges,
     getCacheTimestamp,
     getCacheAge,
+    addPendingChange,
+    removePendingChange,
+    syncPendingChanges,
   };
 }
 
