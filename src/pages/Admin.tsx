@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogOut, Pencil, Trash2, Eye, EyeOff, Loader2, FileText, TrendingUp } from 'lucide-react';
+import { Plus, LogOut, Pencil, Trash2, Eye, EyeOff, Loader2, FileText, TrendingUp, BarChart3 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Thesis } from '@/types/thesis';
 import { ThesisFormDialog } from '@/components/admin/ThesisFormDialog';
 import { PageContentEditor } from '@/components/admin/PageContentEditor';
+import { PublicThesisManager } from '@/components/admin/PublicThesisManager';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -164,6 +165,10 @@ export default function Admin() {
               <TrendingUp className="h-4 w-4" />
               Tesis
             </TabsTrigger>
+            <TabsTrigger value="research" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Research
+            </TabsTrigger>
             <TabsTrigger value="pages" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Páginas
@@ -293,6 +298,10 @@ export default function Admin() {
                 </div>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="research">
+            <PublicThesisManager />
           </TabsContent>
 
           <TabsContent value="pages">
