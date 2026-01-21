@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +22,9 @@ import {
   PieChart,
   Target,
   LineChart,
+  Zap,
+  FileText,
+  Sparkles,
 } from 'lucide-react';
 
 export interface PDFReportConfig {
@@ -49,6 +51,89 @@ interface PDFReportModalProps {
   hasNotes: boolean;
 }
 
+interface PresetConfig {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  config: PDFReportConfig;
+}
+
+const PRESETS: PresetConfig[] = [
+  {
+    id: 'quick-summary',
+    name: 'Quick Summary',
+    description: 'Charts + KPIs only',
+    icon: <Zap className="h-4 w-4" />,
+    config: {
+      growthMarginsChart: true,
+      capitalEfficiencyChart: true,
+      capitalAllocationChart: false,
+      valuationContextChart: true,
+      kpiPanel: true,
+      historicalTable: false,
+      dcfModel: false,
+      lboModel: false,
+      sensitivityMatrix: false,
+      analystNotes: false,
+    },
+  },
+  {
+    id: 'dcf-focus',
+    name: 'DCF Focus',
+    description: 'Valuation-centric report',
+    icon: <Calculator className="h-4 w-4" />,
+    config: {
+      growthMarginsChart: true,
+      capitalEfficiencyChart: true,
+      capitalAllocationChart: false,
+      valuationContextChart: true,
+      kpiPanel: true,
+      historicalTable: false,
+      dcfModel: true,
+      lboModel: false,
+      sensitivityMatrix: true,
+      analystNotes: true,
+    },
+  },
+  {
+    id: 'lbo-analysis',
+    name: 'LBO Analysis',
+    description: 'Private equity focused',
+    icon: <Building2 className="h-4 w-4" />,
+    config: {
+      growthMarginsChart: true,
+      capitalEfficiencyChart: true,
+      capitalAllocationChart: true,
+      valuationContextChart: false,
+      kpiPanel: true,
+      historicalTable: true,
+      dcfModel: false,
+      lboModel: true,
+      sensitivityMatrix: false,
+      analystNotes: true,
+    },
+  },
+  {
+    id: 'full-report',
+    name: 'Full Report',
+    description: 'Complete analysis',
+    icon: <FileText className="h-4 w-4" />,
+    config: {
+      growthMarginsChart: true,
+      capitalEfficiencyChart: true,
+      capitalAllocationChart: true,
+      valuationContextChart: true,
+      kpiPanel: true,
+      historicalTable: true,
+      dcfModel: true,
+      lboModel: true,
+      sensitivityMatrix: true,
+      analystNotes: true,
+    },
+  },
+];
+
 const DEFAULT_CONFIG: PDFReportConfig = {
   growthMarginsChart: true,
   capitalEfficiencyChart: true,
@@ -66,6 +151,12 @@ export function getDefaultPDFConfig(): PDFReportConfig {
   return { ...DEFAULT_CONFIG };
 }
 
+function configsMatch(a: PDFReportConfig, b: PDFReportConfig): boolean {
+  return Object.keys(a).every(
+    (key) => a[key as keyof PDFReportConfig] === b[key as keyof PDFReportConfig]
+  );
+}
+
 export function PDFReportModal({
   open,
   onOpenChange,
@@ -78,37 +169,21 @@ export function PDFReportModal({
     onConfigChange({ ...config, [key]: !config[key] });
   };
 
-  const selectAll = () => {
-    onConfigChange({
-      growthMarginsChart: true,
-      capitalEfficiencyChart: true,
-      capitalAllocationChart: true,
-      valuationContextChart: true,
-      kpiPanel: true,
-      historicalTable: true,
-      dcfModel: true,
-      lboModel: true,
-      sensitivityMatrix: true,
-      analystNotes: hasNotes,
-    });
-  };
-
-  const selectNone = () => {
-    onConfigChange({
-      growthMarginsChart: false,
-      capitalEfficiencyChart: false,
-      capitalAllocationChart: false,
-      valuationContextChart: false,
-      kpiPanel: false,
-      historicalTable: false,
-      dcfModel: false,
-      lboModel: false,
-      sensitivityMatrix: false,
-      analystNotes: false,
-    });
+  const applyPreset = (preset: PresetConfig) => {
+    const adjustedConfig = { ...preset.config };
+    if (!hasNotes) {
+      adjustedConfig.analystNotes = false;
+    }
+    onConfigChange(adjustedConfig);
   };
 
   const selectedCount = Object.values(config).filter(Boolean).length;
+
+  const activePreset = PRESETS.find((p) => {
+    const adjustedPreset = { ...p.config };
+    if (!hasNotes) adjustedPreset.analystNotes = false;
+    return configsMatch(config, adjustedPreset);
+  });
 
   const handlePrint = () => {
     onPrint();
@@ -117,28 +192,55 @@ export function PDFReportModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Printer className="h-5 w-5" />
             Configure PDF Report
           </DialogTitle>
           <DialogDescription>
-            Select which sections to include in your PDF report
+            Choose a preset or customize sections
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-4 space-y-4">
+          {/* Presets */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm font-medium">Quick Presets</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {PRESETS.map((preset) => (
+                <Button
+                  key={preset.id}
+                  variant={activePreset?.id === preset.id ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-auto py-2 px-3 flex flex-col items-start gap-0.5"
+                  onClick={() => applyPreset(preset)}
+                >
+                  <div className="flex items-center gap-2 font-medium">
+                    {preset.icon}
+                    {preset.name}
+                  </div>
+                  <span className="text-xs opacity-70 font-normal">
+                    {preset.description}
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <Separator />
+
           <div className="flex items-center justify-between">
             <Badge variant="outline">{selectedCount} sections selected</Badge>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={selectAll}>
-                All
-              </Button>
-              <Button variant="ghost" size="sm" onClick={selectNone}>
-                None
-              </Button>
-            </div>
+            {activePreset && (
+              <Badge variant="secondary" className="gap-1">
+                {activePreset.icon}
+                {activePreset.name}
+              </Badge>
+            )}
           </div>
 
           <Separator />
@@ -250,7 +352,6 @@ export function PDFReportModal({
                 <Label htmlFor="lboModel" className="flex items-center gap-2 cursor-pointer">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                   LBO Model
-                  <Badge variant="secondary" className="text-xs">Optional</Badge>
                 </Label>
               </div>
               
