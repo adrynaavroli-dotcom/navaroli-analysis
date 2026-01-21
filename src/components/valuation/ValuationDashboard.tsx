@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { BarChart3, Calculator, Grid3X3, TrendingUp, FileText, Printer, Upload, Pencil, RefreshCw, Database, Download, FileJson } from 'lucide-react';
+import { BarChart3, Calculator, Grid3X3, TrendingUp, FileText, Printer, Upload, Pencil, RefreshCw, Database, Download, FileJson, Building2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HistoricalDataTable } from './HistoricalDataTable';
 import { DCFModelPanel } from './DCFModelPanel';
+import { LBOModelPanel } from './LBOModelPanel';
 import { SensitivityHeatmap } from './SensitivityHeatmap';
 import { TemplateKPIPanel } from './TemplateKPIPanel';
 import { AnalystNotebook } from './AnalystNotebook';
@@ -17,7 +18,7 @@ import { UpdateDataModal } from './UpdateDataModal';
 import { AutoFetchPanel } from './AutoFetchPanel';
 import { DataFormatHelp } from './DataFormatHelp';
 import { ExportImportPanel } from './ExportImportPanel';
-import { 
+import {
   GrowthMarginsChart, 
   CapitalEfficiencyChart, 
   CapitalAllocationChart, 
@@ -321,6 +322,10 @@ export function ValuationDashboard({
             <Calculator className="h-4 w-4" />
             DCF Model
           </TabsTrigger>
+          <TabsTrigger value="lbo" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            LBO Model
+          </TabsTrigger>
           <TabsTrigger value="sensitivity" className="flex items-center gap-2">
             <Grid3X3 className="h-4 w-4" />
             Sensitivity
@@ -347,6 +352,14 @@ export function ValuationDashboard({
 
         <TabsContent value="dcf" className="mt-6">
           <DCFModelPanel
+            years={years}
+            currentPrice={currentPrice ?? undefined}
+            sharesOutstanding={sharesOutstanding ?? undefined}
+          />
+        </TabsContent>
+
+        <TabsContent value="lbo" className="mt-6">
+          <LBOModelPanel
             years={years}
             currentPrice={currentPrice ?? undefined}
             sharesOutstanding={sharesOutstanding ?? undefined}
