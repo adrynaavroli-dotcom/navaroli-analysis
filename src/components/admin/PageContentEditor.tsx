@@ -127,7 +127,19 @@ export function PageContentEditor() {
   const handleUpdatePrices = async () => {
     setIsUpdatingPrices(true);
     try {
-      const { data, error } = await supabase.functions.invoke('update-prices');
+      // Get current session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        toast.error('Debes iniciar sesión para actualizar precios');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('update-prices', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
       
       if (error) throw error;
       
