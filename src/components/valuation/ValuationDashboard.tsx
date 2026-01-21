@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
-import { BarChart3, Calculator, Grid3X3, TrendingUp, FileText, Printer, Upload, Pencil, RefreshCw, Database, Download, HelpCircle } from 'lucide-react';
+import { BarChart3, Calculator, Grid3X3, TrendingUp, FileText, Printer, Upload, Pencil, RefreshCw, Database, Download, FileJson } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ import { ExportThesisModal } from './ExportThesisModal';
 import { UpdateDataModal } from './UpdateDataModal';
 import { AutoFetchPanel } from './AutoFetchPanel';
 import { DataFormatHelp } from './DataFormatHelp';
+import { ExportImportPanel } from './ExportImportPanel';
 import { 
   GrowthMarginsChart, 
   CapitalEfficiencyChart, 
@@ -67,6 +68,7 @@ export function ValuationDashboard({
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [updateDataModalOpen, setUpdateDataModalOpen] = useState(false);
   const [autoFetchOpen, setAutoFetchOpen] = useState(false);
+  const [exportImportOpen, setExportImportOpen] = useState(false);
 
   // Get latest year for quick stats
   const latestYear = useMemo(() => {
@@ -170,6 +172,10 @@ export function ValuationDashboard({
 
         <div className="flex items-center gap-2">
           <DataFormatHelp templateType={templateType} />
+          <Button variant="outline" size="sm" onClick={() => setExportImportOpen(true)}>
+            <FileJson className="h-4 w-4 mr-2" />
+            JSON
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setAutoFetchOpen(true)}>
             <Download className="h-4 w-4 mr-2" />
             Auto-Fetch
@@ -407,6 +413,23 @@ export function ValuationDashboard({
           // Handle fetched data - could merge with existing
           console.log('Fetched data:', data);
           setAutoFetchOpen(false);
+        }}
+      />
+
+      {/* Export/Import Panel */}
+      <ExportImportPanel
+        open={exportImportOpen}
+        onOpenChange={setExportImportOpen}
+        ticker={ticker}
+        companyName={companyName}
+        templateType={templateType}
+        years={years}
+        analystNotes={initialNotes}
+        marketInputs={{
+          currentPrice,
+          sharesOutstanding,
+          wacc,
+          terminalGrowth,
         }}
       />
     </div>
