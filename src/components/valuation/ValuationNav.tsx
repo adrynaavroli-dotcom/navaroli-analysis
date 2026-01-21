@@ -1,13 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
-import { BarChart3, FolderOpen, Settings, LogOut } from 'lucide-react';
+import { FolderOpen, LogOut, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
   { to: '/valuation-engine', label: 'Workspaces', icon: FolderOpen },
-  { to: '/valuation-engine/analysis', label: 'Analysis', icon: BarChart3 },
-  { to: '/valuation-engine/settings', label: 'Settings', icon: Settings },
+  { to: '/', label: 'Back to Home', icon: Home },
 ];
 
 export function ValuationNav() {
