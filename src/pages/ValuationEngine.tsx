@@ -4,6 +4,7 @@ import { Plus, Loader2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useValuationCache } from '@/hooks/useValuationCache';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +25,7 @@ import {
 import { ValuationNav } from '@/components/valuation/ValuationNav';
 import { ConsolidationPanel } from '@/components/valuation/ConsolidationPanel';
 import { ValuationDashboard } from '@/components/valuation/ValuationDashboard';
+import { CacheStatusIndicator } from '@/components/valuation/CacheStatusIndicator';
 import type { AnalysisTemplateType, AnalysisWorkspace } from '@/types/valuation';
 import type { ConsolidationResult, ConsolidatedYear } from '@/lib/financial-consolidator';
 
@@ -38,9 +40,18 @@ const TEMPLATE_OPTIONS: { value: AnalysisTemplateType; label: string }[] = [
 export default function ValuationEngine() {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const {
+    isOnline,
+    hasCachedData,
+    getCachedWorkspaces,
+    cacheWorkspaces,
+    cacheWorkspace,
+    getCacheAge,
+  } = useValuationCache();
 
   const [workspaces, setWorkspaces] = useState<AnalysisWorkspace[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -57,8 +68,23 @@ export default function ValuationEngine() {
   // Selected workspace for viewing
   const [selectedWorkspace, setSelectedWorkspace] = useState<AnalysisWorkspace | null>(null);
 
-  const fetchWorkspaces = useCallback(async () => {
+  const fetchWorkspaces = useCallback(async (showRefreshToast = false) => {
     if (!user) return;
+    
+    // If offline, use cached data
+    if (!navigator.onLine) {
+      const cached = getCachedWorkspaces();
+      if (cached.length > 0) {
+        setWorkspaces(cached);
+        setLoading(false);
+        toast({ 
+          title: 'Modo offline', 
+          description: 'Mostrando datos en caché local.',
+        });
+        return;
+      }
+    }
+
     setLoading(true);
     const { data, error } = await supabase
       .from('analysis_workspaces')
@@ -66,12 +92,35 @@ export default function ValuationEngine() {
       .order('updated_at', { ascending: false });
 
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      // On error, try to use cached data
+      const cached = getCachedWorkspaces();
+      if (cached.length > 0) {
+        setWorkspaces(cached);
+        toast({ 
+          title: 'Error de conexión', 
+          description: 'Mostrando datos en caché.',
+          variant: 'destructive' 
+        });
+      } else {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      }
     } else {
-      setWorkspaces((data || []) as AnalysisWorkspace[]);
+      const fetchedWorkspaces = (data || []) as AnalysisWorkspace[];
+      setWorkspaces(fetchedWorkspaces);
+      // Cache the fetched data
+      cacheWorkspaces(fetchedWorkspaces);
+      if (showRefreshToast) {
+        toast({ title: 'Sincronizado', description: 'Datos actualizados y guardados en caché.' });
+      }
     }
     setLoading(false);
-  }, [user, toast]);
+  }, [user, toast, getCachedWorkspaces, cacheWorkspaces]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchWorkspaces(true);
+    setIsRefreshing(false);
+  }, [fetchWorkspaces]);
 
   useEffect(() => {
     if (user) fetchWorkspaces();
@@ -130,7 +179,16 @@ export default function ValuationEngine() {
       toast({ title: 'Workspace created', description: `${ticker} workspace is ready.` });
       setDialogOpen(false);
       resetForm();
-      fetchWorkspaces();
+      // Fetch and cache the updated workspaces
+      const { data } = await supabase
+        .from('analysis_workspaces')
+        .select('*')
+        .order('updated_at', { ascending: false });
+      if (data) {
+        const newWorkspaces = data as AnalysisWorkspace[];
+        setWorkspaces(newWorkspaces);
+        cacheWorkspaces(newWorkspaces);
+      }
     }
     setSaving(false);
   };
@@ -165,9 +223,18 @@ export default function ValuationEngine() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">Workspaces</h1>
-              <p className="text-sm text-muted-foreground">
-                Manage your analysis workspaces
-              </p>
+              <div className="flex items-center gap-3 mt-1">
+                <p className="text-sm text-muted-foreground">
+                  Manage your analysis workspaces
+                </p>
+                <CacheStatusIndicator
+                  isOnline={isOnline}
+                  hasCachedData={hasCachedData}
+                  cacheAge={getCacheAge()}
+                  onRefresh={handleRefresh}
+                  isRefreshing={isRefreshing}
+                />
+              </div>
             </div>
 
             <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
