@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { Loader2, Search, Download, Key, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { Loader2, Search, Download, Key, AlertCircle, CheckCircle2, RefreshCw, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import type { ConsolidatedYear } from '@/lib/financial-consolidator';
 
@@ -66,6 +71,10 @@ interface ApiKey {
   requestsUsed?: number;
 }
 
+// Storage key constant
+const STORAGE_KEY = 'financial-api-keys';
+const SESSION_FLAG = 'financial-api-session-active';
+
 interface AutoFetchPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -89,18 +98,40 @@ export function AutoFetchPanel({
     data?: ConsolidatedYear[];
   } | null>(null);
   
-  // API Keys management
+  // API Keys management - only load if session is active
   const [apiKeys, setApiKeys] = useState<ApiKey[]>(() => {
     if (typeof window === 'undefined') return [];
-    const stored = localStorage.getItem('financial-api-keys');
+    // Only load keys if this is an active session
+    const sessionActive = sessionStorage.getItem(SESSION_FLAG);
+    if (!sessionActive) {
+      // Clear any stale keys from previous sessions
+      localStorage.removeItem(STORAGE_KEY);
+      return [];
+    }
+    const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? JSON.parse(stored) : [];
   });
   const [newKeyProvider, setNewKeyProvider] = useState<string>('fmp');
   const [newKeyValue, setNewKeyValue] = useState('');
 
+  // Mark session as active and clean up on browser close
+  useEffect(() => {
+    sessionStorage.setItem(SESSION_FLAG, 'true');
+    
+    // Clean up keys when browser/tab closes
+    const handleBeforeUnload = () => {
+      localStorage.removeItem(STORAGE_KEY);
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   const saveApiKeys = useCallback((keys: ApiKey[]) => {
     setApiKeys(keys);
-    localStorage.setItem('financial-api-keys', JSON.stringify(keys));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
   }, []);
 
   const addApiKey = useCallback(() => {
@@ -326,14 +357,24 @@ export function AutoFetchPanel({
           </TabsContent>
 
           <TabsContent value="keys" className="space-y-4 pt-4">
+            <Alert variant="destructive" className="border-amber-500/50 bg-amber-500/10">
+              <ShieldAlert className="h-4 w-4 text-amber-600" />
+              <AlertTitle className="text-amber-700">Security Notice</AlertTitle>
+              <AlertDescription className="text-amber-600 text-sm">
+                API keys are stored temporarily in your browser for this session only. 
+                Keys are automatically deleted when you close the browser. 
+                For enhanced security, use <strong>read-only</strong> or <strong>limited-scope</strong> API keys, 
+                and consider rotating them periodically.
+              </AlertDescription>
+            </Alert>
+
             <div className="p-4 border border-border rounded-lg bg-muted/30">
               <div className="flex gap-2 mb-2">
                 <Key className="h-5 w-5 text-muted-foreground" />
                 <p className="font-medium">API Key Management</p>
               </div>
               <p className="text-sm text-muted-foreground">
-                API keys are stored locally in your browser. They are used to fetch data from financial APIs.
-                Configure multiple keys to balance usage across free tier limits.
+                Configure your API keys to fetch financial data. Keys are stored only for this browser session.
               </p>
             </div>
 
