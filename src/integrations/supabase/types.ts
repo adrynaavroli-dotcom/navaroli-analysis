@@ -88,6 +88,7 @@ export type Database = {
           full_name: string | null
           id: string
           linkedin_url: string | null
+          notification_email: string | null
           title: string | null
           updated_at: string
           user_id: string
@@ -99,6 +100,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           linkedin_url?: string | null
+          notification_email?: string | null
           title?: string | null
           updated_at?: string
           user_id: string
@@ -110,6 +112,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           linkedin_url?: string | null
+          notification_email?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string
@@ -118,6 +121,7 @@ export type Database = {
       }
       public_thesis_data: {
         Row: {
+          alert_type: string | null
           analyst_notes: string | null
           capital_allocation_data: Json | null
           capital_efficiency_data: Json | null
@@ -129,6 +133,10 @@ export type Database = {
           growth_margins_data: Json | null
           id: string
           implied_growth_rate: number | null
+          last_alert_sent_at: string | null
+          last_reviewed_at: string | null
+          needs_review: boolean | null
+          price_at_last_check: number | null
           published_at: string | null
           terminal_growth: number | null
           ticker: string
@@ -140,6 +148,7 @@ export type Database = {
           workspace_id: string | null
         }
         Insert: {
+          alert_type?: string | null
           analyst_notes?: string | null
           capital_allocation_data?: Json | null
           capital_efficiency_data?: Json | null
@@ -151,6 +160,10 @@ export type Database = {
           growth_margins_data?: Json | null
           id?: string
           implied_growth_rate?: number | null
+          last_alert_sent_at?: string | null
+          last_reviewed_at?: string | null
+          needs_review?: boolean | null
+          price_at_last_check?: number | null
           published_at?: string | null
           terminal_growth?: number | null
           ticker: string
@@ -162,6 +175,7 @@ export type Database = {
           workspace_id?: string | null
         }
         Update: {
+          alert_type?: string | null
           analyst_notes?: string | null
           capital_allocation_data?: Json | null
           capital_efficiency_data?: Json | null
@@ -173,6 +187,10 @@ export type Database = {
           growth_margins_data?: Json | null
           id?: string
           implied_growth_rate?: number | null
+          last_alert_sent_at?: string | null
+          last_reviewed_at?: string | null
+          needs_review?: boolean | null
+          price_at_last_check?: number | null
           published_at?: string | null
           terminal_growth?: number | null
           ticker?: string
@@ -267,6 +285,53 @@ export type Database = {
           valuation?: string | null
         }
         Relationships: []
+      }
+      thesis_alerts: {
+        Row: {
+          acknowledged: boolean | null
+          alert_type: string
+          created_at: string | null
+          email_sent: boolean | null
+          id: string
+          message: string
+          thesis_id: string | null
+          ticker: string
+          triggered_at: string | null
+          user_id: string
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          alert_type: string
+          created_at?: string | null
+          email_sent?: boolean | null
+          id?: string
+          message: string
+          thesis_id?: string | null
+          ticker: string
+          triggered_at?: string | null
+          user_id: string
+        }
+        Update: {
+          acknowledged?: boolean | null
+          alert_type?: string
+          created_at?: string | null
+          email_sent?: boolean | null
+          id?: string
+          message?: string
+          thesis_id?: string | null
+          ticker?: string
+          triggered_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thesis_alerts_thesis_id_fkey"
+            columns: ["thesis_id"]
+            isOneToOne: false
+            referencedRelation: "public_thesis_data"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       thesis_purchases: {
         Row: {
