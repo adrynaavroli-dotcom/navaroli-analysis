@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LanguageToggle } from '@/components/thesis/LanguageToggle';
+import { AlertsBadge } from '@/components/alerts/AlertsBadge';
+import { useAuth } from '@/hooks/useAuth';
 
 const navLinks = [
   { href: '/', label: 'Thesis' },
@@ -15,6 +17,7 @@ const navLinks = [
 
 export function Header() {
   const location = useLocation();
+  const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -46,6 +49,7 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+          {user && <AlertsBadge />}
           <LanguageToggle />
         </nav>
 
