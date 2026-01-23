@@ -19,6 +19,7 @@ import { AutoFetchPanel } from './AutoFetchPanel';
 import { DataFormatHelp } from './DataFormatHelp';
 import { ExportImportPanel } from './ExportImportPanel';
 import { PDFReportModal, getDefaultPDFConfig, type PDFReportConfig } from './PDFReportModal';
+import { PDFGenerator } from './PDFGenerator';
 import {
   GrowthMarginsChart, 
   CapitalEfficiencyChart, 
@@ -26,6 +27,7 @@ import {
   ValuationContextChart 
 } from './charts';
 import { formatLargeNumber } from '@/lib/valuationUtils';
+import { useToast } from '@/hooks/use-toast';
 import type { ConsolidatedYear } from '@/lib/financial-consolidator';
 import type { AnalysisTemplateType } from '@/types/valuation';
 
@@ -61,6 +63,7 @@ export function ValuationDashboard({
   initialNotes,
   onDataUpdated,
 }: ValuationDashboardProps) {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
   const [marketCap, setMarketCap] = useState<number | null>(null);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
@@ -73,6 +76,7 @@ export function ValuationDashboard({
   const [exportImportOpen, setExportImportOpen] = useState(false);
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [pdfConfig, setPdfConfig] = useState<PDFReportConfig>(getDefaultPDFConfig);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Get latest year for quick stats
   const latestYear = useMemo(() => {
@@ -102,9 +106,27 @@ export function ValuationDashboard({
 
   const kpiTemplate = TEMPLATE_MAP[templateType] || 'dcf';
 
-  const handlePrint = useCallback(() => {
-    window.print();
+  const handleGeneratePdf = useCallback(() => {
+    setPdfModalOpen(false);
+    setIsGeneratingPdf(true);
   }, []);
+
+  const handlePdfComplete = useCallback(() => {
+    setIsGeneratingPdf(false);
+    toast({
+      title: 'PDF Generated',
+      description: `${ticker} valuation report has been downloaded.`,
+    });
+  }, [ticker, toast]);
+
+  const handlePdfError = useCallback((error: string) => {
+    setIsGeneratingPdf(false);
+    toast({
+      title: 'PDF Generation Failed',
+      description: error,
+      variant: 'destructive',
+    });
+  }, [toast]);
 
   const handleDataUpdated = useCallback(() => {
     onDataUpdated?.();
@@ -520,9 +542,28 @@ export function ValuationDashboard({
         onOpenChange={setPdfModalOpen}
         config={pdfConfig}
         onConfigChange={setPdfConfig}
-        onPrint={handlePrint}
+        onPrint={handleGeneratePdf}
         hasNotes={!!initialNotes}
       />
+
+      {/* PDF Generator Overlay */}
+      {isGeneratingPdf && (
+        <PDFGenerator
+          ticker={ticker}
+          companyName={companyName}
+          templateType={templateType}
+          years={years}
+          config={pdfConfig}
+          currentPrice={currentPrice}
+          sharesOutstanding={sharesOutstanding}
+          wacc={wacc}
+          terminalGrowth={terminalGrowth}
+          analystNotes={initialNotes}
+          marketCap={calculatedMarketCap}
+          onComplete={handlePdfComplete}
+          onError={handlePdfError}
+        />
+      )}
     </div>
   );
 }
