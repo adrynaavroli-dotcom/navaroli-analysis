@@ -123,23 +123,30 @@ export type Database = {
         Row: {
           alert_type: string | null
           analyst_notes: string | null
+          base_fcf: number | null
           capital_allocation_data: Json | null
           capital_efficiency_data: Json | null
+          cash: number | null
           company_name: string
           created_at: string
           current_price: number | null
+          dcf_projections: Json | null
           export_config: Json | null
           fair_value: number | null
           growth_margins_data: Json | null
           id: string
           implied_growth_rate: number | null
+          kpi_data: Json | null
           last_alert_sent_at: string | null
           last_reviewed_at: string | null
           needs_review: boolean | null
           price_at_last_check: number | null
           published_at: string | null
+          sensitivity_matrix: Json | null
+          shares_outstanding: number | null
           terminal_growth: number | null
           ticker: string
+          total_debt: number | null
           updated_at: string
           upside_percent: number | null
           user_id: string
@@ -150,23 +157,30 @@ export type Database = {
         Insert: {
           alert_type?: string | null
           analyst_notes?: string | null
+          base_fcf?: number | null
           capital_allocation_data?: Json | null
           capital_efficiency_data?: Json | null
+          cash?: number | null
           company_name: string
           created_at?: string
           current_price?: number | null
+          dcf_projections?: Json | null
           export_config?: Json | null
           fair_value?: number | null
           growth_margins_data?: Json | null
           id?: string
           implied_growth_rate?: number | null
+          kpi_data?: Json | null
           last_alert_sent_at?: string | null
           last_reviewed_at?: string | null
           needs_review?: boolean | null
           price_at_last_check?: number | null
           published_at?: string | null
+          sensitivity_matrix?: Json | null
+          shares_outstanding?: number | null
           terminal_growth?: number | null
           ticker: string
+          total_debt?: number | null
           updated_at?: string
           upside_percent?: number | null
           user_id: string
@@ -177,23 +191,30 @@ export type Database = {
         Update: {
           alert_type?: string | null
           analyst_notes?: string | null
+          base_fcf?: number | null
           capital_allocation_data?: Json | null
           capital_efficiency_data?: Json | null
+          cash?: number | null
           company_name?: string
           created_at?: string
           current_price?: number | null
+          dcf_projections?: Json | null
           export_config?: Json | null
           fair_value?: number | null
           growth_margins_data?: Json | null
           id?: string
           implied_growth_rate?: number | null
+          kpi_data?: Json | null
           last_alert_sent_at?: string | null
           last_reviewed_at?: string | null
           needs_review?: boolean | null
           price_at_last_check?: number | null
           published_at?: string | null
+          sensitivity_matrix?: Json | null
+          shares_outstanding?: number | null
           terminal_growth?: number | null
           ticker?: string
+          total_debt?: number | null
           updated_at?: string
           upside_percent?: number | null
           user_id?: string

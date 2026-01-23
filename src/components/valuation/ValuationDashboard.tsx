@@ -464,6 +464,10 @@ export function ValuationDashboard({
           ticker={ticker}
           companyName={companyName}
           years={years}
+          currentPrice={currentPrice ?? undefined}
+          sharesOutstanding={sharesOutstanding ?? undefined}
+          wacc={wacc}
+          terminalGrowth={terminalGrowth}
           analystNotes={initialNotes}
           userId={userId}
         />
