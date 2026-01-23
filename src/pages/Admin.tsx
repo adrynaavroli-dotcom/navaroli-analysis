@@ -12,6 +12,7 @@ import { Thesis } from '@/types/thesis';
 import { ThesisFormDialog } from '@/components/admin/ThesisFormDialog';
 import { PageContentEditor } from '@/components/admin/PageContentEditor';
 import { PublicThesisManager } from '@/components/admin/PublicThesisManager';
+import { NotificationSettings } from '@/components/admin/NotificationSettings';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -300,7 +301,8 @@ export default function Admin() {
             )}
           </TabsContent>
 
-          <TabsContent value="research">
+          <TabsContent value="research" className="space-y-6">
+            <NotificationSettings />
             <PublicThesisManager />
           </TabsContent>
 
