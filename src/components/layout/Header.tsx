@@ -23,11 +23,11 @@ const protectedNavLinks = [
 
 export function Header() {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Combine links based on auth status
-  const navLinks = user 
+  // Only show protected links when user is confirmed authenticated (not during loading)
+  const navLinks = (!loading && user) 
     ? [...publicNavLinks, ...protectedNavLinks] 
     : publicNavLinks;
 
