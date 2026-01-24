@@ -107,19 +107,18 @@ export default function PublicThesis() {
     queryFn: async () => {
       const upperTicker = ticker?.toUpperCase() || '';
       
+      // Use the secure view that excludes user_id and workspace_id
       let { data, error: exactError } = await supabase
-        .from('public_thesis_data')
+        .from('public_thesis_data_view')
         .select('*')
         .eq('ticker', upperTicker)
-        .not('published_at', 'is', null)
         .maybeSingle();
       
       if (!data && !exactError) {
         const { data: ilikeData, error: ilikeError } = await supabase
-          .from('public_thesis_data')
+          .from('public_thesis_data_view')
           .select('*')
           .ilike('ticker', ticker || '')
-          .not('published_at', 'is', null)
           .maybeSingle();
         
         if (ilikeError) throw ilikeError;

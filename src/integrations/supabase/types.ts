@@ -352,6 +352,13 @@ export type Database = {
             referencedRelation: "public_thesis_data"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "thesis_alerts_thesis_id_fkey"
+            columns: ["thesis_id"]
+            isOneToOne: false
+            referencedRelation: "public_thesis_data_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       thesis_purchases: {
@@ -421,7 +428,93 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_thesis_data_view: {
+        Row: {
+          alert_type: string | null
+          analyst_notes: string | null
+          base_fcf: number | null
+          capital_allocation_data: Json | null
+          capital_efficiency_data: Json | null
+          cash: number | null
+          company_name: string | null
+          created_at: string | null
+          current_price: number | null
+          dcf_projections: Json | null
+          export_config: Json | null
+          fair_value: number | null
+          growth_margins_data: Json | null
+          id: string | null
+          implied_growth_rate: number | null
+          kpi_data: Json | null
+          published_at: string | null
+          sensitivity_matrix: Json | null
+          shares_outstanding: number | null
+          terminal_growth: number | null
+          ticker: string | null
+          total_debt: number | null
+          updated_at: string | null
+          upside_percent: number | null
+          valuation_context_data: Json | null
+          wacc: number | null
+        }
+        Insert: {
+          alert_type?: string | null
+          analyst_notes?: string | null
+          base_fcf?: number | null
+          capital_allocation_data?: Json | null
+          capital_efficiency_data?: Json | null
+          cash?: number | null
+          company_name?: string | null
+          created_at?: string | null
+          current_price?: number | null
+          dcf_projections?: Json | null
+          export_config?: Json | null
+          fair_value?: number | null
+          growth_margins_data?: Json | null
+          id?: string | null
+          implied_growth_rate?: number | null
+          kpi_data?: Json | null
+          published_at?: string | null
+          sensitivity_matrix?: Json | null
+          shares_outstanding?: number | null
+          terminal_growth?: number | null
+          ticker?: string | null
+          total_debt?: number | null
+          updated_at?: string | null
+          upside_percent?: number | null
+          valuation_context_data?: Json | null
+          wacc?: number | null
+        }
+        Update: {
+          alert_type?: string | null
+          analyst_notes?: string | null
+          base_fcf?: number | null
+          capital_allocation_data?: Json | null
+          capital_efficiency_data?: Json | null
+          cash?: number | null
+          company_name?: string | null
+          created_at?: string | null
+          current_price?: number | null
+          dcf_projections?: Json | null
+          export_config?: Json | null
+          fair_value?: number | null
+          growth_margins_data?: Json | null
+          id?: string | null
+          implied_growth_rate?: number | null
+          kpi_data?: Json | null
+          published_at?: string | null
+          sensitivity_matrix?: Json | null
+          shares_outstanding?: number | null
+          terminal_growth?: number | null
+          ticker?: string | null
+          total_debt?: number | null
+          updated_at?: string | null
+          upside_percent?: number | null
+          valuation_context_data?: Json | null
+          wacc?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
