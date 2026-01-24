@@ -178,16 +178,16 @@ export default function PublicThesis() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="container py-8 max-w-5xl">
+      <main className="container py-6 md:py-8 px-4 md:px-6 max-w-5xl">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-start justify-between mb-4">
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold">{thesis.ticker}</h1>
-                <Badge variant="secondary">{thesis.company_name}</Badge>
+              <div className="flex items-center gap-2 md:gap-3 mb-2 flex-wrap">
+                <h1 className="text-2xl md:text-3xl font-bold">{thesis.ticker}</h1>
+                <Badge variant="secondary" className="text-xs md:text-sm">{thesis.company_name}</Badge>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Published {new Date(thesis.published_at).toLocaleDateString('en-US', {
                   month: 'long',
                   day: 'numeric',
@@ -197,15 +197,15 @@ export default function PublicThesis() {
             </div>
             
             {thesis.fair_value && thesis.current_price && (
-              <div className="text-right">
+              <div className="text-left md:text-right">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold">
+                  <span className="text-xl md:text-2xl font-bold">
                     ${thesis.fair_value.toFixed(2)}
                   </span>
                   {thesis.upside_percent !== null && (
                     <Badge 
                       variant={thesis.upside_percent >= 0 ? 'default' : 'destructive'}
-                      className="gap-1"
+                      className="gap-1 text-xs"
                     >
                       {thesis.upside_percent >= 0 ? (
                         <ArrowUpRight className="h-3 w-3" />
@@ -216,7 +216,7 @@ export default function PublicThesis() {
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Fair Value (vs ${thesis.current_price.toFixed(2)} current)
                 </p>
               </div>
@@ -225,16 +225,16 @@ export default function PublicThesis() {
           
           {/* DCF Parameters */}
           {config.dcfSummary && thesis.wacc && thesis.terminal_growth && (
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="gap-1.5">
+            <div className="flex flex-wrap gap-1.5 md:gap-2">
+              <Badge variant="outline" className="gap-1 text-xs">
                 <Calculator className="h-3 w-3" />
                 WACC: {(thesis.wacc * 100).toFixed(1)}%
               </Badge>
-              <Badge variant="outline" className="gap-1.5">
+              <Badge variant="outline" className="gap-1 text-xs">
                 Terminal Growth: {(thesis.terminal_growth * 100).toFixed(1)}%
               </Badge>
               {config.reverseDcf && thesis.implied_growth_rate !== null && (
-                <Badge variant="secondary" className="gap-1.5">
+                <Badge variant="secondary" className="gap-1 text-xs">
                   <RotateCcw className="h-3 w-3" />
                   Implied Growth: {(thesis.implied_growth_rate * 100).toFixed(1)}%
                 </Badge>
@@ -249,18 +249,18 @@ export default function PublicThesis() {
         {config.kpiMetrics && kpi.latestYear && (
           <>
             <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
+              <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />
                 Key Performance Indicators ({kpi.latestYear})
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
                 {kpi.revenue && (
                   <Card>
-                    <CardContent className="pt-4">
-                      <p className="text-xs text-muted-foreground">Revenue</p>
-                      <p className="text-lg font-semibold">{formatLargeNumber(kpi.revenue)}</p>
+                    <CardContent className="p-3 md:pt-4">
+                      <p className="text-[10px] md:text-xs text-muted-foreground">Revenue</p>
+                      <p className="text-base md:text-lg font-semibold">{formatLargeNumber(kpi.revenue)}</p>
                       {kpi.revenueGrowth !== null && kpi.revenueGrowth !== undefined && (
-                        <Badge variant={kpi.revenueGrowth >= 0 ? 'default' : 'destructive'} className="text-xs mt-1">
+                        <Badge variant={kpi.revenueGrowth >= 0 ? 'default' : 'destructive'} className="text-[10px] mt-1">
                           {kpi.revenueGrowth >= 0 ? '+' : ''}{kpi.revenueGrowth.toFixed(1)}% YoY
                         </Badge>
                       )}
@@ -269,37 +269,37 @@ export default function PublicThesis() {
                 )}
                 {kpi.netIncome && (
                   <Card>
-                    <CardContent className="pt-4">
-                      <p className="text-xs text-muted-foreground">Net Income</p>
-                      <p className="text-lg font-semibold">{formatLargeNumber(kpi.netIncome)}</p>
+                    <CardContent className="p-3 md:pt-4">
+                      <p className="text-[10px] md:text-xs text-muted-foreground">Net Income</p>
+                      <p className="text-base md:text-lg font-semibold">{formatLargeNumber(kpi.netIncome)}</p>
                       {kpi.netMargin !== null && kpi.netMargin !== undefined && (
-                        <p className="text-xs text-muted-foreground">{kpi.netMargin.toFixed(1)}% margin</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">{kpi.netMargin.toFixed(1)}% margin</p>
                       )}
                     </CardContent>
                   </Card>
                 )}
                 {kpi.freeCashFlow && (
                   <Card>
-                    <CardContent className="pt-4">
-                      <p className="text-xs text-muted-foreground">Free Cash Flow</p>
-                      <p className="text-lg font-semibold">{formatLargeNumber(kpi.freeCashFlow)}</p>
+                    <CardContent className="p-3 md:pt-4">
+                      <p className="text-[10px] md:text-xs text-muted-foreground">Free Cash Flow</p>
+                      <p className="text-base md:text-lg font-semibold">{formatLargeNumber(kpi.freeCashFlow)}</p>
                       {kpi.fcfMargin !== null && kpi.fcfMargin !== undefined && (
-                        <p className="text-xs text-muted-foreground">{kpi.fcfMargin.toFixed(1)}% margin</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">{kpi.fcfMargin.toFixed(1)}% margin</p>
                       )}
                     </CardContent>
                   </Card>
                 )}
                 {kpi.roic !== null && kpi.roic !== undefined && (
                   <Card>
-                    <CardContent className="pt-4">
-                      <p className="text-xs text-muted-foreground">ROIC</p>
-                      <p className="text-lg font-semibold">{kpi.roic.toFixed(1)}%</p>
+                    <CardContent className="p-3 md:pt-4">
+                      <p className="text-[10px] md:text-xs text-muted-foreground">ROIC</p>
+                      <p className="text-base md:text-lg font-semibold">{kpi.roic.toFixed(1)}%</p>
                     </CardContent>
                   </Card>
                 )}
               </div>
             </div>
-            <Separator className="my-6" />
+            <Separator className="my-4 md:my-6" />
           </>
         )}
 
@@ -307,26 +307,26 @@ export default function PublicThesis() {
         {config.dcfProjections && dcfProjections.length > 0 && (
           <>
             <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Calculator className="h-5 w-5" />
+              <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2">
+                <Calculator className="h-4 w-4 md:h-5 md:w-5" />
                 DCF Projections
               </h2>
               <Card>
-                <CardContent className="pt-4">
+                <CardContent className="p-3 md:pt-4 overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Year</TableHead>
-                        <TableHead className="text-right">Projected FCF</TableHead>
-                        <TableHead className="text-right">Present Value</TableHead>
+                        <TableHead className="text-xs md:text-sm">Year</TableHead>
+                        <TableHead className="text-right text-xs md:text-sm">Projected FCF</TableHead>
+                        <TableHead className="text-right text-xs md:text-sm">Present Value</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {dcfProjections.map((p) => (
                         <TableRow key={p.year}>
-                          <TableCell className="font-medium">Year {p.year}</TableCell>
-                          <TableCell className="text-right font-mono">{formatLargeNumber(p.fcf)}</TableCell>
-                          <TableCell className="text-right font-mono">{formatLargeNumber(p.discountedFcf)}</TableCell>
+                          <TableCell className="font-medium text-xs md:text-sm py-2">Year {p.year}</TableCell>
+                          <TableCell className="text-right font-mono text-xs md:text-sm py-2">{formatLargeNumber(p.fcf)}</TableCell>
+                          <TableCell className="text-right font-mono text-xs md:text-sm py-2">{formatLargeNumber(p.discountedFcf)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -334,7 +334,7 @@ export default function PublicThesis() {
                 </CardContent>
               </Card>
             </div>
-            <Separator className="my-6" />
+            <Separator className="my-4 md:my-6" />
           </>
         )}
 
@@ -342,18 +342,19 @@ export default function PublicThesis() {
         {config.sensitivityMatrix && sensitivityMatrix.length > 0 && (
           <>
             <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Grid3X3 className="h-5 w-5" />
-                Sensitivity Analysis (WACC vs Terminal Growth)
+              <h2 className="text-base md:text-lg font-semibold mb-3 md:mb-4 flex items-center gap-2">
+                <Grid3X3 className="h-4 w-4 md:h-5 md:w-5" />
+                <span className="hidden sm:inline">Sensitivity Analysis (WACC vs Terminal Growth)</span>
+                <span className="sm:hidden">Sensitivity Analysis</span>
               </h2>
               <Card>
-                <CardContent className="pt-4 overflow-x-auto">
-                  <table className="w-full text-sm">
+                <CardContent className="p-3 md:pt-4 overflow-x-auto -mx-3 px-3 md:mx-0 md:px-4">
+                  <table className="w-full text-xs md:text-sm min-w-[320px]">
                     <thead>
                       <tr>
-                        <th className="p-2 text-left font-medium text-muted-foreground">WACC \ g</th>
+                        <th className="p-1.5 md:p-2 text-left font-medium text-muted-foreground text-[10px] md:text-sm">WACC \ g</th>
                         {sensitivityMatrix[0]?.map((_, colIdx) => (
-                          <th key={colIdx} className="p-2 text-center font-medium">
+                          <th key={colIdx} className="p-1.5 md:p-2 text-center font-medium text-[10px] md:text-sm">
                             {sensitivityMatrix[0][colIdx]?.terminalGrowth !== undefined 
                               ? `${sensitivityMatrix[0][colIdx].terminalGrowth}%` 
                               : '-'}
@@ -364,13 +365,13 @@ export default function PublicThesis() {
                     <tbody>
                       {sensitivityMatrix.map((row, rowIdx) => (
                         <tr key={rowIdx}>
-                          <td className="p-2 font-medium text-muted-foreground">
+                          <td className="p-1.5 md:p-2 font-medium text-muted-foreground text-[10px] md:text-sm">
                             {row[0]?.wacc !== undefined ? `${row[0].wacc}%` : '-'}
                           </td>
                           {row.map((cell, colIdx) => (
                             <td 
                               key={colIdx} 
-                              className={`p-2 text-center font-mono text-sm ${getSensitivityColor(cell.fairValue)}`}
+                              className={`p-1.5 md:p-2 text-center font-mono text-[10px] md:text-sm ${getSensitivityColor(cell.fairValue)}`}
                             >
                               ${cell.fairValue?.toFixed(0) ?? '-'}
                             </td>
@@ -380,40 +381,40 @@ export default function PublicThesis() {
                     </tbody>
                   </table>
                   {thesis.current_price && (
-                    <p className="text-xs text-muted-foreground mt-3">
+                    <p className="text-[10px] md:text-xs text-muted-foreground mt-2 md:mt-3">
                       Green = undervalued vs current price (${thesis.current_price.toFixed(2)}), Red = overvalued
                     </p>
                   )}
                 </CardContent>
               </Card>
             </div>
-            <Separator className="my-6" />
+            <Separator className="my-4 md:my-6" />
           </>
         )}
         
         {/* Charts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 mb-6 md:mb-8">
           {/* Growth & Margins */}
           {config.growthMargins && thesis.growth_margins_data?.length > 0 && (
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
+              <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                <CardTitle className="text-xs md:text-sm font-medium flex items-center gap-2">
+                  <TrendingUp className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   Growth & Margins
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={240}>
-                  <ComposedChart data={thesis.growth_margins_data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CardContent className="p-2 md:p-6 pt-0">
+                <ResponsiveContainer width="100%" height={180} className="md:!h-[240px]">
+                  <ComposedChart data={thesis.growth_margins_data} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                    <XAxis dataKey="year" tick={{ fontSize: 11 }} />
-                    <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(v) => formatLargeNumber(v)} />
-                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(v) => `${v}%`} domain={[-20, 60]} />
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: '11px' }} />
+                    <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                    <YAxis yAxisId="left" tick={{ fontSize: 10 }} tickFormatter={(v) => formatLargeNumber(v)} width={45} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} domain={[-20, 60]} width={35} />
+                    <Tooltip contentStyle={{ fontSize: '11px' }} />
+                    <Legend wrapperStyle={{ fontSize: '10px' }} />
                     <Bar yAxisId="left" dataKey="revenue" name="Revenue" fill="hsl(var(--muted-foreground))" fillOpacity={0.3} radius={[2, 2, 0, 0]} />
-                    <Line yAxisId="right" type="monotone" dataKey="operatingMargin" name="Op. Margin %" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                    <Line yAxisId="right" type="monotone" dataKey="fcfMargin" name="FCF Margin %" stroke="hsl(var(--success))" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                    <Line yAxisId="right" type="monotone" dataKey="operatingMargin" name="Op. Margin %" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 2 }} connectNulls />
+                    <Line yAxisId="right" type="monotone" dataKey="fcfMargin" name="FCF Margin %" stroke="hsl(var(--success))" strokeWidth={2} dot={{ r: 2 }} connectNulls />
                   </ComposedChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -423,19 +424,19 @@ export default function PublicThesis() {
           {/* Capital Efficiency */}
           {config.capitalEfficiency && thesis.capital_efficiency_data?.length > 0 && (
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Target className="h-4 w-4" />
+              <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                <CardTitle className="text-xs md:text-sm font-medium flex items-center gap-2">
+                  <Target className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   Capital Efficiency (ROIC)
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={240}>
-                  <AreaChart data={thesis.capital_efficiency_data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CardContent className="p-2 md:p-6 pt-0">
+                <ResponsiveContainer width="100%" height={180} className="md:!h-[240px]">
+                  <AreaChart data={thesis.capital_efficiency_data} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                    <XAxis dataKey="year" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v}%`} />
-                    <Tooltip formatter={(v: number) => `${v?.toFixed(1)}%`} />
+                    <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} width={35} />
+                    <Tooltip formatter={(v: number) => `${v?.toFixed(1)}%`} contentStyle={{ fontSize: '11px' }} />
                     <Area type="monotone" dataKey="roic" name="ROIC" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} connectNulls />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -446,19 +447,19 @@ export default function PublicThesis() {
           {/* Capital Allocation */}
           {config.capitalAllocation && thesis.capital_allocation_data?.length > 0 && (
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <PieChart className="h-4 w-4" />
+              <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                <CardTitle className="text-xs md:text-sm font-medium flex items-center gap-2">
+                  <PieChart className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   Capital Allocation (CapEx)
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={240}>
-                  <ComposedChart data={thesis.capital_allocation_data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CardContent className="p-2 md:p-6 pt-0">
+                <ResponsiveContainer width="100%" height={180} className="md:!h-[240px]">
+                  <ComposedChart data={thesis.capital_allocation_data} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                    <XAxis dataKey="year" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatLargeNumber(v)} />
-                    <Tooltip formatter={(v: number) => formatLargeNumber(v)} />
+                    <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => formatLargeNumber(v)} width={45} />
+                    <Tooltip formatter={(v: number) => formatLargeNumber(v)} contentStyle={{ fontSize: '11px' }} />
                     <Bar dataKey="capex" name="CapEx" fill="hsl(var(--accent))" radius={[2, 2, 0, 0]} />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -469,19 +470,19 @@ export default function PublicThesis() {
           {/* Valuation Context */}
           {config.valuationContext && thesis.valuation_context_data?.length > 0 && (
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4" />
+              <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+                <CardTitle className="text-xs md:text-sm font-medium flex items-center gap-2">
+                  <BarChart3 className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   Valuation Context (EPS)
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={240}>
-                  <ComposedChart data={thesis.valuation_context_data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CardContent className="p-2 md:p-6 pt-0">
+                <ResponsiveContainer width="100%" height={180} className="md:!h-[240px]">
+                  <ComposedChart data={thesis.valuation_context_data} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                    <XAxis dataKey="year" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
-                    <Tooltip formatter={(v: number) => `$${v?.toFixed(2)}`} />
+                    <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v}`} width={35} />
+                    <Tooltip formatter={(v: number) => `$${v?.toFixed(2)}`} contentStyle={{ fontSize: '11px' }} />
                     <Bar dataKey="eps" name="EPS" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -493,11 +494,11 @@ export default function PublicThesis() {
         {/* Analyst Notes */}
         {config.analystNotes && thesis.analyst_notes && (
           <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Analyst Notes</CardTitle>
+            <CardHeader className="p-3 md:p-6 pb-2">
+              <CardTitle className="text-xs md:text-sm font-medium">Analyst Notes</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="prose prose-sm dark:prose-invert max-w-none">
+            <CardContent className="p-3 md:p-6 pt-0">
+              <div className="prose prose-sm dark:prose-invert max-w-none text-xs md:text-sm">
                 <ReactMarkdown>{thesis.analyst_notes}</ReactMarkdown>
               </div>
             </CardContent>
@@ -505,7 +506,7 @@ export default function PublicThesis() {
         )}
         
         {/* Footer */}
-        <div className="mt-12 pt-6 border-t text-center text-sm text-muted-foreground">
+        <div className="mt-8 md:mt-12 pt-4 md:pt-6 border-t text-center text-xs md:text-sm text-muted-foreground">
           <p>This analysis is for educational purposes only. Not financial advice.</p>
         </div>
       </main>
