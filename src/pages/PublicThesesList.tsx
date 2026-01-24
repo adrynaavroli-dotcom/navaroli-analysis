@@ -21,10 +21,10 @@ export default function PublicThesesList() {
   const { data: theses, isLoading } = useQuery({
     queryKey: ['public-theses-list'],
     queryFn: async () => {
+      // Use the secure view that excludes user_id and workspace_id
       const { data, error } = await supabase
-        .from('public_thesis_data')
+        .from('public_thesis_data_view')
         .select('id, ticker, company_name, fair_value, current_price, upside_percent, published_at')
-        .not('published_at', 'is', null)
         .order('published_at', { ascending: false });
       
       if (error) throw error;
