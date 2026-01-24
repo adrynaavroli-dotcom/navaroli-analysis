@@ -56,7 +56,8 @@ interface DCFProjection {
 interface SensitivityCell {
   wacc: number;
   terminalGrowth: number;
-  fairValue: number;
+  fairValue?: number;
+  pricePerShare?: number; // Legacy field name from some exports
 }
 
 interface PublicThesisData {
@@ -162,16 +163,21 @@ export default function PublicThesis() {
   const sensitivityMatrix = thesis.sensitivity_matrix || [];
   const dcfProjections = thesis.dcf_projections || [];
 
+  // Helper to get value from cell (handles both fairValue and pricePerShare)
+  const getCellValue = (cell: SensitivityCell): number | undefined => {
+    return cell.fairValue ?? cell.pricePerShare;
+  };
+
   // Get sensitivity cell color
-  const getSensitivityColor = (value: number): string => {
-    if (!thesis.current_price) return 'bg-muted/50';
+  const getSensitivityColor = (value: number | undefined): string => {
+    if (!value || !thesis.current_price) return 'bg-muted/50';
     const ratio = value / thesis.current_price;
-    if (ratio >= 1.5) return 'bg-green-500/40 text-green-900';
+    if (ratio >= 1.5) return 'bg-green-500/40 text-green-900 dark:text-green-100';
     if (ratio >= 1.2) return 'bg-green-500/25';
     if (ratio >= 1.0) return 'bg-green-500/10';
     if (ratio >= 0.8) return 'bg-red-500/10';
     if (ratio >= 0.5) return 'bg-red-500/25';
-    return 'bg-red-500/40 text-red-900';
+    return 'bg-red-500/40 text-red-900 dark:text-red-100';
   };
 
   return (
@@ -368,14 +374,17 @@ export default function PublicThesis() {
                           <td className="p-1.5 md:p-2 font-medium text-muted-foreground text-[10px] md:text-sm">
                             {row[0]?.wacc !== undefined ? `${row[0].wacc}%` : '-'}
                           </td>
-                          {row.map((cell, colIdx) => (
-                            <td 
-                              key={colIdx} 
-                              className={`p-1.5 md:p-2 text-center font-mono text-[10px] md:text-sm ${getSensitivityColor(cell.fairValue)}`}
-                            >
-                              ${cell.fairValue?.toFixed(0) ?? '-'}
-                            </td>
-                          ))}
+                          {row.map((cell, colIdx) => {
+                            const value = getCellValue(cell);
+                            return (
+                              <td 
+                                key={colIdx} 
+                                className={`p-1.5 md:p-2 text-center font-mono text-[10px] md:text-sm ${getSensitivityColor(value)}`}
+                              >
+                                ${value?.toFixed(0) ?? '-'}
+                              </td>
+                            );
+                          })}
                         </tr>
                       ))}
                     </tbody>
