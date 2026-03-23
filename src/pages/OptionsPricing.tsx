@@ -131,8 +131,6 @@ export default function OptionsPricing() {
 
   const effectiveModel = result?.models[result.effectiveMethod];
 
-  if (authLoading) return null;
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
