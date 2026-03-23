@@ -394,6 +394,16 @@ export default function OptionsPricing() {
                   )}
                 </TabsContent>
 
+                {/* Payoff Tab */}
+                <TabsContent value="payoff">
+                  <PayoffDiagram
+                    spotPrice={parseFloat(inputs.spotPrice)}
+                    strikePrice={parseFloat(inputs.strikePrice)}
+                    callPremium={effectiveModel?.call ?? 0}
+                    putPremium={effectiveModel?.put ?? 0}
+                  />
+                </TabsContent>
+
                 {/* Sensitivity Tab */}
                 <TabsContent value="sensitivity">
                   <SensitivityChart
