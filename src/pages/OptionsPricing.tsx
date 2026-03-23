@@ -100,18 +100,27 @@ export default function OptionsPricing() {
     }, 50);
   }, [inputs]);
 
+  const [fetchError, setFetchError] = useState('');
+
   const handleAutoFetch = useCallback(async () => {
     if (!ticker.trim()) return;
     setAutoFetching(true);
+    setFetchError('');
     try {
-      const { data } = await supabase.functions.invoke('fetch-stock-data', {
+      const { data, error } = await supabase.functions.invoke('fetch-stock-data', {
         body: { ticker: ticker.trim().toUpperCase() },
       });
-      if (data?.current_price) {
-        setInputs(prev => ({ ...prev, spotPrice: String(data.current_price) }));
+      if (error || data?.error) {
+        setFetchError(data?.error || 'Ticker not found. For European stocks use Yahoo format (e.g. MC.PA for LVMH)');
+      } else if (data?.currentPrice) {
+        setInputs(prev => ({ ...prev, spotPrice: String(data.currentPrice) }));
+        setFetchError('');
+      } else {
+        setFetchError('No price data returned');
       }
     } catch (e) {
       console.error('Auto-fetch error:', e);
+      setFetchError('Connection error');
     }
     setAutoFetching(false);
   }, [ticker]);
@@ -162,6 +171,9 @@ export default function OptionsPricing() {
                     {autoFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Fetch'}
                   </Button>
                 </div>
+                {fetchError && (
+                  <p className="text-xs text-destructive">{fetchError}</p>
+                )}
               </CardContent>
             </Card>
 
