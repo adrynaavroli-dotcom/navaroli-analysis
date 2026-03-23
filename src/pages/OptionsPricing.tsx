@@ -372,7 +372,18 @@ export default function OptionsPricing() {
                   )}
                 </TabsContent>
 
-                {/* Compare Tab */}
+                {/* Sensitivity Tab */}
+                <TabsContent value="sensitivity">
+                  <SensitivityChart
+                    spotPrice={parseFloat(inputs.spotPrice)}
+                    strikePrice={parseFloat(inputs.strikePrice)}
+                    riskFreeRate={parseFloat(inputs.riskFreeRate) / 100}
+                    dividendYield={parseFloat(inputs.dividendYield) / 100}
+                    volatility={parseFloat(inputs.volatility) / 100}
+                    timeToExpiry={inputs.expiryDate ? calculateTimeToExpiry(inputs.expiryDate) : 0.25}
+                  />
+                </TabsContent>
+
                 <TabsContent value="compare">
                   <Card>
                     <CardHeader className="pb-3">
