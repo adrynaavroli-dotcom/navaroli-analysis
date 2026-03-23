@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Calculator, TrendingUp, TrendingDown, Activity, BarChart3, Loader2, Grid3x3, GitBranch } from 'lucide-react';
 import { SensitivityChart } from '@/components/options/SensitivityChart';
 import { BinomialTreeChart } from '@/components/options/BinomialTreeChart';
+import { PayoffDiagram } from '@/components/options/PayoffDiagram';
 import { AssetTypeSelector, inferExerciseStyle, type AssetType } from '@/components/options/AssetTypeSelector';
 import {
   computeValuations,
