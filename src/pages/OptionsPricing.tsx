@@ -26,8 +26,6 @@ import {
 } from '@/lib/options';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 
 function formatPrice(v: number | null): string {
   return v === null ? '—' : v.toFixed(4);
@@ -38,12 +36,7 @@ function formatGreek(v: number): string {
 }
 
 export default function OptionsPricing() {
-  const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!authLoading && !user) navigate('/auth');
-  }, [authLoading, user, navigate]);
+  const { user } = useAuth();
 
   const [inputs, setInputs] = useState({
     spotPrice: '100',
@@ -137,8 +130,6 @@ export default function OptionsPricing() {
   };
 
   const effectiveModel = result?.models[result.effectiveMethod];
-
-  if (authLoading) return null;
 
   return (
     <div className="min-h-screen bg-background">

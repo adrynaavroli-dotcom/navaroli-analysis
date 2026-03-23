@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.update-prices]
 verify_jwt = false
+
+[functions.fetch-options-chain]
+verify_jwt = false
+
+[functions.fetch-historical-volatility]
+verify_jwt = false
+
+[functions.fetch-stock-data]
+verify_jwt = false
