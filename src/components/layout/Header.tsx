@@ -10,7 +10,8 @@ import { useAuth } from '@/hooks/useAuth';
 // Links visible to everyone
 const publicNavLinks = [
   { href: '/', label: 'Thesis' },
-  { href: '/research', label: 'Research' },
+  { href: '/research', label: 'Fundamentals' },
+  { href: '/options-pricing', label: 'Options' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ];
@@ -18,7 +19,6 @@ const publicNavLinks = [
 // Links only visible to authenticated users
 const protectedNavLinks = [
   { href: '/valuation-engine', label: 'Valuation' },
-  { href: '/options-pricing', label: 'Options' },
   { href: '/admin', label: 'Admin' },
 ];
 
