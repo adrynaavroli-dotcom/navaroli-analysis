@@ -137,11 +137,15 @@ export function MarketDataPanel({
     fetchChain(exp);
   };
 
-  const handleOpen = (isOpen: boolean) => {
-    onOpenChange(isOpen);
-    if (isOpen && !chainData && !loading) {
+  // Auto-fetch when dialog opens
+  useEffect(() => {
+    if (open && !chainData && !loading && ticker.trim()) {
       fetchChain();
     }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleOpen = (isOpen: boolean) => {
+    onOpenChange(isOpen);
   };
 
   const contracts = chainType === 'calls' ? (chainData?.calls || []) : (chainData?.puts || []);
