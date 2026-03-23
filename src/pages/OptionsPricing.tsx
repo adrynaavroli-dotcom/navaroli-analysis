@@ -253,9 +253,10 @@ export default function OptionsPricing() {
               </Card>
             ) : (
               <Tabs defaultValue="summary" className="space-y-4">
-                <TabsList className="grid grid-cols-3 w-full max-w-md">
+                <TabsList className="grid grid-cols-4 w-full max-w-lg">
                   <TabsTrigger value="summary">Summary</TabsTrigger>
                   <TabsTrigger value="greeks">Greeks</TabsTrigger>
+                  <TabsTrigger value="sensitivity">Sensitivity</TabsTrigger>
                   <TabsTrigger value="compare">Compare</TabsTrigger>
                 </TabsList>
 
