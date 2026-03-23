@@ -497,6 +497,23 @@ export default function OptionsPricing() {
           </div>
         </div>
       </main>
+
+      <MarketDataPanel
+        open={marketDataOpen}
+        onOpenChange={setMarketDataOpen}
+        ticker={ticker}
+        onApplyStrike={(strike, expiration, iv) => {
+          setInputs(prev => ({
+            ...prev,
+            strikePrice: String(strike),
+            expiryDate: expiration,
+            volatility: String(iv.toFixed(1)),
+          }));
+        }}
+        onApplyVolatility={(vol) => {
+          setInputs(prev => ({ ...prev, volatility: String(vol.toFixed(1)) }));
+        }}
+      />
     </div>
   );
 }
