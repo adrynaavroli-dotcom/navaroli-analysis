@@ -18,6 +18,7 @@ const publicNavLinks = [
 // Links only visible to authenticated users
 const protectedNavLinks = [
   { href: '/valuation-engine', label: 'Valuation' },
+  { href: '/options-pricing', label: 'Options' },
   { href: '/admin', label: 'Admin' },
 ];
 
