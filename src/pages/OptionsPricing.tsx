@@ -26,8 +26,6 @@ import {
 } from '@/lib/options';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 
 function formatPrice(v: number | null): string {
   return v === null ? '—' : v.toFixed(4);
