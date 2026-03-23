@@ -11,6 +11,7 @@ import ThesisDetail from "./pages/ThesisDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import ValuationEngine from "./pages/ValuationEngine";
+import OptionsPricing from "./pages/OptionsPricing";
 import PublicThesis from "./pages/PublicThesis";
 import PublicThesesList from "./pages/PublicThesesList";
 import NotFound from "./pages/NotFound";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/valuation-engine" element={<ValuationEngine />} />
+            <Route path="/options-pricing" element={<OptionsPricing />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
