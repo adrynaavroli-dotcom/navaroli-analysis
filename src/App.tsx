@@ -37,6 +37,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/valuation-engine" element={<ValuationEngine />} />
             <Route path="/options-pricing" element={<OptionsPricing />} />
+            <Route path="/macro" element={<MacroDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
