@@ -51,28 +51,30 @@ serve(async (req) => {
   }
 
   try {
-    // Authentication check
+    // Optional auth: authenticated users get unlimited access, anonymous users are rate-limited
+    let isAuthenticated = false;
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    if (authHeader?.startsWith('Bearer ')) {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_ANON_KEY')!,
+        { global: { headers: { Authorization: authHeader } } }
       );
+      const token = authHeader.replace('Bearer ', '');
+      const { data, error: authError } = await supabase.auth.getUser(token);
+      if (!authError && data?.user) {
+        isAuthenticated = true;
+      }
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !data?.user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (!isAuthenticated) {
+      const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+      if (!checkRateLimit(clientIp)) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again later or sign in for unlimited access.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     const { ticker } = await req.json();
