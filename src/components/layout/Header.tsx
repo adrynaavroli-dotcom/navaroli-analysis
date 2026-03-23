@@ -17,8 +17,9 @@ const publicNavLinks = [
   { href: '/contact', label: 'Contact' },
 ];
 
-// Links only visible to authenticated users
+// Links only visible to authenticated admin users
 const protectedNavLinks = [
+  { href: '/credit-analysis', label: 'Credit' },
   { href: '/valuation-engine', label: 'Valuation' },
   { href: '/admin', label: 'Admin' },
 ];
