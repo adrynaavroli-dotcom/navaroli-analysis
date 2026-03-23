@@ -14,6 +14,7 @@ import ValuationEngine from "./pages/ValuationEngine";
 import OptionsPricing from "./pages/OptionsPricing";
 import PublicThesis from "./pages/PublicThesis";
 import PublicThesesList from "./pages/PublicThesesList";
+import MacroDashboard from "./pages/MacroDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
