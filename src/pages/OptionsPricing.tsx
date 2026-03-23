@@ -171,6 +171,9 @@ export default function OptionsPricing() {
                     {autoFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Fetch'}
                   </Button>
                 </div>
+                {fetchError && (
+                  <p className="text-xs text-destructive">{fetchError}</p>
+                )}
               </CardContent>
             </Card>
 
