@@ -168,10 +168,11 @@ export default function PublicThesis() {
     return cell.fairValue ?? cell.pricePerShare;
   };
 
-  // Get sensitivity cell color
+  // Get sensitivity cell color - use fair_value as reference when current_price is unavailable
+  const referencePrice = thesis.current_price ?? thesis.fair_value;
   const getSensitivityColor = (value: number | undefined): string => {
-    if (!value || !thesis.current_price) return 'bg-muted/50';
-    const ratio = value / thesis.current_price;
+    if (!value || !referencePrice) return 'bg-muted/50';
+    const ratio = value / referencePrice;
     if (ratio >= 1.5) return 'bg-green-500/40 text-green-900 dark:text-green-100';
     if (ratio >= 1.2) return 'bg-green-500/25';
     if (ratio >= 1.0) return 'bg-green-500/10';
