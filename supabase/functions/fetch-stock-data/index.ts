@@ -69,7 +69,7 @@ serve(async (req) => {
     }
 
     // Validate ticker format
-    const tickerRegex = /^[A-Za-z0-9.-]{1,10}$/;
+    const tickerRegex = /^[A-Za-z0-9.\-^=]{1,15}$/;
     if (!tickerRegex.test(ticker)) {
       return new Response(
         JSON.stringify({ error: 'Invalid ticker format. Use alphanumeric characters only (max 10)' }),
