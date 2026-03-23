@@ -257,6 +257,14 @@ export function MarketDataPanel({
                   </table>
                 </ScrollArea>
 
+
+                {/* Volatility Smile Chart */}
+                <VolatilitySmileChart
+                  calls={chainData.calls}
+                  puts={chainData.puts}
+                  underlyingPrice={chainData.underlyingPrice}
+                />
+
                 <p className="text-[10px] text-muted-foreground text-center">
                   Data from Yahoo Finance • ~15 min delay • US equities only • Click "Use" to apply strike & IV to calculator
                 </p>
