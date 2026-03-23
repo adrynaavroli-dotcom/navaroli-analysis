@@ -195,6 +195,85 @@ export default function CreditAnalysis() {
 
               <CreditInputPanel inputs={inputs} onChange={setInputs} />
 
+              {/* Quick Import Section */}
+              <div className="space-y-2 border-t border-slate-700/30 pt-3">
+                {/* AI Prompt Helper */}
+                <button
+                  onClick={() => setShowPrompt(!showPrompt)}
+                  className="flex items-center gap-1.5 w-full text-left group"
+                >
+                  <Sparkles className="h-3 w-3 text-amber-400" />
+                  <span className="text-[10px] font-mono text-slate-400 group-hover:text-slate-200 transition-colors">
+                    Obtener datos con IA
+                  </span>
+                  {showPrompt
+                    ? <ChevronUp className="h-3 w-3 text-slate-600 ml-auto" />
+                    : <ChevronDown className="h-3 w-3 text-slate-600 ml-auto" />
+                  }
+                </button>
+
+                {showPrompt && (
+                  <div className="rounded border border-amber-500/20 bg-amber-950/10 p-2.5 space-y-2">
+                    <p className="text-[10px] font-mono text-slate-400 leading-relaxed">
+                      Copia este prompt y pégalo en ChatGPT, Gemini o Claude con el nombre de la empresa. 
+                      Luego pega el JSON resultante abajo para importar los datos automáticamente.
+                    </p>
+                    <div className="relative">
+                      <pre className="text-[9px] font-mono text-slate-500 bg-slate-800/60 rounded p-2 max-h-32 overflow-y-auto whitespace-pre-wrap leading-relaxed">
+                        {AI_PROMPT}
+                      </pre>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleCopyPrompt}
+                        className="absolute top-1 right-1 h-6 px-1.5 text-[9px] font-mono gap-1 text-slate-400 hover:text-emerald-400 hover:bg-slate-700/50"
+                      >
+                        {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                        {copied ? 'Copiado' : 'Copiar'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* JSON Import */}
+                <button
+                  onClick={() => setShowJsonImport(!showJsonImport)}
+                  className="flex items-center gap-1.5 w-full text-left group"
+                >
+                  <ClipboardPaste className="h-3 w-3 text-blue-400" />
+                  <span className="text-[10px] font-mono text-slate-400 group-hover:text-slate-200 transition-colors">
+                    Importar JSON rápido
+                  </span>
+                  {showJsonImport
+                    ? <ChevronUp className="h-3 w-3 text-slate-600 ml-auto" />
+                    : <ChevronDown className="h-3 w-3 text-slate-600 ml-auto" />
+                  }
+                </button>
+
+                {showJsonImport && (
+                  <div className="rounded border border-blue-500/20 bg-blue-950/10 p-2.5 space-y-2">
+                    <p className="text-[10px] font-mono text-slate-400">
+                      Pega aquí la respuesta JSON de la IA:
+                    </p>
+                    <Textarea
+                      value={jsonInput}
+                      onChange={(e) => setJsonInput(e.target.value)}
+                      placeholder='{"totalAssets": 50000, "currentAssets": 18000, ...}'
+                      className="h-24 text-[10px] font-mono bg-slate-800/50 border-slate-700/50 text-slate-300 placeholder:text-slate-600 resize-none"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleJsonImport}
+                      disabled={!jsonInput.trim()}
+                      className="w-full text-[10px] font-mono gap-1.5 bg-blue-600 hover:bg-blue-500 text-white disabled:bg-slate-800 disabled:text-slate-600"
+                    >
+                      <ClipboardPaste className="h-3 w-3" />
+                      Importar y Analizar
+                    </Button>
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-2 pt-2">
                 <Button
                   onClick={handleAnalyze}
