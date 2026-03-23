@@ -11,6 +11,7 @@ import ThesisDetail from "./pages/ThesisDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import ValuationEngine from "./pages/ValuationEngine";
+import OptionsPricing from "./pages/OptionsPricing";
 import PublicThesis from "./pages/PublicThesis";
 import PublicThesesList from "./pages/PublicThesesList";
 import NotFound from "./pages/NotFound";
