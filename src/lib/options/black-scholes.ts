@@ -37,6 +37,10 @@ export function bsPutPrice(s: number, k: number, r: number, q: number, sigma: nu
   return k * Math.exp(-r * t) * normCdf(-d_2) - s * Math.exp(-q * t) * normCdf(-d_1);
 }
 
+export function bsPrice(s: number, k: number, r: number, q: number, sigma: number, t: number, type: 'call' | 'put'): number {
+  return type === 'call' ? bsCallPrice(s, k, r, q, sigma, t) : bsPutPrice(s, k, r, q, sigma, t);
+}
+
 export interface OptionGreeks {
   callDelta: number;
   putDelta: number;
