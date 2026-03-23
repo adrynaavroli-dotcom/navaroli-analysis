@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Calculator, TrendingUp, TrendingDown, Activity, BarChart3, Loader2 } from 'lucide-react';
+import { Calculator, TrendingUp, TrendingDown, Activity, BarChart3, Loader2, Grid3x3 } from 'lucide-react';
+import { SensitivityChart } from '@/components/options/SensitivityChart';
 import {
   computeValuations,
   bsGreeks,
@@ -252,9 +253,10 @@ export default function OptionsPricing() {
               </Card>
             ) : (
               <Tabs defaultValue="summary" className="space-y-4">
-                <TabsList className="grid grid-cols-3 w-full max-w-md">
+                <TabsList className="grid grid-cols-4 w-full max-w-lg">
                   <TabsTrigger value="summary">Summary</TabsTrigger>
                   <TabsTrigger value="greeks">Greeks</TabsTrigger>
+                  <TabsTrigger value="sensitivity">Sensitivity</TabsTrigger>
                   <TabsTrigger value="compare">Compare</TabsTrigger>
                 </TabsList>
 
@@ -370,7 +372,18 @@ export default function OptionsPricing() {
                   )}
                 </TabsContent>
 
-                {/* Compare Tab */}
+                {/* Sensitivity Tab */}
+                <TabsContent value="sensitivity">
+                  <SensitivityChart
+                    spotPrice={parseFloat(inputs.spotPrice)}
+                    strikePrice={parseFloat(inputs.strikePrice)}
+                    riskFreeRate={parseFloat(inputs.riskFreeRate) / 100}
+                    dividendYield={parseFloat(inputs.dividendYield) / 100}
+                    volatility={parseFloat(inputs.volatility) / 100}
+                    timeToExpiry={inputs.expiryDate ? calculateTimeToExpiry(inputs.expiryDate) : 0.25}
+                  />
+                </TabsContent>
+
                 <TabsContent value="compare">
                   <Card>
                     <CardHeader className="pb-3">
