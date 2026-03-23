@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Loader2, TrendingUp, TrendingDown, Activity, Download, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -137,18 +137,22 @@ export function MarketDataPanel({
     fetchChain(exp);
   };
 
-  const handleOpen = (isOpen: boolean) => {
-    onOpenChange(isOpen);
-    if (isOpen && !chainData && !loading) {
+  // Auto-fetch when dialog opens
+  useEffect(() => {
+    if (open && !chainData && !loading && ticker.trim()) {
       fetchChain();
     }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleOpen = (isOpen: boolean) => {
+    onOpenChange(isOpen);
   };
 
   const contracts = chainType === 'calls' ? (chainData?.calls || []) : (chainData?.puts || []);
 
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogContent className="max-w-4xl max-h-[85vh]">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
