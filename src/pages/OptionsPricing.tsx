@@ -60,6 +60,7 @@ export default function OptionsPricing() {
   const [computing, setComputing] = useState(false);
   const [autoFetching, setAutoFetching] = useState(false);
   const [ticker, setTicker] = useState('');
+  const [assetType, setAssetType] = useState<AssetType>('stock');
 
   const calculateTimeToExpiry = (dateStr: string): number => {
     if (!dateStr) return 0;
