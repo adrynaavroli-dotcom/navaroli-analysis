@@ -94,9 +94,12 @@ const emptyInputs: CreditInputs = {
 export default function CreditAnalysis() {
   const [inputs, setInputs] = useState<CreditInputs>(emptyInputs);
   const [result, setResult] = useState<CreditAnalysisResult | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [jsonInput, setJsonInput] = useState('');
+  const [showJsonImport, setShowJsonImport] = useState(false);
 
   const handleAnalyze = useCallback(() => {
-    // Basic validation
     if (inputs.totalAssets <= 0 || inputs.revenue <= 0) return;
     setResult(analyzeCreditRisk(inputs));
   }, [inputs]);
@@ -104,12 +107,33 @@ export default function CreditAnalysis() {
   const handleReset = useCallback(() => {
     setInputs(emptyInputs);
     setResult(null);
+    setJsonInput('');
   }, []);
 
   const loadExample = useCallback((example: CreditInputs) => {
     setInputs(example);
     setResult(analyzeCreditRisk(example));
   }, []);
+
+  const handleCopyPrompt = useCallback(async () => {
+    await navigator.clipboard.writeText(AI_PROMPT);
+    setCopied(true);
+    toast.success('Prompt copiado al portapapeles');
+    setTimeout(() => setCopied(false), 2000);
+  }, []);
+
+  const handleJsonImport = useCallback(() => {
+    const parsed = parseJsonInput(jsonInput);
+    if (parsed) {
+      setInputs(parsed);
+      setResult(analyzeCreditRisk(parsed));
+      setJsonInput('');
+      setShowJsonImport(false);
+      toast.success('Datos importados correctamente');
+    } else {
+      toast.error('JSON inválido. Verifica el formato e inténtalo de nuevo.');
+    }
+  }, [jsonInput]);
 
   const isValid = inputs.totalAssets > 0 && inputs.revenue > 0;
 
