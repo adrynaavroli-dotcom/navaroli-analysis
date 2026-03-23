@@ -390,9 +390,9 @@ export default function PublicThesis() {
                       ))}
                     </tbody>
                   </table>
-                  {thesis.current_price && (
+                  {referencePrice && (
                     <p className="text-[10px] md:text-xs text-muted-foreground mt-2 md:mt-3">
-                      Green = undervalued vs current price (${thesis.current_price.toFixed(2)}), Red = overvalued
+                      Green = above {thesis.current_price ? `current price ($${thesis.current_price.toFixed(2)})` : `fair value ($${thesis.fair_value?.toFixed(2)})`}, Red = below
                     </p>
                   )}
                 </CardContent>
