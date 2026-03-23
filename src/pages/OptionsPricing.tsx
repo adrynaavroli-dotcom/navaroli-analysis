@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Calculator, TrendingUp, TrendingDown, Activity, BarChart3, Loader2, Grid3x3, GitBranch } from 'lucide-react';
 import { SensitivityChart } from '@/components/options/SensitivityChart';
 import { BinomialTreeChart } from '@/components/options/BinomialTreeChart';
+import { PayoffDiagram } from '@/components/options/PayoffDiagram';
 import { AssetTypeSelector, inferExerciseStyle, type AssetType } from '@/components/options/AssetTypeSelector';
 import {
   computeValuations,
@@ -272,9 +273,10 @@ export default function OptionsPricing() {
               </Card>
             ) : (
               <Tabs defaultValue="summary" className="space-y-4">
-                <TabsList className="grid grid-cols-5 w-full max-w-2xl">
+                <TabsList className="grid grid-cols-6 w-full max-w-3xl">
                   <TabsTrigger value="summary">Summary</TabsTrigger>
                   <TabsTrigger value="greeks">Greeks</TabsTrigger>
+                  <TabsTrigger value="payoff">Payoff</TabsTrigger>
                   <TabsTrigger value="sensitivity">Sensitivity</TabsTrigger>
                   <TabsTrigger value="tree">Tree</TabsTrigger>
                   <TabsTrigger value="compare">Compare</TabsTrigger>
@@ -390,6 +392,16 @@ export default function OptionsPricing() {
                       </CardContent>
                     </Card>
                   )}
+                </TabsContent>
+
+                {/* Payoff Tab */}
+                <TabsContent value="payoff">
+                  <PayoffDiagram
+                    spotPrice={parseFloat(inputs.spotPrice)}
+                    strikePrice={parseFloat(inputs.strikePrice)}
+                    callPremium={effectiveModel?.call ?? 0}
+                    putPremium={effectiveModel?.put ?? 0}
+                  />
                 </TabsContent>
 
                 {/* Sensitivity Tab */}
