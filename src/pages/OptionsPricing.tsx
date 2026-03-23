@@ -38,12 +38,7 @@ function formatGreek(v: number): string {
 }
 
 export default function OptionsPricing() {
-  const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!authLoading && !user) navigate('/auth');
-  }, [authLoading, user, navigate]);
+  const { user } = useAuth();
 
   const [inputs, setInputs] = useState({
     spotPrice: '100',
