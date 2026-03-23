@@ -14,6 +14,7 @@ import ValuationEngine from "./pages/ValuationEngine";
 import OptionsPricing from "./pages/OptionsPricing";
 import PublicThesis from "./pages/PublicThesis";
 import PublicThesesList from "./pages/PublicThesesList";
+import MacroDashboard from "./pages/MacroDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/valuation-engine" element={<ValuationEngine />} />
             <Route path="/options-pricing" element={<OptionsPricing />} />
+            <Route path="/macro" element={<MacroDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
