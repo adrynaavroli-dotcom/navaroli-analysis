@@ -4,20 +4,13 @@
  */
 
 function normCdf(x: number): number {
-  // Approximation of the cumulative distribution function for a standard normal
-  const a1 = 0.254829592;
-  const a2 = -0.284496736;
-  const a3 = 1.421413741;
-  const a4 = -1.453152027;
-  const a5 = 1.061405429;
-  const p = 0.3275911;
-
-  const sign = x < 0 ? -1 : 1;
-  const absX = Math.abs(x);
-  const t = 1.0 / (1.0 + p * absX);
-  const y = 1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-absX * absX / 2);
-
-  return 0.5 * (1.0 + sign * y);
+  // Abramowitz & Stegun 26.2.17 approximation for the normal CDF
+  if (x >= 0) {
+    const k = 1.0 / (1.0 + 0.2316419 * x);
+    const poly = k * (0.319381530 + k * (-0.356563782 + k * (1.781477937 + k * (-1.821255978 + k * 1.330274429))));
+    return 1.0 - (1.0 / Math.sqrt(2.0 * Math.PI)) * Math.exp(-0.5 * x * x) * poly;
+  }
+  return 1.0 - normCdf(-x);
 }
 
 function normPdf(x: number): number {
