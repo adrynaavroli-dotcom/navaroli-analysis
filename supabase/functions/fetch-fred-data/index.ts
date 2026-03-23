@@ -12,6 +12,7 @@ serve(async (req) => {
 
   try {
     const fredApiKey = Deno.env.get('FRED_API_KEY');
+    console.log('FRED_API_KEY length:', fredApiKey?.length, 'matches pattern:', fredApiKey ? /^[a-z0-9]{32}$/.test(fredApiKey) : false);
     if (!fredApiKey) {
       return new Response(
         JSON.stringify({ error: 'FRED_API_KEY not configured' }),
