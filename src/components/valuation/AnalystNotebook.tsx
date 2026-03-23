@@ -19,7 +19,7 @@ export function AnalystNotebook({ workspaceId, initialNotes = '' }: AnalystNoteb
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Auto-save with debounce
   const saveNotes = useCallback(async (content: string) => {
