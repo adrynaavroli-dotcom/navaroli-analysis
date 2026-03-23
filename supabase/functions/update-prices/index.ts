@@ -17,60 +17,47 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Check for authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    let authorized = false;
+
+    // Method 1: Cron secret (for scheduled jobs)
+    const cronSecret = req.headers.get('x-cron-secret');
+    const expectedSecret = Deno.env.get('CRON_SECRET');
+    if (expectedSecret && cronSecret === expectedSecret) {
+      authorized = true;
+      console.log('Authorized via cron secret');
+    }
+
+    // Method 2: Admin JWT (for manual triggers)
+    if (!authorized) {
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.replace('Bearer ', '');
+        const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+          global: { headers: { Authorization: authHeader } }
+        });
+        const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+
+        if (!claimsError && claimsData?.claims) {
+          const userId = claimsData.claims.sub;
+          const supabaseCheck = createClient(supabaseUrl, supabaseServiceKey);
+          const { data: hasRole } = await supabaseCheck.rpc('has_role', { _user_id: userId, _role: 'admin' });
+          if (hasRole) {
+            authorized = true;
+            console.log('Authorized via admin JWT:', userId);
+          }
+        }
+      }
+    }
+
+    if (!authorized) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized - No valid authorization header' }),
+        JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Verify the user using getClaims
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
-    
-    if (claimsError || !claimsData?.claims) {
-      console.error('Auth error:', claimsError);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized - Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const userId = claimsData.claims.sub;
-    console.log('Authenticated user:', userId);
-
-    // Check if user has admin role
-    const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
-    const { data: roleData, error: roleError } = await supabaseService
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .eq('role', 'admin')
-      .maybeSingle();
-
-    if (roleError) {
-      console.error('Role check error:', roleError);
-      return new Response(
-        JSON.stringify({ error: 'Error checking user permissions' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (!roleData) {
-      return new Response(
-        JSON.stringify({ error: 'Forbidden - Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Use service role key to bypass RLS for updates
-    const supabase = supabaseService;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get all published theses
     const { data: theses, error: fetchError } = await supabase

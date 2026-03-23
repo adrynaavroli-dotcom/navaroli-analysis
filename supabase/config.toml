@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.fetch-stock-data]
 verify_jwt = false
+
+[functions.fetch-fred-data]
+verify_jwt = false
+
+[functions.check-thesis-alerts]
+verify_jwt = false

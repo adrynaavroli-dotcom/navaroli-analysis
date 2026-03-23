@@ -1,13 +1,25 @@
-import { isYieldCurveInverted } from '@/lib/macro-data';
+import { MacroDataPoint, isYieldCurveInverted } from '@/lib/macro-data';
 import { AlertTriangle, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function RecessionWidget() {
-  const { inverted, spread, duration } = isYieldCurveInverted();
+interface RecessionWidgetProps {
+  data: MacroDataPoint[];
+}
+
+export function RecessionWidget({ data }: RecessionWidgetProps) {
+  const { inverted, spread, duration } = isYieldCurveInverted(data);
+
+  if (data.length === 0) {
+    return (
+      <div className="flex-1 rounded-lg border border-slate-700/30 bg-slate-900/40 p-4">
+        <p className="text-xs text-slate-500 font-mono">Loading yield curve data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className={cn(
-      'rounded-lg border p-4 backdrop-blur-sm',
+      'flex-1 rounded-lg border p-4 backdrop-blur-sm',
       inverted
         ? 'border-red-500/30 bg-red-950/30'
         : 'border-emerald-500/20 bg-emerald-950/20'
