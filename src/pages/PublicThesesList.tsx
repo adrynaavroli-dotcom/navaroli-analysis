@@ -38,7 +38,7 @@ export default function PublicThesesList() {
       
       <main className="container py-12 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Research Library</h1>
+          <h1 className="text-3xl font-bold mb-2">Fundamentals</h1>
           <p className="text-muted-foreground">
             Published investment analyses and valuation models
           </p>

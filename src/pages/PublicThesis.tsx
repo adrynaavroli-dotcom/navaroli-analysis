@@ -168,10 +168,11 @@ export default function PublicThesis() {
     return cell.fairValue ?? cell.pricePerShare;
   };
 
-  // Get sensitivity cell color
+  // Get sensitivity cell color - use fair_value as reference when current_price is unavailable
+  const referencePrice = thesis.current_price ?? thesis.fair_value;
   const getSensitivityColor = (value: number | undefined): string => {
-    if (!value || !thesis.current_price) return 'bg-muted/50';
-    const ratio = value / thesis.current_price;
+    if (!value || !referencePrice) return 'bg-muted/50';
+    const ratio = value / referencePrice;
     if (ratio >= 1.5) return 'bg-green-500/40 text-green-900 dark:text-green-100';
     if (ratio >= 1.2) return 'bg-green-500/25';
     if (ratio >= 1.0) return 'bg-green-500/10';
@@ -389,9 +390,9 @@ export default function PublicThesis() {
                       ))}
                     </tbody>
                   </table>
-                  {thesis.current_price && (
+                  {referencePrice && (
                     <p className="text-[10px] md:text-xs text-muted-foreground mt-2 md:mt-3">
-                      Green = undervalued vs current price (${thesis.current_price.toFixed(2)}), Red = overvalued
+                      Green = above {thesis.current_price ? `current price ($${thesis.current_price.toFixed(2)})` : `fair value ($${thesis.fair_value?.toFixed(2)})`}, Red = below
                     </p>
                   )}
                 </CardContent>
