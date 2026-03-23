@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Calculator, TrendingUp, TrendingDown, Activity, BarChart3, Loader2, Grid3x3 } from 'lucide-react';
+import { Calculator, TrendingUp, TrendingDown, Activity, BarChart3, Loader2, Grid3x3, GitBranch } from 'lucide-react';
 import { SensitivityChart } from '@/components/options/SensitivityChart';
+import { BinomialTreeChart } from '@/components/options/BinomialTreeChart';
+import { AssetTypeSelector, inferExerciseStyle, type AssetType } from '@/components/options/AssetTypeSelector';
 import {
   computeValuations,
   bsGreeks,
@@ -58,6 +60,7 @@ export default function OptionsPricing() {
   const [computing, setComputing] = useState(false);
   const [autoFetching, setAutoFetching] = useState(false);
   const [ticker, setTicker] = useState('');
+  const [assetType, setAssetType] = useState<AssetType>('stock');
 
   const calculateTimeToExpiry = (dateStr: string): number => {
     if (!dateStr) return 0;
@@ -160,11 +163,27 @@ export default function OptionsPricing() {
                 <CardTitle className="text-sm font-medium">Auto-Fetch Price</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <AssetTypeSelector
+                  value={assetType}
+                  onChange={(type, defaultExercise) => {
+                    setAssetType(type);
+                    setInputs(prev => ({ ...prev, exerciseStyle: defaultExercise }));
+                  }}
+                  onTickerSelect={(t) => {
+                    setTicker(t);
+                    const style = inferExerciseStyle(t, assetType);
+                    setInputs(prev => ({ ...prev, exerciseStyle: style }));
+                  }}
+                />
                 <div className="flex gap-2">
                   <Input
                     placeholder="AAPL, MSFT..."
                     value={ticker}
-                    onChange={e => setTicker(e.target.value)}
+                    onChange={e => {
+                      setTicker(e.target.value);
+                      const style = inferExerciseStyle(e.target.value, assetType);
+                      setInputs(prev => ({ ...prev, exerciseStyle: style }));
+                    }}
                     onKeyDown={e => e.key === 'Enter' && handleAutoFetch()}
                     className="font-mono"
                   />
@@ -253,10 +272,11 @@ export default function OptionsPricing() {
               </Card>
             ) : (
               <Tabs defaultValue="summary" className="space-y-4">
-                <TabsList className="grid grid-cols-4 w-full max-w-lg">
+                <TabsList className="grid grid-cols-5 w-full max-w-2xl">
                   <TabsTrigger value="summary">Summary</TabsTrigger>
                   <TabsTrigger value="greeks">Greeks</TabsTrigger>
                   <TabsTrigger value="sensitivity">Sensitivity</TabsTrigger>
+                  <TabsTrigger value="tree">Tree</TabsTrigger>
                   <TabsTrigger value="compare">Compare</TabsTrigger>
                 </TabsList>
 
@@ -381,6 +401,19 @@ export default function OptionsPricing() {
                     dividendYield={parseFloat(inputs.dividendYield) / 100}
                     volatility={parseFloat(inputs.volatility) / 100}
                     timeToExpiry={inputs.expiryDate ? calculateTimeToExpiry(inputs.expiryDate) : 0.25}
+                  />
+                </TabsContent>
+
+                {/* Tree Tab */}
+                <TabsContent value="tree">
+                  <BinomialTreeChart
+                    spotPrice={parseFloat(inputs.spotPrice)}
+                    strikePrice={parseFloat(inputs.strikePrice)}
+                    riskFreeRate={parseFloat(inputs.riskFreeRate) / 100}
+                    dividendYield={parseFloat(inputs.dividendYield) / 100}
+                    volatility={parseFloat(inputs.volatility) / 100}
+                    timeToExpiry={inputs.expiryDate ? calculateTimeToExpiry(inputs.expiryDate) : 0.25}
+                    isAmerican={inputs.exerciseStyle === 'american'}
                   />
                 </TabsContent>
 
