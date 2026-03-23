@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const fredApiKey = Deno.env.get('FRED_API_KEY');
+    const fredApiKey = Deno.env.get('FRED_API_KEY')?.trim();
     if (!fredApiKey) {
       return new Response(
         JSON.stringify({ error: 'FRED_API_KEY not configured' }),
