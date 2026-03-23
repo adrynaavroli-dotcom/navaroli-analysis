@@ -68,8 +68,8 @@ export const defaultIndicatorConfigs: MacroIndicatorConfig[] = [
     description: 'St. Louis Fed Financial Stress Index', category: 'liquidity',
   },
   {
-    id: 'ism', name: 'ISM Manufacturing PMI', fredSeriesId: 'NAPM', unit: 'Index',
-    description: 'ISM Manufacturing Purchasing Managers Index', category: 'sentiment',
+    id: 'sentiment', name: 'Consumer Sentiment', fredSeriesId: 'UMCSENT', unit: 'Index',
+    description: 'U. Michigan Consumer Sentiment Index', category: 'sentiment',
   },
   {
     id: 'yield-curve', name: '10Y-2Y Spread', fredSeriesId: 'T10Y2Y', unit: 'bps',
