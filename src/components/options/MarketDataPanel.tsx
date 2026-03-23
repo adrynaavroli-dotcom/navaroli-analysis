@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Loader2, TrendingUp, TrendingDown, Activity, Download, BarChart3 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -256,6 +257,14 @@ export function MarketDataPanel({
                   </table>
                 </ScrollArea>
 
+
+                {/* Volatility Smile Chart */}
+                <VolatilitySmileChart
+                  calls={chainData.calls}
+                  puts={chainData.puts}
+                  underlyingPrice={chainData.underlyingPrice}
+                />
+
                 <p className="text-[10px] text-muted-foreground text-center">
                   Data from Yahoo Finance • ~15 min delay • US equities only • Click "Use" to apply strike & IV to calculator
                 </p>
@@ -369,6 +378,132 @@ export function MarketDataPanel({
         </Tabs>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function VolatilitySmileChart({
+  calls,
+  puts,
+  underlyingPrice,
+}: {
+  calls: OptionContract[];
+  puts: OptionContract[];
+  underlyingPrice: number;
+}) {
+  const smileData = useMemo(() => {
+    const callPoints = calls
+      .filter(c => c.impliedVolatility > 0.001 && c.volume > 0)
+      .map(c => ({
+        strike: c.strike,
+        callIV: parseFloat((c.impliedVolatility * 100).toFixed(1)),
+      }));
+
+    const putPoints = puts
+      .filter(p => p.impliedVolatility > 0.001 && p.volume > 0)
+      .map(p => ({
+        strike: p.strike,
+        putIV: parseFloat((p.impliedVolatility * 100).toFixed(1)),
+      }));
+
+    // Merge by strike
+    const strikeMap = new Map<number, { strike: number; callIV?: number; putIV?: number }>();
+    callPoints.forEach(c => strikeMap.set(c.strike, { strike: c.strike, callIV: c.callIV }));
+    putPoints.forEach(p => {
+      const existing = strikeMap.get(p.strike) || { strike: p.strike };
+      strikeMap.set(p.strike, { ...existing, putIV: p.putIV });
+    });
+
+    return Array.from(strikeMap.values()).sort((a, b) => a.strike - b.strike);
+  }, [calls, puts]);
+
+  if (smileData.length < 3) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <BarChart3 className="h-4 w-4" />
+          Volatility Smile — IV vs Strike
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart data={smileData} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
+            <XAxis
+              dataKey="strike"
+              tick={{ fontSize: 10 }}
+              className="fill-muted-foreground"
+              tickFormatter={(v: number) => `$${v}`}
+            />
+            <YAxis
+              tick={{ fontSize: 10 }}
+              className="fill-muted-foreground"
+              tickFormatter={(v: number) => `${v}%`}
+              width={48}
+            />
+            <RechartsTooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '6px',
+                fontSize: '12px',
+              }}
+              formatter={(value: number, name: string) => [
+                `${value.toFixed(1)}%`,
+                name === 'callIV' ? 'Call IV' : 'Put IV',
+              ]}
+              labelFormatter={(label: number) => `Strike: $${label}`}
+            />
+            {underlyingPrice > 0 && (
+              <ReferenceLine
+                x={underlyingPrice}
+                stroke="hsl(var(--primary))"
+                strokeDasharray="4 4"
+                strokeWidth={1.5}
+                label={{
+                  value: 'ATM',
+                  position: 'top',
+                  fill: 'hsl(var(--primary))',
+                  fontSize: 10,
+                }}
+              />
+            )}
+            <Line
+              type="monotone"
+              dataKey="callIV"
+              stroke="hsl(var(--success, 142 76% 36%))"
+              strokeWidth={2}
+              dot={{ r: 2 }}
+              activeDot={{ r: 4 }}
+              name="callIV"
+              connectNulls
+            />
+            <Line
+              type="monotone"
+              dataKey="putIV"
+              stroke="hsl(var(--destructive))"
+              strokeWidth={2}
+              dot={{ r: 2 }}
+              activeDot={{ r: 4 }}
+              name="putIV"
+              connectNulls
+            />
+          </LineChart>
+        </ResponsiveContainer>
+        <div className="flex items-center justify-center gap-4 mt-2 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-0.5 bg-success inline-block rounded" /> Call IV
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-0.5 bg-destructive inline-block rounded" /> Put IV
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-0.5 border-t border-dashed border-primary inline-block" /> ATM
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
