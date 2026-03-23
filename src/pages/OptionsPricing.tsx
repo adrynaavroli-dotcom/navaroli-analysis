@@ -163,11 +163,27 @@ export default function OptionsPricing() {
                 <CardTitle className="text-sm font-medium">Auto-Fetch Price</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <AssetTypeSelector
+                  value={assetType}
+                  onChange={(type, defaultExercise) => {
+                    setAssetType(type);
+                    setInputs(prev => ({ ...prev, exerciseStyle: defaultExercise }));
+                  }}
+                  onTickerSelect={(t) => {
+                    setTicker(t);
+                    const style = inferExerciseStyle(t, assetType);
+                    setInputs(prev => ({ ...prev, exerciseStyle: style }));
+                  }}
+                />
                 <div className="flex gap-2">
                   <Input
                     placeholder="AAPL, MSFT..."
                     value={ticker}
-                    onChange={e => setTicker(e.target.value)}
+                    onChange={e => {
+                      setTicker(e.target.value);
+                      const style = inferExerciseStyle(e.target.value, assetType);
+                      setInputs(prev => ({ ...prev, exerciseStyle: style }));
+                    }}
                     onKeyDown={e => e.key === 'Enter' && handleAutoFetch()}
                     className="font-mono"
                   />
