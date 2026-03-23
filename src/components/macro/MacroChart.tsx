@@ -147,9 +147,6 @@ export function MacroChart({ indicator, className }: MacroChartProps) {
             {indicator.id === 'yield-curve' && (
               <ReferenceLine y={0} stroke="hsl(0, 84%, 60%)" strokeDasharray="4 4" strokeOpacity={0.6} />
             )}
-            {indicator.id === 'ism' && (
-              <ReferenceLine y={50} stroke="hsl(45, 93%, 47%)" strokeDasharray="4 4" strokeOpacity={0.6} />
-            )}
             <Area
               type="monotone"
               dataKey="value"
