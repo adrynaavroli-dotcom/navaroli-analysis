@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MarketDataPanel } from '@/components/options/MarketDataPanel';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
