@@ -197,6 +197,17 @@ export default function OptionsPricing() {
                 {fetchError && (
                   <p className="text-xs text-destructive">{fetchError}</p>
                 )}
+                {ticker.trim() && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2"
+                    onClick={() => setMarketDataOpen(true)}
+                  >
+                    <LineChart className="h-4 w-4" />
+                    Options Chain & Volatility
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
