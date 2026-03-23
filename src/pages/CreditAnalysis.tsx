@@ -11,8 +11,71 @@ import {
   riskyCompanyExample,
 } from '@/lib/credit-analysis';
 import { Button } from '@/components/ui/button';
-import { ShieldCheck, AlertTriangle, BarChart3, RotateCcw, Beaker } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { ShieldCheck, AlertTriangle, BarChart3, RotateCcw, Beaker, Copy, Check, ChevronDown, ChevronUp, ClipboardPaste, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+
+const AI_PROMPT = `Necesito los siguientes datos financieros anuales (en millones) de [NOMBRE DE LA EMPRESA] para realizar un análisis de crédito corporativo (Scorecard + Altman Z-Score). Por favor responde SOLO con un JSON con esta estructura exacta:
+
+{
+  "totalAssets": 0,
+  "currentAssets": 0,
+  "totalLiabilities": 0,
+  "currentLiabilities": 0,
+  "equity": 0,
+  "retainedEarnings": 0,
+  "revenue": 0,
+  "ebit": 0,
+  "ebitda": 0,
+  "interestExpense": 0,
+  "marketCap": 0
+}
+
+Campos requeridos:
+• totalAssets — Activo Total
+• currentAssets — Activo Corriente (activos líquidos <1 año)
+• totalLiabilities — Pasivo Total
+• currentLiabilities — Pasivo Corriente (<1 año)
+• equity — Patrimonio Neto (capital propio)
+• retainedEarnings — Reservas Retenidas (Retained Earnings)
+• revenue — Ventas/Ingresos Totales
+• ebit — EBIT (Beneficio Antes de Intereses e Impuestos)
+• ebitda — EBITDA (opcional, si no está disponible pon null)
+• interestExpense — Gastos Financieros (intereses pagados)
+• marketCap — Capitalización de Mercado (opcional, si no está disponible pon null)
+
+Usa los datos del último informe anual disponible. Todos los valores en millones.`;
+
+function parseJsonInput(text: string): CreditInputs | null {
+  try {
+    // Try to extract JSON from the text (in case it's wrapped in markdown code blocks)
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    const parsed = JSON.parse(jsonMatch[0]);
+    
+    const requiredKeys = ['totalAssets', 'currentAssets', 'totalLiabilities', 'currentLiabilities', 'equity', 'retainedEarnings', 'revenue', 'ebit', 'interestExpense'];
+    for (const key of requiredKeys) {
+      if (parsed[key] === undefined || parsed[key] === null) return null;
+    }
+    
+    return {
+      totalAssets: Number(parsed.totalAssets) || 0,
+      currentAssets: Number(parsed.currentAssets) || 0,
+      totalLiabilities: Number(parsed.totalLiabilities) || 0,
+      currentLiabilities: Number(parsed.currentLiabilities) || 0,
+      equity: Number(parsed.equity) || 0,
+      retainedEarnings: Number(parsed.retainedEarnings) || 0,
+      revenue: Number(parsed.revenue) || 0,
+      ebit: Number(parsed.ebit) || 0,
+      ebitda: parsed.ebitda != null ? Number(parsed.ebitda) : null,
+      interestExpense: Number(parsed.interestExpense) || 0,
+      marketCap: parsed.marketCap != null ? Number(parsed.marketCap) : null,
+    };
+  } catch {
+    return null;
+  }
+}
 
 const emptyInputs: CreditInputs = {
   totalAssets: 0,
