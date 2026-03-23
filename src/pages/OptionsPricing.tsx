@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Calculator, TrendingUp, TrendingDown, Activity, BarChart3, Loader2, Grid3x3, GitBranch, LineChart } from 'lucide-react';
+import { Calculator, TrendingUp, TrendingDown, Activity, BarChart3, Loader2, Grid3x3, GitBranch, LineChart, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SensitivityChart } from '@/components/options/SensitivityChart';
 import { BinomialTreeChart } from '@/components/options/BinomialTreeChart';
 import { PayoffDiagram } from '@/components/options/PayoffDiagram';
@@ -57,6 +58,7 @@ export default function OptionsPricing() {
   const [ticker, setTicker] = useState('');
   const [assetType, setAssetType] = useState<AssetType>('stock');
   const [marketDataOpen, setMarketDataOpen] = useState(false);
+  const [showTickerHelp, setShowTickerHelp] = useState(false);
 
   const calculateTimeToExpiry = (dateStr: string): number => {
     if (!dateStr) return 0;
@@ -154,9 +156,44 @@ export default function OptionsPricing() {
             {/* Auto-Fetch */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Auto-Fetch Price</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium">Auto-Fetch Price</CardTitle>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setShowTickerHelp(!showTickerHelp)}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <HelpCircle className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left" className="text-xs max-w-[200px]">
+                      Click to see ticker format examples for international markets
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </CardHeader>
               <CardContent className="space-y-3">
+                {showTickerHelp && (
+                  <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2 text-xs">
+                    <p className="font-medium text-foreground">Ticker Format Guide</p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Uses Yahoo Finance format. US tickers work directly. For international stocks, add the exchange suffix:
+                    </p>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11px]">
+                      <span className="text-muted-foreground">🇺🇸 US:</span><span>AAPL, MSFT</span>
+                      <span className="text-muted-foreground">🇪🇸 Madrid:</span><span>SAN.MC, ITX.MC</span>
+                      <span className="text-muted-foreground">🇫🇷 Paris:</span><span>MC.PA, BNP.PA</span>
+                      <span className="text-muted-foreground">🇩🇪 Frankfurt:</span><span>SAP.DE, BMW.DE</span>
+                      <span className="text-muted-foreground">🇬🇧 London:</span><span>SHEL.L, AZN.L</span>
+                      <span className="text-muted-foreground">🇯🇵 Tokyo:</span><span>7203.T</span>
+                      <span className="text-muted-foreground">🇭🇰 Hong Kong:</span><span>0700.HK</span>
+                    </div>
+                    <p className="text-muted-foreground text-[10px] leading-relaxed pt-1 border-t border-border/50">
+                      💡 Search your stock on <a href="https://finance.yahoo.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">finance.yahoo.com</a> to find the exact ticker symbol.
+                    </p>
+                  </div>
+                )}
                 <AssetTypeSelector
                   value={assetType}
                   onChange={(type, defaultExercise) => {
@@ -171,7 +208,7 @@ export default function OptionsPricing() {
                 />
                 <div className="flex gap-2">
                   <Input
-                    placeholder="AAPL, MSFT..."
+                    placeholder="AAPL, MC.PA, SAN.MC..."
                     value={ticker}
                     onChange={e => {
                       setTicker(e.target.value);
