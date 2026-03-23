@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MarketDataPanel } from '@/components/options/MarketDataPanel';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Calculator, TrendingUp, TrendingDown, Activity, BarChart3, Loader2, Grid3x3, GitBranch } from 'lucide-react';
+import { Calculator, TrendingUp, TrendingDown, Activity, BarChart3, Loader2, Grid3x3, GitBranch, LineChart } from 'lucide-react';
 import { SensitivityChart } from '@/components/options/SensitivityChart';
 import { BinomialTreeChart } from '@/components/options/BinomialTreeChart';
 import { PayoffDiagram } from '@/components/options/PayoffDiagram';
@@ -62,6 +63,7 @@ export default function OptionsPricing() {
   const [autoFetching, setAutoFetching] = useState(false);
   const [ticker, setTicker] = useState('');
   const [assetType, setAssetType] = useState<AssetType>('stock');
+  const [marketDataOpen, setMarketDataOpen] = useState(false);
 
   const calculateTimeToExpiry = (dateStr: string): number => {
     if (!dateStr) return 0;
@@ -194,6 +196,17 @@ export default function OptionsPricing() {
                 </div>
                 {fetchError && (
                   <p className="text-xs text-destructive">{fetchError}</p>
+                )}
+                {ticker.trim() && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2"
+                    onClick={() => setMarketDataOpen(true)}
+                  >
+                    <LineChart className="h-4 w-4" />
+                    Options Chain & Volatility
+                  </Button>
                 )}
               </CardContent>
             </Card>
@@ -484,6 +497,23 @@ export default function OptionsPricing() {
           </div>
         </div>
       </main>
+
+      <MarketDataPanel
+        open={marketDataOpen}
+        onOpenChange={setMarketDataOpen}
+        ticker={ticker}
+        onApplyStrike={(strike, expiration, iv) => {
+          setInputs(prev => ({
+            ...prev,
+            strikePrice: String(strike),
+            expiryDate: expiration,
+            volatility: String(iv.toFixed(1)),
+          }));
+        }}
+        onApplyVolatility={(vol) => {
+          setInputs(prev => ({ ...prev, volatility: String(vol.toFixed(1)) }));
+        }}
+      />
     </div>
   );
 }
