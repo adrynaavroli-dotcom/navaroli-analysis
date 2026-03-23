@@ -9,19 +9,32 @@ const corsHeaders = {
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
 async function getYahooCrumbAndCookie(): Promise<{ crumb: string; cookie: string }> {
-  // Step 1: Visit Yahoo Finance to get cookies
-  const initRes = await fetch('https://finance.yahoo.com/', {
+  // Step 1: Hit the consent/login page to get session cookies
+  const consentRes = await fetch('https://fc.yahoo.com', {
     headers: { 'User-Agent': USER_AGENT },
-    redirect: 'follow',
+    redirect: 'manual',
   });
+  // Consume body
+  await consentRes.text().catch(() => {});
   
-  const setCookies = initRes.headers.getSetCookie?.() || [];
-  const cookieStr = setCookies.map(c => c.split(';')[0]).join('; ');
-  
-  // Also read the body to complete the request
-  await initRes.text();
+  const setCookies = consentRes.headers.getSetCookie?.() || [];
+  let cookieStr = setCookies.map(c => c.split(';')[0]).join('; ');
 
-  // Step 2: Get crumb using the cookies
+  if (!cookieStr) {
+    // Fallback: try query2 directly for cookie
+    const q2Res = await fetch('https://query2.finance.yahoo.com/v1/test/getcrumb', {
+      headers: { 'User-Agent': USER_AGENT },
+      redirect: 'manual',
+    });
+    const q2Cookies = q2Res.headers.getSetCookie?.() || [];
+    cookieStr = q2Cookies.map(c => c.split(';')[0]).join('; ');
+    const crumbText = await q2Res.text();
+    if (q2Res.ok && crumbText && !crumbText.includes('Too Many')) {
+      return { crumb: crumbText.trim(), cookie: cookieStr };
+    }
+  }
+
+  // Step 2: Get crumb
   const crumbRes = await fetch('https://query2.finance.yahoo.com/v1/test/getcrumb', {
     headers: {
       'User-Agent': USER_AGENT,
@@ -35,7 +48,7 @@ async function getYahooCrumbAndCookie(): Promise<{ crumb: string; cookie: string
 
   const crumb = await crumbRes.text();
   if (!crumb || crumb.includes('Too Many Requests')) {
-    throw new Error('Failed to obtain valid crumb from Yahoo');
+    throw new Error('Failed to obtain valid crumb');
   }
 
   return { crumb: crumb.trim(), cookie: cookieStr };
@@ -87,52 +100,56 @@ serve(async (req) => {
     const sanitizedTicker = ticker.toUpperCase().trim();
     console.log(`Fetching options chain for: ${sanitizedTicker}`);
 
-    // Get crumb and cookie for authenticated Yahoo requests
-    const { crumb, cookie } = await getYahooCrumbAndCookie();
-    console.log(`Got crumb: ${crumb.substring(0, 8)}...`);
+    // Try multiple approaches
+    let optionChain = null;
 
-    // Fetch options chain from Yahoo Finance with crumb auth
-    let url = `https://query2.finance.yahoo.com/v7/finance/options/${sanitizedTicker}?crumb=${encodeURIComponent(crumb)}`;
-    if (expirationDate) {
-      const epoch = Math.floor(new Date(expirationDate).getTime() / 1000);
-      url += `&date=${epoch}`;
+    // Approach 1: query2 with crumb+cookie
+    try {
+      const { crumb, cookie } = await getYahooCrumbAndCookie();
+      console.log(`Got crumb (len=${crumb.length})`);
+
+      let url = `https://query2.finance.yahoo.com/v7/finance/options/${sanitizedTicker}?crumb=${encodeURIComponent(crumb)}`;
+      if (expirationDate) {
+        url += `&date=${Math.floor(new Date(expirationDate).getTime() / 1000)}`;
+      }
+
+      const res = await fetch(url, {
+        headers: { 'User-Agent': USER_AGENT, 'Cookie': cookie },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        optionChain = data.optionChain?.result?.[0];
+      } else {
+        console.log(`query2 failed: ${res.status}`);
+      }
+    } catch (e) {
+      console.log(`Crumb approach failed: ${e}`);
     }
 
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': USER_AGENT,
-        'Cookie': cookie,
-      },
-    });
-
-    if (!response.ok) {
-      console.error(`Yahoo options API error: ${response.status}`);
-      // Fallback: try query1 without crumb
-      const fallbackUrl = `https://query1.finance.yahoo.com/v7/finance/options/${sanitizedTicker}` +
-        (expirationDate ? `?date=${Math.floor(new Date(expirationDate).getTime() / 1000)}` : '');
-      const fallbackRes = await fetch(fallbackUrl, {
-        headers: { 'User-Agent': USER_AGENT },
-      });
-      if (!fallbackRes.ok) {
-        return new Response(JSON.stringify({ error: 'Failed to fetch options data. Check if ticker has listed options.' }), {
-          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Approach 2: query1 without crumb (may work in some regions)
+    if (!optionChain) {
+      try {
+        let url = `https://query1.finance.yahoo.com/v7/finance/options/${sanitizedTicker}`;
+        if (expirationDate) {
+          url += `?date=${Math.floor(new Date(expirationDate).getTime() / 1000)}`;
+        }
+        const res = await fetch(url, {
+          headers: { 'User-Agent': USER_AGENT },
         });
+        if (res.ok) {
+          const data = await res.json();
+          optionChain = data.optionChain?.result?.[0];
+        } else {
+          console.log(`query1 failed: ${res.status}`);
+        }
+      } catch (e) {
+        console.log(`query1 approach failed: ${e}`);
       }
-      const fallbackData = await fallbackRes.json();
-      const fbChain = fallbackData.optionChain?.result?.[0];
-      if (fbChain) {
-        return buildResponse(fbChain, sanitizedTicker);
-      }
-      return new Response(JSON.stringify({ error: 'No options data found for this ticker' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
     }
-
-    const data = await response.json();
-    const optionChain = data.optionChain?.result?.[0];
 
     if (!optionChain) {
-      return new Response(JSON.stringify({ error: 'No options data found for this ticker' }), {
+      return new Response(JSON.stringify({ error: 'Failed to fetch options data. Yahoo Finance may be blocking server requests. Try again later.' }), {
         status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
