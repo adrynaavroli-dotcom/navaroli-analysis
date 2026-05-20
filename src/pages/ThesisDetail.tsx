@@ -267,6 +267,33 @@ export default function ThesisDetail() {
                     </div>
                   )}
                 </div>
+
+                {/* Company-specific business KPIs (e.g. Google) */}
+                {isGoogleTicker(thesis.ticker) && (
+                  <div className="mt-6 pt-4 border-t">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                        <Briefcase className="h-3.5 w-3.5" />
+                        Alphabet — Business KPIs
+                      </h4>
+                      <Badge variant="outline" className="text-[10px]">FY2024</Badge>
+                    </div>
+                    <div className="space-y-3">
+                      {GOOGLE_BUSINESS_KPIS.map((kpi) => (
+                        <div key={kpi.label} className="flex items-start justify-between gap-3 py-1.5 border-b border-border/50 last:border-0">
+                          <div className="min-w-0">
+                            <p className="text-xs text-muted-foreground leading-tight">{kpi.label}</p>
+                            <p className="text-[10px] text-muted-foreground/70 mt-0.5 leading-tight">{kpi.hint}</p>
+                          </div>
+                          <span className="text-sm font-semibold tabular-nums whitespace-nowrap">{kpi.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-2 italic">
+                      Source: Alphabet 10-K FY2024.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
