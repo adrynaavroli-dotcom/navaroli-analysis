@@ -85,6 +85,40 @@ export default function ThesisDetail() {
                     ? 'bg-success/10 text-success border-success/20' 
                     : 'bg-destructive/10 text-destructive border-destructive/20'
                   }
+  return (
+    <div className="min-h-screen bg-background thesis-printable">
+      {/* Print styles for "Download / Save as PDF" */}
+      <style>{`
+        @media print {
+          @page { size: A4; margin: 14mm; }
+          body { background: white !important; }
+          .no-print { display: none !important; }
+          .thesis-printable .sticky { position: static !important; }
+          .bento-card { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; border: 1px solid #e5e7eb !important; }
+          [role="tabpanel"] { display: block !important; }
+          [role="tablist"] { display: none !important; }
+          .recharts-wrapper { page-break-inside: avoid; }
+        }
+      `}</style>
+
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b no-print">
+        <div className="container py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Link>
+              </Button>
+              <div className="hidden sm:flex items-center gap-3">
+                <span className="text-2xl font-bold font-mono">${thesis.ticker}</span>
+                <Badge 
+                  className={isPositive 
+                    ? 'bg-success/10 text-success border-success/20' 
+                    : 'bg-destructive/10 text-destructive border-destructive/20'
+                  }
                   variant="outline"
                 >
                   {thesis.direction.toUpperCase()}
@@ -107,12 +141,23 @@ export default function ThesisDetail() {
                   </p>
                 </div>
               )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.print()}
+                title="Download as PDF (use 'Save as PDF' in the print dialog)"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <Header />
+      <div className="no-print">
+        <Header />
+      </div>
 
       <main className="container py-8">
         {/* Mobile Title */}
