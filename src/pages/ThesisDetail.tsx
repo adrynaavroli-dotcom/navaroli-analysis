@@ -428,6 +428,27 @@ export default function ThesisDetail() {
                 </TabsContent>
               </Tabs>
             </div>
+
+            {/* Print-only: all sections expanded */}
+            <div className="print-only space-y-6">
+              {[
+                { title: 'Executive Summary', content: thesis.executive_summary },
+                { title: 'Investment Case', content: thesis.investment_case },
+                { title: 'Valuation', content: thesis.valuation },
+                { title: 'Risks', content: thesis.risks },
+              ].map((s) => (
+                <div key={s.title} className="bento-card p-6">
+                  <h3 className="text-lg font-semibold mb-3">{s.title}</h3>
+                  {s.content ? (
+                    <div className="prose prose-slate max-w-none">
+                      <ReactMarkdown>{s.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground italic">Not available.</p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </main>
