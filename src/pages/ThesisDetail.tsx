@@ -69,14 +69,14 @@ export default function ThesisDetail() {
     <div className="min-h-screen bg-background thesis-printable">
       {/* Print styles for "Download / Save as PDF" */}
       <style>{`
+        .print-only { display: none; }
         @media print {
           @page { size: A4; margin: 14mm; }
           body { background: white !important; }
-          .no-print { display: none !important; }
+          .no-print, .print-hide { display: none !important; }
+          .print-only { display: block !important; }
           .thesis-printable .sticky { position: static !important; }
           .bento-card { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; border: 1px solid #e5e7eb !important; }
-          [role="tabpanel"] { display: block !important; }
-          [role="tablist"] { display: none !important; }
           .recharts-wrapper { page-break-inside: avoid; }
         }
       `}</style>
@@ -267,6 +267,33 @@ export default function ThesisDetail() {
                     </div>
                   )}
                 </div>
+
+                {/* Company-specific business KPIs (e.g. Google) */}
+                {isGoogleTicker(thesis.ticker) && (
+                  <div className="mt-6 pt-4 border-t">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                        <Briefcase className="h-3.5 w-3.5" />
+                        Alphabet — Business KPIs
+                      </h4>
+                      <Badge variant="outline" className="text-[10px]">FY2024</Badge>
+                    </div>
+                    <div className="space-y-3">
+                      {GOOGLE_BUSINESS_KPIS.map((kpi) => (
+                        <div key={kpi.label} className="flex items-start justify-between gap-3 py-1.5 border-b border-border/50 last:border-0">
+                          <div className="min-w-0">
+                            <p className="text-xs text-muted-foreground leading-tight">{kpi.label}</p>
+                            <p className="text-[10px] text-muted-foreground/70 mt-0.5 leading-tight">{kpi.hint}</p>
+                          </div>
+                          <span className="text-sm font-semibold tabular-nums whitespace-nowrap">{kpi.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-2 italic">
+                      Source: Alphabet 10-K FY2024.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -303,34 +330,6 @@ export default function ThesisDetail() {
 
           {/* Right Column - Deep Analysis (70%) */}
           <div className="lg:col-span-8 space-y-6">
-            {/* Google-specific Business KPIs */}
-            {isGoogleTicker(thesis.ticker) && (
-              <div className="bento-card p-6 border-l-4 border-l-primary">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Briefcase className="h-4 w-4" />
-                    Alphabet — Key Business KPIs
-                  </h3>
-                  <Badge variant="outline" className="text-xs">FY2024</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground mb-4">
-                  Segment economics and capital allocation metrics most relevant to value the business.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {GOOGLE_BUSINESS_KPIS.map((kpi) => (
-                    <div key={kpi.label} className="rounded-lg border border-border/60 bg-muted/30 p-3">
-                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{kpi.label}</p>
-                      <p className="text-lg font-semibold tabular-nums mt-1">{kpi.value}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1 leading-tight">{kpi.hint}</p>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-3 italic">
-                  Source: Alphabet 10-K FY2024 / Q4'24 earnings release.
-                </p>
-              </div>
-            )}
-
             {/* Charts */}
             {thesis.chart_data && (thesis.chart_data.revenue?.length || thesis.chart_data.margins?.length) && (
               <div className="bento-card p-6">
@@ -378,8 +377,8 @@ export default function ThesisDetail() {
               </div>
             )}
 
-            {/* Content Tabs */}
-            <div className="bento-card p-6">
+            {/* Content Tabs (screen only) */}
+            <div className="bento-card p-6 print-hide">
               <Tabs defaultValue="summary" className="w-full">
                 <TabsList className="w-full flex flex-wrap h-auto gap-1 sm:grid sm:grid-cols-4">
                   <TabsTrigger value="summary" className="flex-1 min-w-[80px] text-xs sm:text-sm">Summary</TabsTrigger>
@@ -428,6 +427,27 @@ export default function ThesisDetail() {
                   )}
                 </TabsContent>
               </Tabs>
+            </div>
+
+            {/* Print-only: all sections expanded */}
+            <div className="print-only space-y-6">
+              {[
+                { title: 'Executive Summary', content: thesis.executive_summary },
+                { title: 'Investment Case', content: thesis.investment_case },
+                { title: 'Valuation', content: thesis.valuation },
+                { title: 'Risks', content: thesis.risks },
+              ].map((s) => (
+                <div key={s.title} className="bento-card p-6">
+                  <h3 className="text-lg font-semibold mb-3">{s.title}</h3>
+                  {s.content ? (
+                    <div className="prose prose-slate max-w-none">
+                      <ReactMarkdown>{s.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground italic">Not available.</p>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
