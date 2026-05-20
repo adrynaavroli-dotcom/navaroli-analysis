@@ -377,7 +377,9 @@ export default function ThesisDetail() {
               </div>
             )}
 
-            {/* Content Tabs */}
+            {/* Content Tabs (screen) */}
+            <div className="bento-card p-6 print-hide">
+              <Tabs defaultValue="summary" className="w-full">
             <div className="bento-card p-6">
               <Tabs defaultValue="summary" className="w-full">
                 <TabsList className="w-full flex flex-wrap h-auto gap-1 sm:grid sm:grid-cols-4">
