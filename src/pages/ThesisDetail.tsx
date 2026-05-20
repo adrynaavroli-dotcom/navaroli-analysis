@@ -69,14 +69,14 @@ export default function ThesisDetail() {
     <div className="min-h-screen bg-background thesis-printable">
       {/* Print styles for "Download / Save as PDF" */}
       <style>{`
+        .print-only { display: none; }
         @media print {
           @page { size: A4; margin: 14mm; }
           body { background: white !important; }
-          .no-print { display: none !important; }
+          .no-print, .print-hide { display: none !important; }
+          .print-only { display: block !important; }
           .thesis-printable .sticky { position: static !important; }
           .bento-card { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; border: 1px solid #e5e7eb !important; }
-          [role="tabpanel"] { display: block !important; }
-          [role="tablist"] { display: none !important; }
           .recharts-wrapper { page-break-inside: avoid; }
         }
       `}</style>
