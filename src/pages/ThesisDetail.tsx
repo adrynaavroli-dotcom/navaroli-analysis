@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, TrendingDown, Calendar, Target, DollarSign, Loader2, CalendarClock } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, Calendar, Target, DollarSign, Loader2, CalendarClock, Download, Briefcase } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useThesis } from '@/hooks/useTheses';
 import { PurchaseTracker } from '@/components/thesis/PurchaseTracker';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+
+// Google-specific KPIs (FY2024 reported figures, in USD).
+// Source: Alphabet 10-K FY2024 / Q4'24 earnings release.
+const GOOGLE_BUSINESS_KPIS = [
+  { label: 'Google Search Ads Revenue', value: '$198.1B', hint: 'Largest revenue stream (~57% of total)' },
+  { label: 'YouTube Ads Revenue', value: '$36.1B', hint: '+15% YoY, key growth driver' },
+  { label: 'Google Network Revenue', value: '$30.4B', hint: 'AdSense / AdMob partners' },
+  { label: 'Google Cloud Revenue', value: '$43.2B', hint: '+31% YoY, margin inflection' },
+  { label: 'Google Cloud Operating Margin', value: '14.1%', hint: 'From breakeven in 2023' },
+  { label: 'Google Services Op. Margin', value: '39.0%', hint: 'High-quality cash engine' },
+  { label: 'Free Cash Flow', value: '$72.8B', hint: 'TTM FCF generation' },
+  { label: 'Cash & Marketable Securities', value: '$95.7B', hint: 'Net cash fortress balance sheet' },
+  { label: 'CapEx (AI Infrastructure)', value: '$52.5B', hint: '2024 — heavy AI/data center investment' },
+  { label: 'R&D % of Revenue', value: '~14%', hint: 'Sustained innovation spend' },
+  { label: 'Share Buybacks (FY24)', value: '$62.2B', hint: 'Aggressive capital return' },
+  { label: 'Traffic Acquisition Cost (TAC)', value: '$54.6B', hint: 'Cost to acquire ad traffic' },
+];
+
+const isGoogleTicker = (t: string) => ['GOOGL', 'GOOG', 'ALPHABET'].includes(t.toUpperCase());
 
 export default function ThesisDetail() {
   const { id } = useParams<{ id: string }>();
