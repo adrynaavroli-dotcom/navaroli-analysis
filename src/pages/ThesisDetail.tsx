@@ -66,26 +66,6 @@ export default function ThesisDetail() {
   const isPositive = thesis.direction === 'long';
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
-        <div className="container py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Link>
-              </Button>
-              <div className="hidden sm:flex items-center gap-3">
-                <span className="text-2xl font-bold font-mono">${thesis.ticker}</span>
-                <Badge 
-                  className={isPositive 
-                    ? 'bg-success/10 text-success border-success/20' 
-                    : 'bg-destructive/10 text-destructive border-destructive/20'
-                  }
-  return (
     <div className="min-h-screen bg-background thesis-printable">
       {/* Print styles for "Download / Save as PDF" */}
       <style>{`
