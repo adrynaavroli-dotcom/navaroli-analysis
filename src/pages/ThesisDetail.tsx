@@ -292,15 +292,45 @@ export default function ThesisDetail() {
             )}
 
             {/* Purchase Tracker */}
-            <PurchaseTracker
-              thesisId={thesis.id}
-              currentPrice={thesis.current_price}
-              currency={thesis.currency}
-            />
+            <div className="no-print">
+              <PurchaseTracker
+                thesisId={thesis.id}
+                currentPrice={thesis.current_price}
+                currency={thesis.currency}
+              />
+            </div>
           </aside>
 
           {/* Right Column - Deep Analysis (70%) */}
           <div className="lg:col-span-8 space-y-6">
+            {/* Google-specific Business KPIs */}
+            {isGoogleTicker(thesis.ticker) && (
+              <div className="bento-card p-6 border-l-4 border-l-primary">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" />
+                    Alphabet — Key Business KPIs
+                  </h3>
+                  <Badge variant="outline" className="text-xs">FY2024</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Segment economics and capital allocation metrics most relevant to value the business.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {GOOGLE_BUSINESS_KPIS.map((kpi) => (
+                    <div key={kpi.label} className="rounded-lg border border-border/60 bg-muted/30 p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{kpi.label}</p>
+                      <p className="text-lg font-semibold tabular-nums mt-1">{kpi.value}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1 leading-tight">{kpi.hint}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-3 italic">
+                  Source: Alphabet 10-K FY2024 / Q4'24 earnings release.
+                </p>
+              </div>
+            )}
+
             {/* Charts */}
             {thesis.chart_data && (thesis.chart_data.revenue?.length || thesis.chart_data.margins?.length) && (
               <div className="bento-card p-6">
