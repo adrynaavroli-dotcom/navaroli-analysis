@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, TrendingDown, Calendar, Target, DollarSign, Loader2, CalendarClock } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, Calendar, Target, DollarSign, Loader2, CalendarClock, Download, Briefcase } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useThesis } from '@/hooks/useTheses';
 import { PurchaseTracker } from '@/components/thesis/PurchaseTracker';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+
+// Google-specific KPIs (FY2024 reported figures, in USD).
+// Source: Alphabet 10-K FY2024 / Q4'24 earnings release.
+const GOOGLE_BUSINESS_KPIS = [
+  { label: 'Google Search Ads Revenue', value: '$198.1B', hint: 'Largest revenue stream (~57% of total)' },
+  { label: 'YouTube Ads Revenue', value: '$36.1B', hint: '+15% YoY, key growth driver' },
+  { label: 'Google Network Revenue', value: '$30.4B', hint: 'AdSense / AdMob partners' },
+  { label: 'Google Cloud Revenue', value: '$43.2B', hint: '+31% YoY, margin inflection' },
+  { label: 'Google Cloud Operating Margin', value: '14.1%', hint: 'From breakeven in 2023' },
+  { label: 'Google Services Op. Margin', value: '39.0%', hint: 'High-quality cash engine' },
+  { label: 'Free Cash Flow', value: '$72.8B', hint: 'TTM FCF generation' },
+  { label: 'Cash & Marketable Securities', value: '$95.7B', hint: 'Net cash fortress balance sheet' },
+  { label: 'CapEx (AI Infrastructure)', value: '$52.5B', hint: '2024 — heavy AI/data center investment' },
+  { label: 'R&D % of Revenue', value: '~14%', hint: 'Sustained innovation spend' },
+  { label: 'Share Buybacks (FY24)', value: '$62.2B', hint: 'Aggressive capital return' },
+  { label: 'Traffic Acquisition Cost (TAC)', value: '$54.6B', hint: 'Cost to acquire ad traffic' },
+];
+
+const isGoogleTicker = (t: string) => ['GOOGL', 'GOOG', 'ALPHABET'].includes(t.toUpperCase());
 
 export default function ThesisDetail() {
   const { id } = useParams<{ id: string }>();
@@ -47,9 +66,23 @@ export default function ThesisDetail() {
   const isPositive = thesis.direction === 'long';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background thesis-printable">
+      {/* Print styles for "Download / Save as PDF" */}
+      <style>{`
+        @media print {
+          @page { size: A4; margin: 14mm; }
+          body { background: white !important; }
+          .no-print { display: none !important; }
+          .thesis-printable .sticky { position: static !important; }
+          .bento-card { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; border: 1px solid #e5e7eb !important; }
+          [role="tabpanel"] { display: block !important; }
+          [role="tablist"] { display: none !important; }
+          .recharts-wrapper { page-break-inside: avoid; }
+        }
+      `}</style>
+
       {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b no-print">
         <div className="container py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -88,12 +121,23 @@ export default function ThesisDetail() {
                   </p>
                 </div>
               )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.print()}
+                title="Download as PDF (use 'Save as PDF' in the print dialog)"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <Header />
+      <div className="no-print">
+        <Header />
+      </div>
 
       <main className="container py-8">
         {/* Mobile Title */}
@@ -248,15 +292,45 @@ export default function ThesisDetail() {
             )}
 
             {/* Purchase Tracker */}
-            <PurchaseTracker
-              thesisId={thesis.id}
-              currentPrice={thesis.current_price}
-              currency={thesis.currency}
-            />
+            <div className="no-print">
+              <PurchaseTracker
+                thesisId={thesis.id}
+                currentPrice={thesis.current_price}
+                currency={thesis.currency}
+              />
+            </div>
           </aside>
 
           {/* Right Column - Deep Analysis (70%) */}
           <div className="lg:col-span-8 space-y-6">
+            {/* Google-specific Business KPIs */}
+            {isGoogleTicker(thesis.ticker) && (
+              <div className="bento-card p-6 border-l-4 border-l-primary">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" />
+                    Alphabet — Key Business KPIs
+                  </h3>
+                  <Badge variant="outline" className="text-xs">FY2024</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Segment economics and capital allocation metrics most relevant to value the business.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {GOOGLE_BUSINESS_KPIS.map((kpi) => (
+                    <div key={kpi.label} className="rounded-lg border border-border/60 bg-muted/30 p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{kpi.label}</p>
+                      <p className="text-lg font-semibold tabular-nums mt-1">{kpi.value}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1 leading-tight">{kpi.hint}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-3 italic">
+                  Source: Alphabet 10-K FY2024 / Q4'24 earnings release.
+                </p>
+              </div>
+            )}
+
             {/* Charts */}
             {thesis.chart_data && (thesis.chart_data.revenue?.length || thesis.chart_data.margins?.length) && (
               <div className="bento-card p-6">
