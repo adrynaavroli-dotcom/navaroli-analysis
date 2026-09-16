@@ -1,73 +1,85 @@
-# Welcome to your Lovable project
+# Investment Analysis - Navaroli
 
-## Project info
+Actúa como un Lead Product Designer y Senior React Developer especializado en aplicaciones Fintech de alto nivel (como Koyfin, Bloomberg o Quartr).
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Quiero desarrollar una plataforma web llamada "Investment Analysis".
+El objetivo es servir como portfolio profesional para conseguir trabajo en Equity Research.
 
-## How can I edit this code?
+**Objetivo Central:**
+Crear una biblioteca de tesis de inversión altamente organizada, minimalista y fácil de visualizar. La UX debe priorizar la jerarquía de la información: primero los datos clave, luego la profundidad del análisis.
 
-There are several ways of editing your application.
+**Stack Tecnológico Obligatorio:**
+- Framework: React + Vite + Tailwind CSS.
+- UI Library: Shadcn UI (esencial para el look minimalista).
+- Base de Datos/Auth: Supabase.
+- Gráficos: Recharts.
+- Iconos: Lucide React.
+- Renderizado de Texto: React-Markdown (para renderizar mis análisis largos generados por IA).
 
-**Use Lovable**
+**1. Sistema de Diseño (Design System):**
+- **Estilo:** "Swiss International Style" aplicado a finanzas. Mucho espacio en blanco, tipografía sans-serif fuerte (Inter o Geist), bordes sutiles.
+- **Paleta:**
+  - Fondo: Blanco puro (#ffffff) o Gris muy suave (#f8fafc) para modo claro.
+  - Acentos: Slate-900 (Texto principal), Emerald-600 (Buy/Upside), Rose-600 (Sell/Downside), Indigo-600 (Branding).
+- **Layout:** Uso de "Bento Grids" (contenedores modulares) para organizar la información de forma visual y ordenada.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+**2. Arquitectura de Páginas:**
 
-Changes made via Lovable will be committed automatically to this repo.
+**A. Landing / Dashboard (Home):**
+- *Header:* Logo tipográfico simple "Investment Analysis" a la izquierda. Navegación a la derecha (Thesis, About, Contact).
+- *Hero Section:* Título claro: "Institutional-Grade Equity Research". Subtítulo: "Deep dive fundamental analysis combining human insight with AI efficiency."
+- *The Grid (Portfolio):* Una tabla o grid de tarjetas interactiva. Cada tarjeta representa una empresa y muestra:
+  - Ticker (ej: $AAPL) y Nombre.
+  - Sector (Tag coloreado).
+  - Tesis (Long/Short).
+  - Fecha de análisis.
+  - *Sparkline chart:* Un pequeño gráfico de línea mostrando la tendencia del precio (simulado visualmente).
+  - Botón "Read Thesis".
+- *Sidebar/Filtros:* Capacidad de filtrar por Sector, Market Cap y Estrategia (Value, Growth, Compounder).
 
-**Use your preferred IDE**
+**B. Thesis Detail Page (La página clave):**
+Esta página debe verse como un reporte PDF interactivo.
+- *Sticky Header:* Al hacer scroll, el precio y el ticker se mantienen arriba.
+- *Layout de 2 Columnas:*
+  - **Columna Izquierda (Key Data - 30%):** "The Fact Sheet". Tabla de métricas (PER, EV/EBITDA, ROIC), Capitalización, Precio Objetivo.
+  - **Columna Derecha (Deep Analysis - 70%):** Aquí es donde va el contenido.
+    - Usa componentes de acordeón o pestañas para separar: "Executive Summary", "Investment Case", "Valuation", "Risks".
+    - El texto debe renderizarse desde Markdown para permitir negritas, listas y citas.
+- *Visuals:* Entre el texto, inserta componentes de gráficos grandes y limpios (Revenue Growth, Margins).
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+**C. Admin Dashboard (CMS Privado):**
+- Necesito un panel protegido por login para subir mis análisis.
+- **Formulario de Creación:**
+  1. Inputs básicos (Ticker, Empresa, Precio, Sector).
+  2. Input de "Markdown Content": Un área de texto grande donde pegaré el análisis que redacte con ayuda de mi IA.
+  3. Input de "Chart Data": Un campo JSON donde pegaré los datos financieros para que Recharts los pinte automáticamente.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+**3. Instrucciones de Comportamiento:**
+- La web debe ser **Responsive** (Mobile first).
+- Crea datos "dummy" (falsos) realistas de empresas tecnológicas (ej: Nvidia, Airbnb) para poblar la base de datos inicial y visualizar el diseño.
+- Implementa "Skeleton loading" para que la carga de datos se sienta premium.
 
-Follow these steps:
+Empieza configurando la base de datos en Supabase y generando la estructura del Dashboard principal con el diseño "Bento Grid".
+
+This project was built with [Lovable](https://lovable.dev).
+
+**Live app**: https://navaroli-analysis.lovable.app
+
+## Build with Lovable
+
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/d5f1434d-e693-437e-9d32-99122a3c7272).
+
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+
+## Development
+
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+git clone <this-repository-url>
+cd <repository-name>
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
