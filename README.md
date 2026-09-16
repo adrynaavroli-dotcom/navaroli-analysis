@@ -1,73 +1,59 @@
-# Welcome to your Lovable project
+# Navaroli Analysis
 
-## Project info
+Plataforma de research de inversión: tesis, motor de valoración, pricing de opciones, dashboard macro y análisis de crédito corporativo.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Stack: Vite + React + TypeScript + Tailwind + shadcn/ui + backend gestionado (Supabase).
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Desarrollo
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Variables de entorno necesarias (archivo `.env`, no se sube al repositorio):
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_PROJECT_ID=...
+VITE_SUPABASE_PUBLISHABLE_KEY=...
+```
 
-**Use GitHub Codespaces**
+Solo se usan claves públicas (publishable/anon). Nunca añadas claves privadas al repositorio.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Publicación en GitHub Pages
 
-## What technologies are used for this project?
+El repositorio incluye el workflow `.github/workflows/deploy-pages.yml`, que compila y publica
+automáticamente en cada push a `main`.
 
-This project is built with:
+Pasos únicos de configuración en GitHub:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Settings → Pages → **Source: GitHub Actions**.
+2. Hacer push a `main` (o Actions → *Deploy to GitHub Pages* → *Run workflow*).
+3. La web queda en `https://adrynaavroli-dotcom.github.io/navaroli-analysis/`.
 
-## How can I deploy this project?
+Detalles que ya están resueltos:
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+- `vite.config.ts` usa `base: "/navaroli-analysis/"` cuando la variable `GITHUB_PAGES=true` (solo en el workflow).
+- El router usa `basename={import.meta.env.BASE_URL}`, así que las rutas internas funcionan bajo el subdirectorio.
+- El workflow copia `index.html` a `404.html` para que las URLs directas (p. ej. `/research`) no den error 404.
+- `public/.nojekyll` evita que GitHub Pages ignore archivos generados.
 
-## Can I connect a custom domain to my Lovable project?
+Si cambias el nombre del repositorio, actualiza la ruta en `vite.config.ts`.
 
-Yes, you can!
+## Editar desde GitHub
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+El proyecto está sincronizado en ambos sentidos con Lovable: los cambios hechos en GitHub
+(directamente en la web, en un IDE local o en Codespaces) se reflejan en Lovable y viceversa.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Recomendaciones:
+
+- Trabajar en ramas y abrir Pull Requests para cambios grandes; `main` es lo que se publica.
+- Evitar editar a la vez el mismo archivo en Lovable y en GitHub para prevenir conflictos.
+- Las funciones de backend viven en `supabase/functions` y no se despliegan desde GitHub Pages;
+  Pages sirve únicamente la parte web.
+
+## Hosting alternativo
+
+La web también está publicada en `https://navaroli-analysis.lovable.app`, y admite conectar un
+dominio propio, opción más profesional que `github.io` para un portfolio.
