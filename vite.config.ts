@@ -5,6 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // GitHub Pages serves the app from /<repo>/, other hosts from the root.
+  base: process.env.GITHUB_PAGES === "true" ? "/navaroli-analysis/" : "/",
   server: {
     host: "::",
     port: 8080,
