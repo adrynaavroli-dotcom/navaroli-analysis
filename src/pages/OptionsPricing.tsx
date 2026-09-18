@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { SensitivityChart } from '@/components/options/SensitivityChart';
 import { BinomialTreeChart } from '@/components/options/BinomialTreeChart';
 import { PayoffDiagram } from '@/components/options/PayoffDiagram';
+import { VolatilitySurface } from '@/components/options/VolatilitySurface';
 import { AssetTypeSelector, inferExerciseStyle, type AssetType } from '@/components/options/AssetTypeSelector';
 import {
   computeValuations,
@@ -468,6 +469,15 @@ export default function OptionsPricing() {
                     volatility={parseFloat(inputs.volatility) / 100}
                     timeToExpiry={inputs.expiryDate ? calculateTimeToExpiry(inputs.expiryDate) : 0.25}
                     isAmerican={inputs.exerciseStyle === 'american'}
+                  />
+                </TabsContent>
+
+                {/* 3D Volatility Surface Tab */}
+                <TabsContent value="surface">
+                  <VolatilitySurface
+                    defaultTicker={ticker}
+                    riskFreeRate={parseFloat(inputs.riskFreeRate) / 100 || 0}
+                    dividendYield={parseFloat(inputs.dividendYield) / 100 || 0}
                   />
                 </TabsContent>
 
