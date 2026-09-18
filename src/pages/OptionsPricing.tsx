@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { SensitivityChart } from '@/components/options/SensitivityChart';
 import { BinomialTreeChart } from '@/components/options/BinomialTreeChart';
 import { PayoffDiagram } from '@/components/options/PayoffDiagram';
+import { VolatilitySurface } from '@/components/options/VolatilitySurface';
 import { AssetTypeSelector, inferExerciseStyle, type AssetType } from '@/components/options/AssetTypeSelector';
 import {
   computeValuations,
