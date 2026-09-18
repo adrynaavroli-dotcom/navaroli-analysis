@@ -471,6 +471,15 @@ export default function OptionsPricing() {
                   />
                 </TabsContent>
 
+                {/* 3D Volatility Surface Tab */}
+                <TabsContent value="surface">
+                  <VolatilitySurface
+                    defaultTicker={ticker}
+                    riskFreeRate={parseFloat(inputs.riskFreeRate) / 100 || 0}
+                    dividendYield={parseFloat(inputs.dividendYield) / 100 || 0}
+                  />
+                </TabsContent>
+
                 <TabsContent value="compare">
                   <Card>
                     <CardHeader className="pb-3">
