@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { LanguageToggle } from '@/components/thesis/LanguageToggle';
 import { AlertsBadge } from '@/components/alerts/AlertsBadge';
 import { useAuth } from '@/hooks/useAuth';
+import { useSiteVisibility } from '@/hooks/useSiteVisibility';
 
 // Links visible to everyone
 const publicNavLinks = [
@@ -27,12 +28,15 @@ const protectedNavLinks = [
 export function Header() {
   const location = useLocation();
   const { user, loading } = useAuth();
+  const { data: visibility } = useSiteVisibility();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Only show protected links when user is confirmed authenticated (not during loading)
-  const navLinks = (!loading && user) 
-    ? [...publicNavLinks, ...protectedNavLinks] 
-    : publicNavLinks;
+  const navLinks = (!loading && user)
+    ? [...publicNavLinks, ...protectedNavLinks]
+    : visibility?.credit_public
+      ? [...publicNavLinks, { href: '/credit-analysis', label: 'Credit' }]
+      : publicNavLinks;
 
   return (
     <header className="sticky-header">
