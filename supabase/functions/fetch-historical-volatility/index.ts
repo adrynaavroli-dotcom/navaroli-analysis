@@ -73,7 +73,7 @@ serve(async (req) => {
       }
     }
 
-    const { ticker, period = '1y' } = await req.json();
+    const { ticker, period = '1y', full = false } = await req.json();
 
     if (!ticker || typeof ticker !== 'string') {
       return new Response(JSON.stringify({ error: 'Ticker is required' }), {
@@ -88,7 +88,7 @@ serve(async (req) => {
       });
     }
 
-    const validPeriods = ['1mo', '3mo', '6mo', '1y', '2y'];
+    const validPeriods = ['1mo', '3mo', '6mo', '1y', '2y', '5y'];
     const safePeriod = validPeriods.includes(period) ? period : '1y';
 
     const sanitizedTicker = ticker.toUpperCase().trim();
@@ -117,6 +117,19 @@ serve(async (req) => {
     }
 
     const timestamps = chartResult.timestamp || [];
+
+    if (full === true) {
+      // Raw, non-downsampled series for client-side quantitative analysis.
+      const rawCloses: (number | null)[] = chartResult.indicators?.quote?.[0]?.close || [];
+      const dates = timestamps.map((t: number) => new Date(t * 1000).toISOString().split('T')[0]);
+      return new Response(JSON.stringify({
+        ticker: sanitizedTicker,
+        period: safePeriod,
+        currency: chartResult.meta?.currency ?? null,
+        dates,
+        closes: rawCloses,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     const closePrices: number[] = (chartResult.indicators?.quote?.[0]?.close || [])
       .filter((p: number | null) => p !== null && p > 0);
 
