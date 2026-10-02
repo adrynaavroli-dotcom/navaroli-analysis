@@ -13,6 +13,7 @@ const publicNavLinks = [
   { href: '/', label: 'Thesis' },
   { href: '/research', label: 'Fundamentals' },
   { href: '/options-pricing', label: 'Options' },
+  { href: '/volatility', label: 'Volatility' },
   { href: '/macro', label: 'Macro' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
