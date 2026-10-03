@@ -20,7 +20,7 @@ import {
 
 const WINDOWS = [20, 60, 120, 252];
 const LAMBDAS = [0.9, 0.94, 0.97];
-const C = { price: 'hsl(var(--foreground))', roll: 'hsl(var(--primary))', ewma: 'hsl(var(--short))', realized: 'hsl(var(--muted-foreground))', long: 'hsl(var(--long))' };
+const C = { price: 'hsl(var(--foreground))', roll: 'hsl(var(--long))', ewma: 'hsl(var(--short))', realized: 'hsl(var(--muted-foreground))', long: 'hsl(var(--long))' };
 
 export default function VolatilityAnalytics() {
   const [input, setInput] = useState('AAPL');
