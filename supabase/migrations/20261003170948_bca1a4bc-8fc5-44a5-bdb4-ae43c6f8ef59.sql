@@ -1,0 +1,1 @@
+INSERT INTO public.page_content (page_key, content) VALUES ('quant_matrix_state', '{"items": {}, "phases": {}}'::jsonb) ON CONFLICT (page_key) DO NOTHING;
