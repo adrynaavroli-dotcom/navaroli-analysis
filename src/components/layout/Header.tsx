@@ -23,6 +23,7 @@ const publicNavLinks = [
 const protectedNavLinks = [
   { href: '/credit-analysis', label: 'Credit' },
   { href: '/valuation-engine', label: 'Valuation' },
+  { href: '/quant-matrix', label: 'Quant Matrix' },
   { href: '/admin', label: 'Admin' },
 ];
 
