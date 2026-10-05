@@ -114,7 +114,7 @@ function Dashboard({ items, onSelect }: { items: MatrixItem[]; onSelect: (id: st
               <BarChart data={d} layout="vertical" margin={{ left: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} />
-                <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 10 }} />
+                <YAxis type="category" dataKey="name" width={140} interval={0} tick={{ fontSize: 10 }} />
                 <Tooltip />
                 <Bar dataKey="value" fill="hsl(var(--primary))" />
               </BarChart>
