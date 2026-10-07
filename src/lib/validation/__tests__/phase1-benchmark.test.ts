@@ -1,50 +1,41 @@
 import { describe, it, expect } from 'vitest';
 import fx from '../fixtures/phase1-benchmark.json';
-import { cleanPrices, logReturns, simpleReturns, resamplePrices, alignPrices } from '../../returns';
-import { mean, stdDev, skewness, kurtosis, jarqueBera, historicalVolatility, rollingVolatility, ewmaVolatility } from '../../volatility';
+import { runPhase1Benchmark, type Phase1Fixture } from '../suites/phase1';
+import { runPhase1Numerical } from '../suites/phase1-numerical';
+import { VALIDATION_PLANS, VALIDATION_RESULTS, statusFor, validationStatus, compareNumeric } from '../index';
 
-/** Independent benchmark vs Python (numpy/pandas/scipy). Tolerance: |a−b| ≤ abs + rel·|b|. */
-const close = (a: number | null, b: number | null, abs = 1e-12, rel = 1e-9) =>
-  a === null || b === null ? a === b : Math.abs(a - b) <= abs + rel * Math.abs(b);
-const all = (a: (number | null)[], b: (number | null)[], abs?: number, rel?: number) =>
-  a.length === b.length && a.every((v, i) => close(v, b[i], abs, rel));
+const F = fx as unknown as Phase1Fixture;
+const fresh = [...runPhase1Numerical('test', F.returns.log, F.returns.simple), ...runPhase1Benchmark(F, 'test')];
 
-const { series, report } = cleanPrices(fx.input.dates, fx.input.prices);
-const lr = logReturns(series);
+describe('Phase 1 — Web engine vs independent Python reference', () => {
+  for (const r of fresh) it(`${r.modelId} [${r.validationType}] ${r.testName}`, () => {
+    expect(r.passed, `maxAbs=${r.maxAbsError} maxRel=${r.maxRelError}`).toBe(true);
+  });
+  it('recorded evidence matches a fresh run (same tests, same outcome)', () => {
+    expect(VALIDATION_RESULTS.map((r) => [r.modelId, r.testName, r.passed])).toEqual(fresh.map((r) => [r.modelId, r.testName, r.passed]));
+  });
+  it('covers every required check', () => {
+    const names = fresh.map((r) => r.testName).join('|');
+    for (const k of ['duplicate', 'missing', '≤ 0', 'Temporal order', 'Simple returns', 'Log returns', 'Mean', 'Skewness', 'Kurtosis', 'Jarque-Bera', 'Full-sample', '20D', '60D', 'EWMA', 'Weekly', 'Monthly', 'alignment']) expect(names).toContain(k);
+  });
+});
 
-describe('Phase 1 independent benchmark (Python reference)', () => {
-  it('cleaning matches pandas', () => {
-    expect(report.removedMissing).toBe(fx.cleaning.removedMissing);
-    expect(report.removedNonPositive).toBe(fx.cleaning.removedNonPositive);
-    expect(report.removedDuplicateDates).toBe(fx.cleaning.removedDuplicateDates);
-    expect(series.dates).toEqual(fx.cleaning.dates);
-    expect(all(series.prices, fx.cleaning.prices, 0, 0)).toBe(true);
+describe('validation framework', () => {
+  const meta = { modelId: 'X', validationType: 'numerical' as const, testName: 't', reference: 'r', dataset: 'd', validationDate: 'x', implementationVersion: 'v' };
+  it('fails outside tolerance and on null mismatch', () => {
+    expect(compareNumeric([1.001], [1], { abs: 0, rel: 1e-6 }, meta).passed).toBe(false);
+    expect(compareNumeric([null, 1], [0, 1], { abs: 1, rel: 0 }, meta).passed).toBe(false);
+    expect(compareNumeric([null, 1 + 1e-13], [null, 1], { abs: 0, rel: 1e-12 }, meta).passed).toBe(true);
   });
-  it('log and simple returns match', () => {
-    expect(all(lr.returns, fx.returns.log, 1e-15, 1e-12)).toBe(true);
-    expect(all(simpleReturns(series).returns, fx.returns.simple, 1e-15, 1e-12)).toBe(true);
+  it('status requires every required type and no failures', () => {
+    const ok = compareNumeric([1], [1], 'exact', meta);
+    expect(validationStatus({ modelId: 'X', required: ['numerical', 'independent-benchmark'] }, [ok])).toBe('IN PROGRESS');
+    expect(validationStatus({ modelId: 'X', required: ['numerical'] }, [ok, { ...ok, passed: false }])).toBe('FAILED');
+    expect(validationStatus({ modelId: 'X', required: ['numerical'] }, [ok])).toBe('COMPLETED');
   });
-  it('descriptive statistics match scipy', () => {
-    const r = lr.returns, s = fx.statistics, jb = jarqueBera(r);
-    expect(close(mean(r), s.mean, 1e-15, 1e-10)).toBe(true);
-    expect(close(stdDev(r), s.std, 1e-15, 1e-10)).toBe(true);
-    expect(close(skewness(r), s.skewness, 1e-12, 1e-8)).toBe(true);
-    expect(close(kurtosis(r), s.kurtosis, 1e-12, 1e-10)).toBe(true);
-    expect(close(jb.statistic, s.jbStatistic, 1e-10, 1e-9)).toBe(true);
-    expect(close(jb.pValue, s.jbPValue, 1e-20, 1e-6)).toBe(true);
-  });
-  it('historical & rolling volatility match pandas', () => {
-    expect(close(historicalVolatility(lr.returns), fx.volatility.historical, 1e-14, 1e-10)).toBe(true);
-    for (const w of [20, 60]) expect(all(rollingVolatility(lr.returns, lr.dates, w).values, fx.volatility.rolling[String(w) as '20' | '60'], 1e-12, 1e-9)).toBe(true);
-  });
-  it('EWMA matches numpy loop and pandas ewm', () => {
-    expect(all(ewmaVolatility(lr.returns, lr.dates, 0.94, 20).values, fx.volatility.ewma, 1e-14, 1e-10)).toBe(true);
-  });
-  it('resampling and alignment match pandas', () => {
-    expect(resamplePrices(series, 'weekly').prices).toEqual(fx.resample.weekly.prices);
-    expect(resamplePrices(series, 'monthly').prices).toEqual(fx.resample.monthly.prices);
-    const p = alignPrices({ A: series, B: fx.alignment.B });
-    expect(p.dates).toEqual(fx.alignment.dates);
-    expect(p.values.map((r) => r[1])).toEqual(fx.alignment.BAligned);
+  it('phase 1 statuses', () => {
+    for (const id of ['DAT-002', 'DAT-003', 'STA-001', 'VOL-001', 'VOL-002']) expect(statusFor(id)).toBe('COMPLETED');
+    expect(statusFor('DAT-001')).toBe('NOT STARTED');
+    expect(VALIDATION_PLANS.length).toBe(6);
   });
 });
