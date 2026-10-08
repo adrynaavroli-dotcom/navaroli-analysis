@@ -130,6 +130,7 @@ serve(async (req) => {
         currency: chartResult.meta?.currency ?? null,
         dates,
         closes: rawCloses,
+        adjcloses: rawAdj,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
     const closePrices: number[] = (chartResult.indicators?.quote?.[0]?.close || [])
