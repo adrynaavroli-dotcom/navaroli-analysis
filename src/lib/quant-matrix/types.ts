@@ -74,6 +74,8 @@ export interface MatrixItem {
   docPath: string;
   /** Existing page where the model is already usable, if any. */
   livePath?: string;
+  /** Known limitations, shown in the technical page. */
+  limitations?: string[];
 }
 
 export interface RoadmapPhase {

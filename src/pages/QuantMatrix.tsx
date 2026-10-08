@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, ExternalLink, Loader2, Search } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { Header } from '@/components/layout/Header';
+import { ValidationEvidence } from '@/components/quant/ValidationEvidence';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuantMatrix } from '@/hooks/useQuantMatrix';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -341,10 +342,10 @@ function Detail({ item: i, items, saving, onStatus, onSelect }: {
         <div className="font-mono text-xs">{i.implementation}</div>
         <div className="mt-1 flex flex-wrap gap-3 text-xs">
           {i.livePath && <Link to={i.livePath} className="inline-flex items-center gap-1 underline">Open live module <ExternalLink className="h-3 w-3" /></Link>}
-          <span className="text-muted-foreground">Doc page (planned): <span className="font-mono">{i.docPath}</span></span>
+          <Link to={i.docPath} className="inline-flex items-center gap-1 underline">Technical page <span className="font-mono">{i.docPath}</span></Link>
         </div>
       </S>
-      <S t="Validation"><div className="flex flex-wrap gap-1">{i.validation.map((v) => <Badge key={v} variant="outline" className="text-[10px]">{v}</Badge>)}</div></S>
+      <S t="Validation"><div className="flex flex-wrap gap-1">{i.validation.map((v) => <Badge key={v} variant="outline" className="text-[10px]">{v}</Badge>)}</div><div className="mt-2"><ValidationEvidence modelId={i.id} /></div></S>
       <S t="Professional applications"><div className="flex flex-wrap gap-1">{i.professionalUse.map((p) => <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>)}</div></S>
       <S t="Master references">
         <dl className="grid grid-cols-[110px_1fr] gap-y-1 text-xs">
