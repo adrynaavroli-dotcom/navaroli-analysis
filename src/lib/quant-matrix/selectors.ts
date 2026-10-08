@@ -44,3 +44,7 @@ export const needsValidation = (i: MatrixItem) => i.layers.code !== 'NOT STARTED
 export const withoutData = (i: MatrixItem) => i.requiredData.length === 0 || i.requiredData.every((d) => d.source === 'Derived' && i.dependencies.length === 0);
 export const withoutDocs = (i: MatrixItem) => i.layers.code !== 'NOT STARTED' && i.layers.documentation !== 'COMPLETED';
 export const sourceUnverified = (i: MatrixItem) => i.master.source === SOURCE_TO_VERIFY;
+
+/** Technical documentation routing (/quant/...): exact item, or items under a section prefix. */
+export const byDocPath = (path: string, items = allMatrixItems) => items.find((i) => i.docPath === path);
+export const underDocPath = (path: string, items = allMatrixItems) => items.filter((i) => i.docPath.startsWith(`${path.replace(/\/$/, '')}/`));
