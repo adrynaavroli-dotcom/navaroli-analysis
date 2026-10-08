@@ -121,6 +121,8 @@ serve(async (req) => {
     if (full === true) {
       // Raw, non-downsampled series for client-side quantitative analysis.
       const rawCloses: (number | null)[] = chartResult.indicators?.quote?.[0]?.close || [];
+      // Same free endpoint also returns split+dividend adjusted closes; null if absent.
+      const rawAdj: (number | null)[] | null = chartResult.indicators?.adjclose?.[0]?.adjclose ?? null;
       const dates = timestamps.map((t: number) => new Date(t * 1000).toISOString().split('T')[0]);
       return new Response(JSON.stringify({
         ticker: sanitizedTicker,
