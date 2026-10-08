@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { cleanPrices, logReturns, type CleaningReport, type PriceSeries, type ReturnSeries } from '@/lib/volatility';
+import { buildReturnsDataset, type CleaningReport, type PriceField, type PriceSeries, type QualityFlag, type ReturnSeries } from '@/lib/returns';
 
 export const MIN_OBSERVATIONS = 30;
 
@@ -10,6 +10,8 @@ export interface VolatilityDataset {
   prices: PriceSeries;
   returns: ReturnSeries;
   report: CleaningReport;
+  priceField: PriceField;
+  flags: QualityFlag[];
 }
 
 export function useVolatilityData(ticker: string | null, period: string) {
@@ -29,12 +31,15 @@ export function useVolatilityData(ticker: string | null, period: string) {
       }
       if (data?.error) throw new Error(data.error);
       if (!data?.dates?.length) throw new Error('No price data returned for this ticker');
-      const { series, report } = cleanPrices(data.dates, data.closes);
-      const returns = logReturns(series);
-      if (returns.returns.length < MIN_OBSERVATIONS) {
-        throw new Error(`Insufficient observations: ${returns.returns.length} returns (minimum ${MIN_OBSERVATIONS})`);
+      const ds = buildReturnsDataset(
+        { dates: data.dates, closes: data.closes, adjcloses: data.adjcloses ?? undefined },
+        { source: 'Yahoo Finance', ticker: data.ticker, currency: data.currency, frequency: 'daily', history: period, updateMethod: 'On demand via fetch-historical-volatility', retrievedAt: new Date().toISOString() },
+        'log',
+      );
+      if (ds.returns.returns.length < MIN_OBSERVATIONS) {
+        throw new Error(`Insufficient observations: ${ds.returns.returns.length} returns (minimum ${MIN_OBSERVATIONS})`);
       }
-      return { ticker: data.ticker, currency: data.currency, prices: series, returns, report };
+      return { ticker: data.ticker, currency: data.currency, prices: ds.prices, returns: ds.returns, report: ds.report, priceField: ds.metadata.priceField, flags: ds.flags };
     },
   });
 }

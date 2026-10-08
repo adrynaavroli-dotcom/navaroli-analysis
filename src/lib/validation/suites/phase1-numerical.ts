@@ -28,8 +28,8 @@ export function runPhase1Numerical(validationDate: string, fixtureLog?: number[]
     compareNumeric([jarqueBera(x).statistic], [(5 / 6) * (1.3 ** 2 / 4)], tol, m('STA-001', 'Jarque-Bera of [−2..2]', 'n/6·(S² + (K−3)²/4)')),
     compareNumeric([historicalVolatility(alt)], [Math.sqrt(0.0004 / 3) * Math.sqrt(252)], tol, m('VOL-001', 'Alternating ±1% → √(0.0004/3)·√252', 'Hand calculation')),
     compareNumeric([historicalVolatility(r.map((v) => 2 * v))], [2 * historicalVolatility(r)], tol, m('VOL-001', 'Positive homogeneity σ(2r) = 2σ(r)', 'Identity')),
-    compareNumeric([ewmaVolatility(r, r, 0.94, 2).values[2]!], [Math.sqrt((0.94 * v0 + 0.06 * 0.01 ** 2) * 252)], tol, m('VOL-002', 'One recursion step uses r_{t−1}', 'σ²₂ = λσ²₁ + (1−λ)r₁²')),
-    compareNumeric(ewmaVolatility(r, r, 1, 2).values.slice(1), r.slice(1).map(() => Math.sqrt(v0 * 252)), tol, m('VOL-002', 'λ = 1 keeps the seed variance constant', 'Limit case')),
+    compareNumeric([ewmaVolatility(r, r.map(String), 0.94, 2).values[2]!], [Math.sqrt((0.94 * v0 + 0.06 * 0.01 ** 2) * 252)], tol, m('VOL-002', 'One recursion step uses r_{t−1}', 'σ²₂ = λσ²₁ + (1−λ)r₁²')),
+    compareNumeric(ewmaVolatility(r, r.map(String), 1, 2).values.slice(1), r.slice(1).map(() => Math.sqrt(v0 * 252)), tol, m('VOL-002', 'λ = 1 keeps the seed variance constant', 'Limit case')),
   ];
   if (fixtureLog && fixtureSimple) out.push(compareNumeric(fixtureLog.map(logToSimple), fixtureSimple, { abs: 1e-15, rel: 1e-12 }, { ...m('DAT-003', 'Identity R = eʳ − 1 on 595 benchmark returns', 'Mathematical identity'), dataset: 'phase1-benchmark.json' }));
   return out;

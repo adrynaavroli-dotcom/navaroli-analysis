@@ -100,6 +100,12 @@ export default function VolatilityAnalytics() {
                   Removed: {removed} (missing {rep.removedMissing}, non-positive {rep.removedNonPositive}, duplicate dates {rep.removedDuplicateDates}, invalid returns {data.returns.invalidRemoved})
                 </span>
                 {rep.reordered && <span>Dates re-sorted chronologically</span>}
+                <span>Price: {data.priceField === 'adjclose' ? 'adjusted close (splits + dividends)' : 'close (split-adjusted only)'}</span>
+                {data.flags.filter((f) => !['MISSING', 'NON_POSITIVE', 'DUPLICATE_DATE', 'OUT_OF_ORDER'].includes(f.code)).length > 0 && (
+                  <span className="text-destructive" title={data.flags.map((f) => `${f.code}${f.date ? ` ${f.date}` : ''}: ${f.detail}`).join('\n')}>
+                    Quality flags: {Array.from(new Set(data.flags.filter((f) => !['MISSING', 'NON_POSITIVE', 'DUPLICATE_DATE', 'OUT_OF_ORDER'].includes(f.code)).map((f) => f.code))).join(', ')}
+                  </span>
+                )}
               </div>
             )}
           </CardContent>

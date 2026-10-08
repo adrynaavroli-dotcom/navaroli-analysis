@@ -1,6 +1,252 @@
 [
  {
   "modelId": "DAT-002",
+  "validationType": "numerical",
+  "testName": "Hand example: 1 missing, 1 negative, 1 duplicate → 3 kept",
+  "expectedResult": "n=4, first=1, last=3",
+  "actualResult": "n=4, first=1, last=3",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "Manual count",
+   "dataset": "Hand-constructed inputs"
+  },
+  "validationDate": "2026-10-08",
+  "implementationVersion": "quant-engine/phase1@1.0.0"
+ },
+ {
+  "modelId": "DAT-002",
+  "validationType": "numerical",
+  "testName": "Hand example: sorted output, first duplicate kept",
+  "expectedResult": "n=3, first=1, last=3",
+  "actualResult": "n=3, first=1, last=3",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 3,
+  "passed": true,
+  "evidence": {
+   "reference": "Manual sort",
+   "dataset": "Hand-constructed inputs"
+  },
+  "validationDate": "2026-10-08",
+  "implementationVersion": "quant-engine/phase1@1.0.0"
+ },
+ {
+  "modelId": "DAT-003",
+  "validationType": "numerical",
+  "testName": "Log returns 100→110→99",
+  "expectedResult": "n=2, first=0.09531017980, last=-0.1053605157",
+  "actualResult": "n=2, first=0.09531017980, last=-0.1053605157",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-12
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "ln(1.1), ln(0.9)",
+   "dataset": "Hand-constructed inputs"
+  },
+  "validationDate": "2026-10-08",
+  "implementationVersion": "quant-engine/phase1@1.0.0"
+ },
+ {
+  "modelId": "DAT-003",
+  "validationType": "numerical",
+  "testName": "Simple returns 100→110→99",
+  "expectedResult": "n=2, first=0.1000000000, last=-0.1000000000",
+  "actualResult": "n=2, first=0.1000000000, last=-0.1000000000",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-12
+  },
+  "maxAbsError": 8.326672684688674e-17,
+  "maxRelError": 8.326672684688674e-16,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "+10%, −10%",
+   "dataset": "Hand-constructed inputs"
+  },
+  "validationDate": "2026-10-08",
+  "implementationVersion": "quant-engine/phase1@1.0.0"
+ },
+ {
+  "modelId": "STA-001",
+  "validationType": "numerical",
+  "testName": "Skewness of symmetric sample = 0",
+  "expectedResult": "n=5, first=0.000000000, last=0.000000000",
+  "actualResult": "n=5, first=0.000000000, last=0.000000000",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 0
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 5,
+  "passed": true,
+  "evidence": {
+   "reference": "Symmetry",
+   "dataset": "Hand-constructed inputs"
+  },
+  "validationDate": "2026-10-08",
+  "implementationVersion": "quant-engine/phase1@1.0.0"
+ },
+ {
+  "modelId": "STA-001",
+  "validationType": "numerical",
+  "testName": "Kurtosis of [−2..2] = m4/m2² = 6.8/4",
+  "expectedResult": "1.700000000",
+  "actualResult": "1.700000000",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-12
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Hand calculation",
+   "dataset": "Hand-constructed inputs"
+  },
+  "validationDate": "2026-10-08",
+  "implementationVersion": "quant-engine/phase1@1.0.0"
+ },
+ {
+  "modelId": "STA-001",
+  "validationType": "numerical",
+  "testName": "Jarque-Bera of [−2..2]",
+  "expectedResult": "0.3520833333",
+  "actualResult": "0.3520833333",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-12
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "n/6·(S² + (K−3)²/4)",
+   "dataset": "Hand-constructed inputs"
+  },
+  "validationDate": "2026-10-08",
+  "implementationVersion": "quant-engine/phase1@1.0.0"
+ },
+ {
+  "modelId": "VOL-001",
+  "validationType": "numerical",
+  "testName": "Alternating ±1% → √(0.0004/3)·√252",
+  "expectedResult": "0.1833030278",
+  "actualResult": "0.1833030278",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-12
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Hand calculation",
+   "dataset": "Hand-constructed inputs"
+  },
+  "validationDate": "2026-10-08",
+  "implementationVersion": "quant-engine/phase1@1.0.0"
+ },
+ {
+  "modelId": "VOL-001",
+  "validationType": "numerical",
+  "testName": "Positive homogeneity σ(2r) = 2σ(r)",
+  "expectedResult": "0.6583616028",
+  "actualResult": "0.6583616028",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-12
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Identity",
+   "dataset": "Hand-constructed inputs"
+  },
+  "validationDate": "2026-10-08",
+  "implementationVersion": "quant-engine/phase1@1.0.0"
+ },
+ {
+  "modelId": "VOL-002",
+  "validationType": "numerical",
+  "testName": "One recursion step uses r_{t−1}",
+  "expectedResult": "0.2211063093",
+  "actualResult": "0.2211063093",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-12
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "σ²₂ = λσ²₁ + (1−λ)r₁²",
+   "dataset": "Hand-constructed inputs"
+  },
+  "validationDate": "2026-10-08",
+  "implementationVersion": "quant-engine/phase1@1.0.0"
+ },
+ {
+  "modelId": "VOL-002",
+  "validationType": "numerical",
+  "testName": "λ = 1 keeps the seed variance constant",
+  "expectedResult": "n=4, first=0.2244994432, last=0.2244994432",
+  "actualResult": "n=4, first=0.2244994432, last=0.2244994432",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-12
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "Limit case",
+   "dataset": "Hand-constructed inputs"
+  },
+  "validationDate": "2026-10-08",
+  "implementationVersion": "quant-engine/phase1@1.0.0"
+ },
+ {
+  "modelId": "DAT-003",
+  "validationType": "numerical",
+  "testName": "Identity R = eʳ − 1 on 595 benchmark returns",
+  "expectedResult": "n=595, first=-0.005530256327, last=0.02460262246",
+  "actualResult": "n=595, first=-0.005530256327, last=0.02460262246",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-12
+  },
+  "maxAbsError": 6.938893903907228e-18,
+  "maxRelError": 2.1731071859193118e-16,
+  "n": 595,
+  "passed": true,
+  "evidence": {
+   "reference": "Mathematical identity",
+   "dataset": "phase1-benchmark.json"
+  },
+  "validationDate": "2026-10-08",
+  "implementationVersion": "quant-engine/phase1@1.0.0"
+ },
+ {
+  "modelId": "DAT-002",
   "validationType": "independent-benchmark",
   "testName": "Observation counts (received, kept)",
   "expectedResult": "n=2, first=601, last=596",
@@ -14,7 +260,7 @@
    "reference": "pandas — Cleaning: dropna, >0 filter, stable sort, drop_duplicates(keep=first) (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -32,7 +278,7 @@
    "reference": "pandas DataFrame.dropna (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -50,7 +296,7 @@
    "reference": "pandas boolean filter (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -68,7 +314,7 @@
    "reference": "pandas drop_duplicates(keep=first) (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -86,7 +332,7 @@
    "reference": "pandas sort_values(kind=mergesort) (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -104,7 +350,7 @@
    "reference": "pandas — Cleaning: dropna, >0 filter, stable sort, drop_duplicates(keep=first) (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -122,7 +368,7 @@
    "reference": "pandas shift(1).dropna (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -143,7 +389,7 @@
    "reference": "numpy log(P/P.shift(1)) (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -164,7 +410,7 @@
    "reference": "pandas pct_change (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -182,7 +428,7 @@
    "reference": "pandas resample(\"W-SUN\").last (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -200,7 +446,7 @@
    "reference": "pandas resample(\"ME\").last (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -218,7 +464,7 @@
    "reference": "pandas concat(join=\"inner\") (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -236,7 +482,7 @@
    "reference": "pandas concat(join=\"inner\") (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -257,7 +503,7 @@
    "reference": "numpy.mean (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -278,7 +524,7 @@
    "reference": "numpy.std(ddof=1) (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -299,7 +545,7 @@
    "reference": "scipy.stats.skew(bias=True) (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -320,7 +566,7 @@
    "reference": "scipy.stats.kurtosis(fisher=False, bias=True) (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -341,7 +587,7 @@
    "reference": "scipy.stats.jarque_bera (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -362,7 +608,7 @@
    "reference": "scipy.stats.jarque_bera (χ²₂ survival) (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -383,7 +629,7 @@
    "reference": "numpy.std(ddof=1)·√252 (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -404,7 +650,7 @@
    "reference": "pandas rolling(20).std(ddof=1)·√252 (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -425,7 +671,7 @@
    "reference": "pandas rolling(60).std(ddof=1)·√252 (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0"
  },
  {
@@ -446,7 +692,7 @@
    "reference": "numpy recursion loop, cross-checked with pandas ewm(alpha=0.06, adjust=False); refs agree to 8e-17 (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3 · scipy 1.18.0)",
    "dataset": "Synthetic Student-t GBM, seed 20261006, 601 raw rows with injected defects (phase1-benchmark.json, phase1-benchmark/1.0.0)"
   },
-  "validationDate": "2026-10-07",
+  "validationDate": "2026-10-08",
   "implementationVersion": "quant-engine/phase1@1.0.0",
   "notes": "Seed = sample variance of first 20 returns at index 19"
  }
