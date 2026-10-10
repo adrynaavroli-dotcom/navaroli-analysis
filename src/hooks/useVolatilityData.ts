@@ -14,13 +14,8 @@ export interface VolatilityDataset {
   flags: QualityFlag[];
 }
 
-export function useVolatilityData(ticker: string | null, period: string) {
-  return useQuery({
-    queryKey: ['volatility-data', ticker, period],
-    enabled: !!ticker,
-    staleTime: 60 * 60 * 1000,
-    retry: false,
-    queryFn: async (): Promise<VolatilityDataset> => {
+/** Fetch one ticker from the free Yahoo proxy and run it through the Returns Engine. */
+export async function fetchReturnsDataset(ticker: string, period: string): Promise<VolatilityDataset> {
       const { data, error } = await supabase.functions.invoke('fetch-historical-volatility', {
         body: { ticker, period, full: true },
       });
@@ -40,6 +35,14 @@ export function useVolatilityData(ticker: string | null, period: string) {
         throw new Error(`Insufficient observations: ${ds.returns.returns.length} returns (minimum ${MIN_OBSERVATIONS})`);
       }
       return { ticker: data.ticker, currency: data.currency, prices: ds.prices, returns: ds.returns, report: ds.report, priceField: ds.metadata.priceField, flags: ds.flags };
-    },
+}
+
+export function useVolatilityData(ticker: string | null, period: string) {
+  return useQuery({
+    queryKey: ['volatility-data', ticker, period],
+    enabled: !!ticker,
+    staleTime: 60 * 60 * 1000,
+    retry: false,
+    queryFn: () => fetchReturnsDataset(ticker!, period),
   });
 }

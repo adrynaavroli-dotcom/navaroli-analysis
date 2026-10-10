@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { allMatrixItems, quantitativeProjectMatrix, ROADMAP, CURRENT_PRIORITY, effectiveStatus, applyState, byDocPath } from '../index';
-import { statusFor, planFor } from '@/lib/validation';
+import { validationStatusFor, planFor } from '@/lib/validation';
 
 describe('quantitative project matrix integrity', () => {
   const ids = new Set(allMatrixItems.map((i) => i.id));
@@ -25,7 +25,7 @@ describe('quantitative project matrix integrity', () => {
   });
   it('validation layer COMPLETED ⇔ recorded evidence closes the validation plan', () => {
     for (const i of allMatrixItems) {
-      const closed = !!planFor(i.id) && statusFor(i.id) === 'COMPLETED';
+      const closed = !!planFor(i.id) && validationStatusFor(i.id) === 'COMPLETED';
       expect(i.layers.validation === 'COMPLETED', i.id).toBe(closed);
     }
   });

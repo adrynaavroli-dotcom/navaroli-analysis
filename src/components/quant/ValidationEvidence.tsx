@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { planFor, resultsFor, statusFor } from '@/lib/validation';
+import { planFor, resultsFor, validationStatusFor } from '@/lib/validation';
 
 const tol = (t: unknown) => (t === 'exact' ? 'exact' : `abs ${(t as { abs: number }).abs.toExponential(0)} · rel ${(t as { rel: number }).rel.toExponential(0)}`);
 
@@ -13,7 +13,7 @@ export function ValidationEvidence({ modelId }: { modelId: string }) {
   return (
     <div className="space-y-2 text-xs">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="outline" className="font-mono text-[10px]">{statusFor(modelId)}</Badge>
+        <span className="text-muted-foreground">Validation layer:</span> <Badge variant="outline" className="font-mono text-[10px]">{validationStatusFor(modelId)}</Badge>
         <span className="text-muted-foreground">Required: {plan.required.join(', ')}</span>
         {first && <span className="text-muted-foreground">· {first.validationDate} · {first.implementationVersion}</span>}
       </div>

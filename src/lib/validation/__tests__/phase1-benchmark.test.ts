@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fx from '../fixtures/phase1-benchmark.json';
 import { runPhase1Benchmark, type Phase1Fixture } from '../suites/phase1';
 import { runPhase1Numerical } from '../suites/phase1-numerical';
-import { VALIDATION_PLANS, VALIDATION_RESULTS, statusFor, validationStatus, compareNumeric } from '../index';
+import { VALIDATION_PLANS, VALIDATION_RESULTS, validationStatusFor, validationStatus, compareNumeric } from '../index';
 
 const F = fx as unknown as Phase1Fixture;
 const fresh = [...runPhase1Numerical('test', F.returns.log, F.returns.simple), ...runPhase1Benchmark(F, 'test')];
@@ -12,7 +12,7 @@ describe('Phase 1 — Web engine vs independent Python reference', () => {
     expect(r.passed, `maxAbs=${r.maxAbsError} maxRel=${r.maxRelError}`).toBe(true);
   });
   it('recorded evidence matches a fresh run (same tests, same outcome)', () => {
-    expect(VALIDATION_RESULTS.map((r) => [r.modelId, r.testName, r.passed])).toEqual(fresh.map((r) => [r.modelId, r.testName, r.passed]));
+    expect(VALIDATION_RESULTS.filter((r) => r.implementationVersion.includes('phase1@')).map((r) => [r.modelId, r.testName, r.passed])).toEqual(fresh.map((r) => [r.modelId, r.testName, r.passed]));
   });
   it('covers every required check', () => {
     const names = fresh.map((r) => r.testName).join('|');
@@ -34,8 +34,8 @@ describe('validation framework', () => {
     expect(validationStatus({ modelId: 'X', required: ['numerical'] }, [ok])).toBe('COMPLETED');
   });
   it('phase 1 statuses', () => {
-    for (const id of ['DAT-002', 'DAT-003', 'STA-001', 'VOL-001', 'VOL-002']) expect(statusFor(id)).toBe('COMPLETED');
-    expect(statusFor('DAT-001')).toBe('NOT STARTED');
-    expect(VALIDATION_PLANS.length).toBe(6);
+    for (const id of ['DAT-002', 'DAT-003', 'STA-001', 'VOL-001', 'VOL-002']) expect(validationStatusFor(id)).toBe('COMPLETED');
+    expect(validationStatusFor('DAT-001')).toBe('NOT STARTED');
+    expect(VALIDATION_PLANS.length).toBe(8);
   });
 });
