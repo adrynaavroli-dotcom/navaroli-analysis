@@ -19,6 +19,7 @@ import CreditAnalysis from "./pages/CreditAnalysis";
 import VolatilityAnalytics from "./pages/VolatilityAnalytics";
 import QuantMatrix from "./pages/QuantMatrix";
 import QuantDoc from "./pages/QuantDoc";
+import CorrelationAnalytics from "./pages/CorrelationAnalytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/macro" element={<MacroDashboard />} />
             <Route path="/credit-analysis" element={<CreditAnalysis />} />
             <Route path="/volatility" element={<VolatilityAnalytics />} />
+            <Route path="/correlation" element={<CorrelationAnalytics />} />
             <Route path="/quant-matrix" element={<QuantMatrix />} />
             <Route path="/quant/*" element={<QuantDoc />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
