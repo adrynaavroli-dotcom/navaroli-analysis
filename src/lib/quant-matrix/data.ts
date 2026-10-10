@@ -39,6 +39,7 @@ const D = {
   curve: { source: 'FRED', dataset: 'Treasury yield curve (DGS1MO…DGS30)', frequency: 'Daily', history: '5+ years', updateMethod: 'fetch-fred-data, 1h cache' },
   financials: { source: 'CSV', dataset: 'Company financial statements', frequency: 'Quarterly', history: '5+ years', updateMethod: 'Manual upload / JSON import' },
   scenarios: { source: 'CSV', dataset: 'Historical / hypothetical shock scenarios', frequency: 'N/A', history: 'Event windows', updateMethod: 'Curated CSV' },
+  alignedReturns: { source: 'Derived', dataset: 'Aligned multi-asset log returns (Returns Engine, inner-joined prices)', frequency: 'Daily', history: 'Inherited from DAT-001 (1–5 years)', updateMethod: 'Computed in-browser from DAT-003' },
   derived: { source: 'Derived', dataset: 'Outputs of upstream modules', frequency: 'N/A', history: 'Inherited', updateMethod: 'Computed in-browser' },
 } satisfies Record<string, DataRequirement>;
 
@@ -130,14 +131,16 @@ export const quantitativeProjectMatrix: MatrixItem[] = [
 
   /* ===== Phase 4 — Correlation / Covariance ===== */
   item({ id: 'COR-001', module: 'Correlation', submodule: 'Rolling Covariance', concept: 'Sample covariance matrix',
-    mathematicalModel: 'Σ = (1/(n−1)) Rᵀ R (demeaned), trailing window', mathematicalConcepts: ['Covariance matrices'], requiredData: [D.multiPrices],
-    implementation: 'Planned: src/lib/covariance/', validation: ['Unit tests', 'Benchmark against independent implementation'],
-    professionalUse: ['Portfolio Management', 'Market Risk'], priority: 'P0', status: 'PLANNED', dependencies: ['DAT-003'],
-    nextAction: 'Multi-asset aligned returns matrix', portfolioValue: 'HIGH', master: R.mpt, phase: 4, docPath: '/quant/correlation/covariance' }),
+    mathematicalModel: 'Σ = (1/(n−1)) Rᵀ R (demeaned), trailing window', mathematicalConcepts: ['Covariance matrices'], requiredData: [D.multiPrices, D.alignedReturns],
+    implementation: 'src/lib/correlation/ · sampleCovariance(), rollingCovariance(), annualize()', validation: ['Unit tests', 'Benchmark against independent implementation'],
+    professionalUse: ['Portfolio Management', 'Market Risk'], priority: 'P0', status: 'COMPLETED', layers: layers(CO, CO, CO, CO, CO, CO), dependencies: ['DAT-003'],
+    nextAction: 'Closed — validated vs pandas rolling cov (20/60/120). Next: COR-004 shrinkage / POR-001', portfolioValue: 'HIGH', master: R.mpt, phase: 4, docPath: '/quant/correlation/covariance', livePath: '/correlation',
+    limitations: ['Sample covariance is noisy when W is small relative to N (not positive definite if W ≤ N)', 'Equal weights within the window; abrupt changes when observations leave the window', 'Inner-join alignment: returns spanning a missing date cover a longer interval for every asset'] }),
   item({ id: 'COR-002', module: 'Correlation', submodule: 'Rolling Correlation', concept: 'Time-varying correlation',
-    mathematicalModel: 'ρ = D⁻¹ Σ D⁻¹', mathematicalConcepts: ['Correlation'], requiredData: [D.multiPrices],
-    implementation: 'Planned', validation: ['Unit tests'], professionalUse: ['Portfolio Management', 'Risk Analytics'],
-    priority: 'P0', status: 'PLANNED', dependencies: ['DAT-003', 'COR-001'], nextAction: 'Heatmap + rolling pairwise chart', portfolioValue: 'HIGH', master: R.mpt, phase: 4, docPath: '/quant/correlation/rolling' }),
+    mathematicalModel: 'ρ = D⁻¹ Σ D⁻¹', mathematicalConcepts: ['Correlation'], requiredData: [D.alignedReturns],
+    implementation: 'src/lib/correlation/ · covToCorr(), pairSeries()', validation: ['Unit tests', 'Benchmark against independent implementation'], professionalUse: ['Portfolio Management', 'Risk Analytics'],
+    priority: 'P0', status: 'COMPLETED', layers: layers(CO, CO, CO, CO, CO, CO), dependencies: ['DAT-003', 'COR-001'], nextAction: 'Closed — validated vs pandas rolling corr; zero-variance → unavailable', portfolioValue: 'HIGH', master: R.mpt, phase: 4, docPath: '/quant/correlation/rolling', livePath: '/correlation',
+    limitations: ['Undefined (shown as unavailable) when an asset has zero variance in the window (daily variance ≤ 1e-18)', 'Pearson correlation captures linear dependence only; unstable in short windows', 'Values beyond ±1 by more than 1e-12 raise an error instead of being clipped'] }),
   item({ id: 'COR-003', module: 'Correlation', submodule: 'EWMA Covariance', concept: 'Exponentially weighted covariance',
     mathematicalModel: 'Σ_t = λΣ_{t−1} + (1−λ) r_{t−1} r_{t−1}ᵀ', mathematicalConcepts: ['RiskMetrics covariance'], requiredData: [D.multiPrices],
     implementation: 'Planned', validation: ['Unit tests', 'Benchmark against independent implementation'], professionalUse: ['Market Risk'],
