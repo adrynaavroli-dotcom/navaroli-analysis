@@ -1,0 +1,388 @@
+[
+ {
+  "modelId": "COR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Alignment of 4 assets with missing dates / unequal histories",
+  "expectedResult": "n=285, first=2023-02-13, last=2024-03-22",
+  "actualResult": "n=285, first=2023-02-13, last=2024-03-22",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 285,
+  "passed": true,
+  "evidence": {
+   "reference": "pandas concat(join=\"inner\") (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3)",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Aligned log-returns panel (284×4)",
+  "expectedResult": "n=1136, first=-0.006788869539, last=0.005923694449",
+  "actualResult": "n=1136, first=-0.006788869539, last=0.005923694449",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-12
+  },
+  "maxAbsError": 6.938893903907228e-18,
+  "maxRelError": 2.1361784625327082e-16,
+  "n": 1136,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy log(P/P.shift(1)) (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3)",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Rolling covariance 20D (incl. warm-up nulls)",
+  "expectedResult": "n=4544, first=0.00008157672496, last=0.0007157080151",
+  "actualResult": "n=4544, first=0.00008157672496, last=0.0007157080151",
+  "tolerance": {
+   "abs": 1e-17,
+   "rel": 1e-9
+  },
+  "maxAbsError": 4.336808689942018e-19,
+  "maxRelError": 5.145155481587476e-13,
+  "n": 4544,
+  "passed": true,
+  "evidence": {
+   "reference": "pandas rolling(20).cov() (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3)",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-002",
+  "validationType": "independent-benchmark",
+  "testName": "Rolling correlation 20D (incl. warm-up nulls)",
+  "expectedResult": "n=4544, first=1.000000000, last=1.000000000",
+  "actualResult": "n=4544, first=1.000000000, last=1.000000000",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-10
+  },
+  "maxAbsError": 3.552713678800501e-15,
+  "maxRelError": 5.135166103000701e-13,
+  "n": 4544,
+  "passed": true,
+  "evidence": {
+   "reference": "pandas rolling(20).corr() (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3)",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Rolling covariance 60D (incl. warm-up nulls)",
+  "expectedResult": "n=4544, first=0.00009263169686, last=0.0004798102279",
+  "actualResult": "n=4544, first=0.00009263169686, last=0.0004798102279",
+  "tolerance": {
+   "abs": 1e-17,
+   "rel": 1e-9
+  },
+  "maxAbsError": 4.336808689942018e-19,
+  "maxRelError": 2.54777169858062e-14,
+  "n": 4544,
+  "passed": true,
+  "evidence": {
+   "reference": "pandas rolling(60).cov() (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3)",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-002",
+  "validationType": "independent-benchmark",
+  "testName": "Rolling correlation 60D (incl. warm-up nulls)",
+  "expectedResult": "n=4544, first=1.000000000, last=1.000000000",
+  "actualResult": "n=4544, first=1.000000000, last=1.000000000",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-10
+  },
+  "maxAbsError": 1.7763568394002505e-15,
+  "maxRelError": 2.5802635930153946e-14,
+  "n": 4544,
+  "passed": true,
+  "evidence": {
+   "reference": "pandas rolling(60).corr() (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3)",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Rolling covariance 120D (incl. warm-up nulls)",
+  "expectedResult": "n=4544, first=0.0001070421109, last=0.0004562250869",
+  "actualResult": "n=4544, first=0.0001070421109, last=0.0004562250869",
+  "tolerance": {
+   "abs": 1e-17,
+   "rel": 1e-9
+  },
+  "maxAbsError": 3.7947076036992655e-19,
+  "maxRelError": 4.625027605793549e-15,
+  "n": 4544,
+  "passed": true,
+  "evidence": {
+   "reference": "pandas rolling(120).cov() (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3)",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-002",
+  "validationType": "independent-benchmark",
+  "testName": "Rolling correlation 120D (incl. warm-up nulls)",
+  "expectedResult": "n=4544, first=1.000000000, last=1.000000000",
+  "actualResult": "n=4544, first=1.000000000, last=1.000000000",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-10
+  },
+  "maxAbsError": 1.7763568394002505e-15,
+  "maxRelError": 5.592394053623286e-15,
+  "n": 4544,
+  "passed": true,
+  "evidence": {
+   "reference": "pandas rolling(120).corr() (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3)",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Hand-checkable 3-asset covariance (4 obs)",
+  "expectedResult": "n=9, first=1.666666667, last=0.6666666667",
+  "actualResult": "n=9, first=1.666666667, last=0.6666666667",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-13
+  },
+  "maxAbsError": 2.220446049250313e-16,
+  "maxRelError": 1.332267629550188e-16,
+  "n": 9,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.cov(ddof=1) (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3)",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-001",
+  "validationType": "numerical",
+  "testName": "Hand-checkable covariance vs closed form (5/3, 1/3, 2/3…)",
+  "expectedResult": "n=9, first=1.666666667, last=0.6666666667",
+  "actualResult": "n=9, first=1.666666667, last=0.6666666667",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-13
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 9,
+  "passed": true,
+  "evidence": {
+   "reference": "Manual calculation",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-002",
+  "validationType": "independent-benchmark",
+  "testName": "Perfect positive correlation (y = 2x + c)",
+  "expectedResult": "1.000000000",
+  "actualResult": "1.000000000",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-10
+  },
+  "maxAbsError": 2.220446049250313e-16,
+  "maxRelError": 2.2204460492503136e-16,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.corrcoef (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3)",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-002",
+  "validationType": "numerical",
+  "testName": "Perfect positive correlation = +1",
+  "expectedResult": "1.000000000",
+  "actualResult": "1.000000000",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-10
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Closed form",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-002",
+  "validationType": "numerical",
+  "testName": "Perfect negative correlation = −1",
+  "expectedResult": "-1.000000000",
+  "actualResult": "-1.000000000",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-10
+  },
+  "maxAbsError": 6.661338147750939e-16,
+  "maxRelError": 6.661338147750939e-16,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Closed form",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-002",
+  "validationType": "independent-benchmark",
+  "testName": "Independent series (n=5000) vs numpy",
+  "expectedResult": "-0.008191455046",
+  "actualResult": "-0.008191455046",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-10
+  },
+  "maxAbsError": 1.0408340855860843e-17,
+  "maxRelError": 1.2706339468222109e-15,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.corrcoef (Python 3.13.12 · numpy 2.4.3 · pandas 3.0.3)",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-002",
+  "validationType": "numerical",
+  "testName": "Independent series: |ρ| ≤ 4/√n = 0.0566",
+  "expectedResult": "1.000000000",
+  "actualResult": "1.000000000",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Sampling distribution of ρ under independence (sd ≈ 1/√n)",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0",
+  "notes": "Statistical tolerance of 4 standard errors"
+ },
+ {
+  "modelId": "COR-002",
+  "validationType": "numerical",
+  "testName": "Zero-variance asset → correlation unavailable (null), no NaN/∞",
+  "expectedResult": "n=4, first=1.000000000, last=null",
+  "actualResult": "n=4, first=1.000000000, last=null",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "Spec: variance ≤ 1e-18 treated as zero",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0",
+  "notes": "numpy gives variance 1.09e-37 (round-off) for a constant series"
+ },
+ {
+  "modelId": "COR-002",
+  "validationType": "numerical",
+  "testName": "Symmetry, unit diagonal, |ρ| ≤ 1 across 655 rolling matrices",
+  "expectedResult": "n=3, first=0.000000000, last=0.000000000",
+  "actualResult": "n=3, first=0.000000000, last=0.000000000",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 0
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 3,
+  "passed": true,
+  "evidence": {
+   "reference": "Mathematical properties",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-001",
+  "validationType": "numerical",
+  "testName": "No look-ahead: shock at t=150 leaves estimates t<150 unchanged",
+  "expectedResult": "n=2400, first=0.00009263169686, last=0.0003434794442",
+  "actualResult": "n=2400, first=0.00009263169686, last=0.0003434794442",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2400,
+  "passed": true,
+  "evidence": {
+   "reference": "Trailing-window property",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ },
+ {
+  "modelId": "COR-001",
+  "validationType": "numerical",
+  "testName": "Insufficient observations → no estimate (1 obs; 10 obs with W=20)",
+  "expectedResult": "n=2, first=true, last=true",
+  "actualResult": "n=2, first=true, last=true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "Spec",
+   "dataset": "SYNTHETIC TEST DATA — phase4-benchmark/1.0.0, seed 20261009"
+  },
+  "validationDate": "2026-10-10",
+  "implementationVersion": "quant-engine/phase4-correlation@1.0.0"
+ }
+]
