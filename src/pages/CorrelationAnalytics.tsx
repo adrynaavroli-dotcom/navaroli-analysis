@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { fetchReturnsDataset } from '@/hooks/useVolatilityData';
 import { alignPrices, panelReturns } from '@/lib/returns';
 import { annualize, pairSeries, rollingCovariance, COV_WINDOWS } from '@/lib/correlation';
+import { ewmaCovariance, EWMA_COV_LAMBDA } from '@/lib/correlation/ewma';
 
 const TICKER = /^[A-Z0-9.\-^=]{1,15}$/;
 
@@ -21,6 +22,7 @@ export default function CorrelationAnalytics() {
   const [tickers, setTickers] = useState<string[]>(['AAPL', 'MSFT', 'SPY', 'TLT']);
   const [period, setPeriod] = useState('2y');
   const [window, setWindow] = useState(60);
+  const [estimator, setEstimator] = useState<'rolling' | 'ewma'>('rolling');
   const [annual, setAnnual] = useState(false);
   const [pair, setPair] = useState('0-1');
   const [idx, setIdx] = useState<number | null>(null);
@@ -40,12 +42,12 @@ export default function CorrelationAnalytics() {
     const ds = qs.map((q) => q.data!);
     const prices = alignPrices(Object.fromEntries(ds.map((d) => [d.ticker, d.prices])));
     const rets = panelReturns(prices, 'log');
-    const res = rollingCovariance(rets, window);
+    const res = estimator === 'ewma' ? ewmaCovariance(rets) : rollingCovariance(rets, window);
     const firstValid = res.cov.findIndex((c) => c !== null);
     const flags = ds.flatMap((d) => d.flags.filter((f) => f.code === 'UNADJUSTED_DIVIDENDS' || f.code === 'LARGE_MOVE').map((f) => `${d.ticker}: ${f.code}${f.date ? ` ${f.date}` : ''}`));
     return { ds, prices, rets, res, firstValid, flags };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, window, ...qs.map((q) => q.dataUpdatedAt)]);
+  }, [ready, window, estimator, ...qs.map((q) => q.dataUpdatedAt)]);
 
   const N = a?.rets.tickers.length ?? 0;
   const t = a ? (idx ?? a.res.dates.length - 1) : 0;
@@ -74,7 +76,11 @@ export default function CorrelationAnalytics() {
               <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && load()} className="w-80 font-mono" aria-label="Tickers" />
               <Select value={period} onValueChange={setPeriod}><SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
                 <SelectContent>{['1y', '2y', '5y'].map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select>
-              <ToggleGroup type="single" value={String(window)} onValueChange={(v) => v && setWindow(Number(v))}>
+              <ToggleGroup type="single" value={estimator} onValueChange={(v) => v && setEstimator(v as 'rolling' | 'ewma')}>
+                <ToggleGroupItem value="rolling" className="text-xs">Rolling</ToggleGroupItem>
+                <ToggleGroupItem value="ewma" className="font-mono text-xs">EWMA λ={EWMA_COV_LAMBDA}</ToggleGroupItem>
+              </ToggleGroup>
+              <ToggleGroup type="single" value={String(window)} disabled={estimator === 'ewma'} onValueChange={(v) => v && setWindow(Number(v))}>
                 {COV_WINDOWS.map((w) => <ToggleGroupItem key={w} value={String(w)} className="font-mono text-xs">{w}D</ToggleGroupItem>)}
               </ToggleGroup>
               <Button onClick={load} disabled={loading}>{loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Load</Button>
@@ -86,7 +92,7 @@ export default function CorrelationAnalytics() {
                 <span>Returns: {a.rets.dates.length}</span>
                 <span>Dropped (not common): {Object.entries(a.prices.dropped).map(([k, v]) => `${k} ${v}`).join(' · ')}</span>
                 <span>Prices: {a.ds.map((d) => `${d.ticker} ${d.priceField}`).join(' · ')}</span>
-                {a.firstValid < 0 && <span className="text-destructive">Insufficient observations for a {window}D window</span>}
+                {a.firstValid < 0 && <span className="text-destructive">Insufficient observations for {estimator === 'ewma' ? 'the EWMA seed' : `a ${window}D window`}</span>}
                 {a.flags.length > 0 && <span className="text-destructive" title={a.flags.join('\n')}>Quality flags: {a.flags.length}</span>}
               </div>
             )}
@@ -98,7 +104,7 @@ export default function CorrelationAnalytics() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">2. Matrices at {a.res.dates[t]}</CardTitle>
-                <CardDescription>Estimate uses the {window} returns ending on this date. Earlier dates have no estimate (warm-up).</CardDescription>
+                <CardDescription>{estimator === 'ewma' ? `EWMA (λ=${EWMA_COV_LAMBDA}) uses returns up to the previous date, seeded with the sample covariance of the first 20 returns.` : `Estimate uses the ${window} returns ending on this date.`} Earlier dates have no estimate (warm-up).</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Slider min={a.firstValid} max={a.res.dates.length - 1} step={1} value={[t]} onValueChange={([v]) => setIdx(v)} aria-label="Estimation date" />
@@ -128,7 +134,7 @@ export default function CorrelationAnalytics() {
 
             <Card>
               <CardHeader className="flex-row items-center justify-between space-y-0">
-                <div><CardTitle className="text-base">3. Rolling pairwise correlation ({window}D)</CardTitle><CardDescription>Gaps = no estimate (warm-up or unavailable).</CardDescription></div>
+                <div><CardTitle className="text-base">3. Pairwise correlation ({estimator === 'ewma' ? `EWMA λ=${EWMA_COV_LAMBDA}` : `rolling ${window}D`})</CardTitle><CardDescription>Gaps = no estimate (warm-up or unavailable).</CardDescription></div>
                 <Select value={pair} onValueChange={setPair}><SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
                   <SelectContent>{pairs.map((p) => <SelectItem key={p.v} value={p.v}>{p.l}</SelectItem>)}</SelectContent></Select>
               </CardHeader>
