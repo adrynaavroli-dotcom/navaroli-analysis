@@ -1,0 +1,222 @@
+[
+ {
+  "modelId": "COR-003",
+  "validationType": "independent-benchmark",
+  "testName": "EWMA covariance λ=0.94, seed 20 (incl. warm-up nulls)",
+  "expectedResult": "n=4544, first=0.00008157672496, last=0.0006270514079",
+  "actualResult": "n=4544, first=0.00008157672496, last=0.0006270514079",
+  "tolerance": {
+   "abs": 1e-18,
+   "rel": 1e-10
+  },
+  "maxAbsError": 4.336808689942018e-19,
+  "maxRelError": 7.942632814444402e-13,
+  "n": 4544,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy closed-form weighted sum (Python 3.13.12 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
+  },
+  "validationDate": "2026-10-11",
+  "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
+ },
+ {
+  "modelId": "COR-003",
+  "validationType": "independent-benchmark",
+  "testName": "EWMA correlation (D⁻¹ΣD⁻¹)",
+  "expectedResult": "n=4544, first=1.000000000, last=1.000000000",
+  "actualResult": "n=4544, first=1.000000000, last=1.000000000",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-10
+  },
+  "maxAbsError": 4.440892098500626e-16,
+  "maxRelError": 7.942317276118007e-13,
+  "n": 4544,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy closed-form (Python 3.13.12 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
+  },
+  "validationDate": "2026-10-11",
+  "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
+ },
+ {
+  "modelId": "COR-003",
+  "validationType": "independent-benchmark",
+  "testName": "EWMA covariance λ=0.97 (parameter not hard-coded)",
+  "expectedResult": "n=4544, first=0.00008157672496, last=0.0005328358752",
+  "actualResult": "n=4544, first=0.00008157672496, last=0.0005328358752",
+  "tolerance": {
+   "abs": 1e-18,
+   "rel": 1e-10
+  },
+  "maxAbsError": 3.2526065174565133e-19,
+  "maxRelError": 9.170865398058421e-14,
+  "n": 4544,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy closed-form weighted sum (Python 3.13.12 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
+  },
+  "validationDate": "2026-10-11",
+  "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
+ },
+ {
+  "modelId": "COR-003",
+  "validationType": "independent-benchmark",
+  "testName": "Diagonal = univariate EWMA variance (asset 0)",
+  "expectedResult": "n=284, first=0.00008157672496, last=0.0001092887849",
+  "actualResult": "n=284, first=0.00008157672496, last=0.0001092887849",
+  "tolerance": {
+   "abs": 1e-18,
+   "rel": 1e-10
+  },
+  "maxAbsError": 2.710505431213761e-20,
+  "maxRelError": 3.083116053578366e-16,
+  "n": 284,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy univariate loop (Python 3.13.12 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
+  },
+  "validationDate": "2026-10-11",
+  "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
+ },
+ {
+  "modelId": "COR-003",
+  "validationType": "numerical",
+  "testName": "Diagonal ≡ VOL-002 EWMA volatility for all assets",
+  "expectedResult": "n=1136, first=0.1433782923, last=0.3975134649",
+  "actualResult": "n=1136, first=0.1433782923, last=0.3975134649",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-12
+  },
+  "maxAbsError": 5.551115123125783e-17,
+  "maxRelError": 2.576807694911789e-16,
+  "n": 1136,
+  "passed": true,
+  "evidence": {
+   "reference": "VOL-002 ewmaVolatility() (validated)",
+   "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
+  },
+  "validationDate": "2026-10-11",
+  "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
+ },
+ {
+  "modelId": "COR-003",
+  "validationType": "numerical",
+  "testName": "Symmetry, unit diagonal, |ρ| ≤ 1 across 265 EWMA matrices",
+  "expectedResult": "n=3, first=0.000000000, last=0.000000000",
+  "actualResult": "n=3, first=3.330669074e-16, last=0.000000000",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 0
+  },
+  "maxAbsError": 3.3306690738754696e-16,
+  "maxRelError": 0,
+  "n": 3,
+  "passed": true,
+  "evidence": {
+   "reference": "Mathematical properties",
+   "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
+  },
+  "validationDate": "2026-10-11",
+  "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
+ },
+ {
+  "modelId": "COR-003",
+  "validationType": "numerical",
+  "testName": "Positive definite at every date (LDLᵀ pivots > 0; numpy min eigenvalue > 0)",
+  "expectedResult": "n=2, first=true, last=true",
+  "actualResult": "n=2, first=true, last=true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "PSD by construction: PSD seed + rank-1 PSD updates",
+   "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
+  },
+  "validationDate": "2026-10-11",
+  "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0",
+  "notes": "min pivot 3.016e-5, numpy min eigenvalue 1.326e-5"
+ },
+ {
+  "modelId": "COR-003",
+  "validationType": "numerical",
+  "testName": "No look-ahead: shock at r_150 leaves Σ_t for t ≤ 150 unchanged",
+  "expectedResult": "n=2416, first=0.00008157672496, last=0.0002943489254",
+  "actualResult": "n=2416, first=0.00008157672496, last=0.0002943489254",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2416,
+  "passed": true,
+  "evidence": {
+   "reference": "Ex-ante recursion property",
+   "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
+  },
+  "validationDate": "2026-10-11",
+  "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
+ },
+ {
+  "modelId": "COR-003",
+  "validationType": "numerical",
+  "testName": "Shock at r_150 enters Σ_151",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Recursion timing",
+   "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
+  },
+  "validationDate": "2026-10-11",
+  "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
+ },
+ {
+  "modelId": "COR-003",
+  "validationType": "numerical",
+  "testName": "Hand-checkable 2×2 (λ=0.5, seed 2)",
+  "expectedResult": "n=4, first=5.500000000, last=1.000000000",
+  "actualResult": "n=4, first=5.500000000, last=1.000000000",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 0
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "Manual calculation",
+   "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
+  },
+  "validationDate": "2026-10-11",
+  "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
+ },
+ {
+  "modelId": "COR-003",
+  "validationType": "numerical",
+  "testName": "Insufficient observations (< seed) → all null",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Spec",
+   "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
+  },
+  "validationDate": "2026-10-11",
+  "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
+ }
+]

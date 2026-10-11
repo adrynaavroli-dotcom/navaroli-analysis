@@ -70,4 +70,4 @@ export function rollingCovariance(returns: AlignedPanel, window: number): Rollin
 export const annualize = (S: Matrix, days = TRADING_DAYS): Matrix => S.map((r) => r.map((v) => v * days));
 
 /** Pairwise rolling correlation series for assets i, j. */
-export const pairSeries = (res: RollingCovResult, i: number, j: number) => res.corr.map((c) => (c ? c[i][j] : null));
+export const pairSeries = (res: Pick<RollingCovResult, "corr">, i: number, j: number) => res.corr.map((c) => (c ? c[i][j] : null));

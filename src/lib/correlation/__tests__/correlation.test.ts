@@ -60,7 +60,7 @@ describe('matrix status consistency (regression: DAT-001)', () => {
   // Overall progress = matrix item status; validation layer = recorded evidence. They are different fields.
   const map = { 'NOT STARTED': ['NOT STARTED', 'PLANNED'], 'IN PROGRESS': ['IN PROGRESS', 'VALIDATION'], COMPLETED: ['COMPLETED'], FAILED: ['IN PROGRESS'] } as const;
   it('validation layer in the matrix agrees with evidence for every planned model', () => {
-    for (const id of ['DAT-001', 'DAT-002', 'DAT-003', 'STA-001', 'VOL-001', 'VOL-002', 'COR-001', 'COR-002']) {
+    for (const id of ['DAT-001', 'DAT-002', 'DAT-003', 'STA-001', 'VOL-001', 'VOL-002', 'COR-001', 'COR-002', 'COR-003']) {
       const i = allMatrixItems.find((x) => x.id === id)!;
       expect((map[validationStatusFor(id)] as readonly string[]).includes(i.layers.validation), id).toBe(true);
     }
@@ -70,5 +70,8 @@ describe('matrix status consistency (regression: DAT-001)', () => {
     expect(i.status).toBe('IN PROGRESS'); expect(i.layers.validation).toBe('NOT STARTED');
     expect(validationStatusFor('DAT-001')).toBe('NOT STARTED');
   });
-  it('COR-003 stays not started', () => expect(allMatrixItems.find((x) => x.id === 'COR-003')!.status).toBe('NOT STARTED'));
+  it('COR-003 validation layer is closed by recorded evidence', () => {
+    expect(validationStatusFor('COR-003')).toBe('COMPLETED');
+    expect(allMatrixItems.find((x) => x.id === 'COR-003')!.layers.validation).toBe('COMPLETED');
+  });
 });
