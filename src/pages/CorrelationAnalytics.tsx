@@ -66,7 +66,7 @@ export default function CorrelationAnalytics() {
         <div>
           <div className="font-mono text-xs uppercase tracking-wide text-muted-foreground">Quant · Layer 2 · Correlation</div>
           <h1 className="text-3xl font-semibold">Covariance & Correlation</h1>
-          <p className="text-muted-foreground">Trailing sample covariance (W−1) and Pearson correlation on aligned daily log returns.</p>
+          <p className="text-muted-foreground">Trailing sample covariance (W−1) or EWMA (RiskMetrics) covariance, with Pearson correlation, on aligned daily log returns.</p>
         </div>
 
         <Card>
