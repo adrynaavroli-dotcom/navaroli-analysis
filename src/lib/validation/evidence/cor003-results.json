@@ -17,7 +17,7 @@
    "reference": "numpy closed-form weighted sum (Python 3.13.12 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
   },
-  "validationDate": "2026-10-11",
+  "validationDate": "2026-10-12",
   "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
  },
  {
@@ -38,7 +38,7 @@
    "reference": "numpy closed-form (Python 3.13.12 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
   },
-  "validationDate": "2026-10-11",
+  "validationDate": "2026-10-12",
   "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
  },
  {
@@ -59,7 +59,7 @@
    "reference": "numpy closed-form weighted sum (Python 3.13.12 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
   },
-  "validationDate": "2026-10-11",
+  "validationDate": "2026-10-12",
   "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
  },
  {
@@ -80,7 +80,7 @@
    "reference": "numpy univariate loop (Python 3.13.12 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
   },
-  "validationDate": "2026-10-11",
+  "validationDate": "2026-10-12",
   "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
  },
  {
@@ -101,7 +101,7 @@
    "reference": "VOL-002 ewmaVolatility() (validated)",
    "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
   },
-  "validationDate": "2026-10-11",
+  "validationDate": "2026-10-12",
   "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
  },
  {
@@ -122,7 +122,7 @@
    "reference": "Mathematical properties",
    "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
   },
-  "validationDate": "2026-10-11",
+  "validationDate": "2026-10-12",
   "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
  },
  {
@@ -140,7 +140,7 @@
    "reference": "PSD by construction: PSD seed + rank-1 PSD updates",
    "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
   },
-  "validationDate": "2026-10-11",
+  "validationDate": "2026-10-12",
   "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0",
   "notes": "min pivot 3.016e-5, numpy min eigenvalue 1.326e-5"
  },
@@ -159,7 +159,7 @@
    "reference": "Ex-ante recursion property",
    "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
   },
-  "validationDate": "2026-10-11",
+  "validationDate": "2026-10-12",
   "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
  },
  {
@@ -177,7 +177,7 @@
    "reference": "Recursion timing",
    "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
   },
-  "validationDate": "2026-10-11",
+  "validationDate": "2026-10-12",
   "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
  },
  {
@@ -198,7 +198,7 @@
    "reference": "Manual calculation",
    "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
   },
-  "validationDate": "2026-10-11",
+  "validationDate": "2026-10-12",
   "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
  },
  {
@@ -216,7 +216,7 @@
    "reference": "Spec",
    "dataset": "SYNTHETIC TEST DATA — cor003-benchmark/1.0.0 on phase4-benchmark/1.0.0 returns panel"
   },
-  "validationDate": "2026-10-11",
+  "validationDate": "2026-10-12",
   "implementationVersion": "quant-engine/cor003-ewma-cov@1.0.0"
  }
 ]
