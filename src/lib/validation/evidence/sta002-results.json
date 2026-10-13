@@ -1,0 +1,1083 @@
+[
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ACF lags 0–20 · iid_normal_500",
+  "expectedResult": "n=21, first=1.000000000, last=0.06683404168",
+  "actualResult": "n=21, first=1.000000000, last=0.06683404168",
+  "tolerance": {
+   "abs": 1e-13,
+   "rel": 1e-11
+  },
+  "maxAbsError": 8.326672684688674e-17,
+  "maxRelError": 2.1147621361785018e-14,
+  "n": 21,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box Q(10), Q(20) · iid_normal_500",
+  "expectedResult": "n=2, first=11.56306668, last=20.20483411",
+  "actualResult": "n=2, first=11.56306668, last=20.20483411",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-11
+  },
+  "maxAbsError": 1.0658141036401503e-14,
+  "maxRelError": 5.275045061421779e-16,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box p-values · iid_normal_500",
+  "expectedResult": "n=2, first=0.3153621174, last=0.4451836956",
+  "actualResult": "n=2, first=0.3153621174, last=0.4451836956",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 2.6645352591003757e-15,
+  "maxRelError": 5.985248977597399e-15,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF AIC-selected lag and nobs · iid_normal_500",
+  "expectedResult": "n=2, first=0, last=499",
+  "actualResult": "n=2, first=0, last=499",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF τ statistic and best AIC · iid_normal_500",
+  "expectedResult": "n=2, first=-23.86872121, last=-3075.888776",
+  "actualResult": "n=2, first=-23.86872121, last=-3075.888776",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.7763568394002505e-14,
+  "maxRelError": 7.442195264473515e-16,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF p-value and critical values · iid_normal_500",
+  "expectedResult": "n=4, first=0.000000000, last=-2.569864247",
+  "actualResult": "n=4, first=0.000000000, last=-2.569864247",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ACF lags 0–20 · ar1_phi05_500",
+  "expectedResult": "n=21, first=1.000000000, last=0.08272728611",
+  "actualResult": "n=21, first=1.000000000, last=0.08272728611",
+  "tolerance": {
+   "abs": 1e-13,
+   "rel": 1e-11
+  },
+  "maxAbsError": 1.1102230246251565e-16,
+  "maxRelError": 2.093492589487192e-15,
+  "n": 21,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box Q(10), Q(20) · ar1_phi05_500",
+  "expectedResult": "n=2, first=139.5305521, last=151.1537068",
+  "actualResult": "n=2, first=139.5305521, last=151.1537068",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-11
+  },
+  "maxAbsError": 5.684341886080802e-14,
+  "maxRelError": 4.073904818716283e-16,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box p-values · ar1_phi05_500",
+  "expectedResult": "n=2, first=5.259266105e-25, last=3.778669538e-22",
+  "actualResult": "n=2, first=5.259266105e-25, last=3.778669538e-22",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 5.4072740137825225e-36,
+  "maxRelError": 2.881173259306116e-14,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF AIC-selected lag and nobs · ar1_phi05_500",
+  "expectedResult": "n=2, first=2, last=497",
+  "actualResult": "n=2, first=2, last=497",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF τ statistic and best AIC · ar1_phi05_500",
+  "expectedResult": "n=2, first=-9.411771834, last=-3026.792258",
+  "actualResult": "n=2, first=-9.411771834, last=-3026.792258",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-9
+  },
+  "maxAbsError": 7.105427357601002e-15,
+  "maxRelError": 7.549510850129471e-16,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF p-value and critical values · ar1_phi05_500",
+  "expectedResult": "n=4, first=5.809476439e-16, last=-2.569876744",
+  "actualResult": "n=4, first=5.809476439e-16, last=-2.569876744",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 2.968089155894057e-29,
+  "maxRelError": 5.109047582688578e-14,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ACF lags 0–20 · arch1_returns_750",
+  "expectedResult": "n=21, first=1.000000000, last=-0.02208848738",
+  "actualResult": "n=21, first=1.000000000, last=-0.02208848738",
+  "tolerance": {
+   "abs": 1e-13,
+   "rel": 1e-11
+  },
+  "maxAbsError": 9.71445146547012e-17,
+  "maxRelError": 3.5514859419197017e-15,
+  "n": 21,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box Q(10), Q(20) · arch1_returns_750",
+  "expectedResult": "n=2, first=11.86987362, last=18.11300299",
+  "actualResult": "n=2, first=11.86987362, last=18.11300299",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-11
+  },
+  "maxAbsError": 1.4210854715202004e-14,
+  "maxRelError": 7.845664645424755e-16,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box p-values · arch1_returns_750",
+  "expectedResult": "n=2, first=0.2938598054, last=0.5799642926",
+  "actualResult": "n=2, first=0.2938598054, last=0.5799642926",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.7763568394002505e-15,
+  "maxRelError": 3.589166854035168e-15,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF AIC-selected lag and nobs · arch1_returns_750",
+  "expectedResult": "n=2, first=0, last=749",
+  "actualResult": "n=2, first=0, last=749",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF τ statistic and best AIC · arch1_returns_750",
+  "expectedResult": "n=2, first=-28.78126060, last=-5082.610923",
+  "actualResult": "n=2, first=-28.78126060, last=-5082.610923",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.8189894035458565e-12,
+  "maxRelError": 2.839083935932242e-15,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF p-value and critical values · arch1_returns_750",
+  "expectedResult": "n=4, first=0.000000000, last=-2.568828946",
+  "actualResult": "n=4, first=0.000000000, last=-2.568828946",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ACF lags 0–20 · random_walk_logprice_500",
+  "expectedResult": "n=21, first=1.000000000, last=0.7335366413",
+  "actualResult": "n=21, first=1.000000000, last=0.7335366413",
+  "tolerance": {
+   "abs": 1e-13,
+   "rel": 1e-11
+  },
+  "maxAbsError": 1.9984014443252818e-15,
+  "maxRelError": 2.6807628954001876e-15,
+  "n": 21,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box Q(10), Q(20) · random_walk_logprice_500",
+  "expectedResult": "n=2, first=4356.049711, last=7602.570315",
+  "actualResult": "n=2, first=4356.049711, last=7602.570315",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-11
+  },
+  "maxAbsError": 1.1823431123048067e-11,
+  "maxRelError": 1.5551886577440447e-15,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box p-values · random_walk_logprice_500",
+  "expectedResult": "n=2, first=0.000000000, last=0.000000000",
+  "actualResult": "n=2, first=0.000000000, last=0.000000000",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF AIC-selected lag and nobs · random_walk_logprice_500",
+  "expectedResult": "n=2, first=0, last=499",
+  "actualResult": "n=2, first=0, last=499",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF τ statistic and best AIC · random_walk_logprice_500",
+  "expectedResult": "n=2, first=-1.345214032, last=-3048.332926",
+  "actualResult": "n=2, first=-1.345214032, last=-3048.332926",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-9
+  },
+  "maxAbsError": 9.094947017729282e-13,
+  "maxRelError": 1.78267671582341e-14,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF p-value and critical values · random_walk_logprice_500",
+  "expectedResult": "n=4, first=0.6082415490, last=-2.569864247",
+  "actualResult": "n=4, first=0.6082415490, last=-2.569864247",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.1435297153639112e-14,
+  "maxRelError": 1.8800585348330827e-14,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ACF lags 0–20 · ar1_phi07_level_300",
+  "expectedResult": "n=21, first=1.000000000, last=0.002933751871",
+  "actualResult": "n=21, first=1.000000000, last=0.002933751871",
+  "tolerance": {
+   "abs": 1e-13,
+   "rel": 1e-11
+  },
+  "maxAbsError": 4.996003610813204e-16,
+  "maxRelError": 8.751785977325348e-14,
+  "n": 21,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box Q(10), Q(20) · ar1_phi07_level_300",
+  "expectedResult": "n=2, first=290.8546931, last=298.2884777",
+  "actualResult": "n=2, first=290.8546931, last=298.2884777",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-11
+  },
+  "maxAbsError": 3.410605131648481e-13,
+  "maxRelError": 1.1726147840678394e-15,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box p-values · ar1_phi07_level_300",
+  "expectedResult": "n=2, first=1.330779279e-56, last=1.807218200e-51",
+  "actualResult": "n=2, first=1.330779279e-56, last=1.807218200e-51",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 2.3264140977111507e-64,
+  "maxRelError": 1.5753098502778467e-13,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF AIC-selected lag and nobs · ar1_phi07_level_300",
+  "expectedResult": "n=2, first=0, last=299",
+  "actualResult": "n=2, first=0, last=299",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF τ statistic and best AIC · ar1_phi07_level_300",
+  "expectedResult": "n=2, first=-7.761688453, last=-941.0926673",
+  "actualResult": "n=2, first=-7.761688453, last=-941.0926673",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-9
+  },
+  "maxAbsError": 4.547473508864641e-13,
+  "maxRelError": 2.4030527539925936e-15,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF p-value and critical values · ar1_phi07_level_300",
+  "expectedResult": "n=4, first=9.417823618e-12, last=-2.571946571",
+  "actualResult": "n=4, first=9.417823618e-12, last=-2.571946571",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.027513417155714e-24,
+  "maxRelError": 1.0910306444886963e-13,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ACF lags 0–20 · short_iid_60",
+  "expectedResult": "n=21, first=1.000000000, last=-0.05378496917",
+  "actualResult": "n=21, first=1.000000000, last=-0.05378496917",
+  "tolerance": {
+   "abs": 1e-13,
+   "rel": 1e-11
+  },
+  "maxAbsError": 1.1102230246251565e-16,
+  "maxRelError": 1.2031098608680114e-14,
+  "n": 21,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box Q(10), Q(20) · short_iid_60",
+  "expectedResult": "n=2, first=8.034546138, last=22.02177464",
+  "actualResult": "n=2, first=8.034546138, last=22.02177464",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-11
+  },
+  "maxAbsError": 1.0658141036401503e-14,
+  "maxRelError": 6.632696391930421e-16,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box p-values · short_iid_60",
+  "expectedResult": "n=2, first=0.6254623925, last=0.3393302611",
+  "actualResult": "n=2, first=0.6254623925, last=0.3393302611",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 9.43689570931383e-16,
+  "maxRelError": 2.7810357020489987e-15,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF AIC-selected lag and nobs · short_iid_60",
+  "expectedResult": "n=2, first=0, last=59",
+  "actualResult": "n=2, first=0, last=59",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF τ statistic and best AIC · short_iid_60",
+  "expectedResult": "n=2, first=-6.467362035, last=138.7510978",
+  "actualResult": "n=2, first=-6.467362035, last=138.7510978",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-9
+  },
+  "maxAbsError": 2.6645352591003757e-15,
+  "maxRelError": 4.1199723237679516e-16,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF p-value and critical values · short_iid_60",
+  "expectedResult": "n=4, first=1.394482511e-8, last=-2.593651528",
+  "actualResult": "n=4, first=1.394482511e-8, last=-2.593651528",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.1911400820763599e-22,
+  "maxRelError": 8.541807251789766e-15,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ACF lags 0–20 · arch1_squared_750",
+  "expectedResult": "n=21, first=1.000000000, last=0.06609924772",
+  "actualResult": "n=21, first=1.000000000, last=0.06609924772",
+  "tolerance": {
+   "abs": 1e-13,
+   "rel": 1e-11
+  },
+  "maxAbsError": 5.828670879282072e-16,
+  "maxRelError": 1.6934363444875378e-14,
+  "n": 21,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box Q(10), Q(20) · arch1_squared_750",
+  "expectedResult": "n=2, first=258.5564342, last=270.7412212",
+  "actualResult": "n=2, first=258.5564342, last=270.7412212",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-11
+  },
+  "maxAbsError": 5.684341886080802e-14,
+  "maxRelError": 2.1984917543343658e-16,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Ljung–Box p-values · arch1_squared_750",
+  "expectedResult": "n=2, first=8.602303384e-50, last=7.292642369e-46",
+  "actualResult": "n=2, first=8.602303384e-50, last=7.292642369e-46",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.5557538194652854e-61,
+  "maxRelError": 2.869984356085591e-14,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF AIC-selected lag and nobs · arch1_squared_750",
+  "expectedResult": "n=2, first=3, last=746",
+  "actualResult": "n=2, first=3, last=746",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF τ statistic and best AIC · arch1_squared_750",
+  "expectedResult": "n=2, first=-10.04556976, last=-11278.13780",
+  "actualResult": "n=2, first=-10.04556976, last=-11278.13780",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.0487610779819079e-11,
+  "maxRelError": 1.0440035791992697e-12,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "ADF p-value and critical values · arch1_squared_750",
+  "expectedResult": "n=4, first=1.457543908e-17, last=-2.568837246",
+  "actualResult": "n=4, first=1.457543908e-17, last=-2.568837246",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 8.799712582861276e-28,
+  "maxRelError": 6.037356771953947e-11,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "MacKinnon (1994) p-value on 87 τ values incl. regime boundaries",
+  "expectedResult": "n=87, first=2.736285339e-30, last=0.000000000",
+  "actualResult": "n=87, first=2.736285339e-30, last=0.000000000",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 4.0245584642661925e-16,
+  "maxRelError": 2.6330472325898985e-14,
+  "n": 87,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels mackinnonp(regression=\"c\", N=1) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "MacKinnon (2010) critical values, T = 25…1000",
+  "expectedResult": "n=18, first=-3.723863312, last=-2.568311209",
+  "actualResult": "n=18, first=-3.723863312, last=-2.568311209",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-12
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 18,
+  "passed": true,
+  "evidence": {
+   "reference": "statsmodels mackinnoncrit(regression=\"c\", N=1) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "χ² survival function (55 points, df 1–20)",
+  "expectedResult": "n=55, first=0.9203443254, last=2.851507756e-16",
+  "actualResult": "n=55, first=0.9203443254, last=2.851507756e-16",
+  "tolerance": {
+   "abs": 1e-14,
+   "rel": 1e-11
+  },
+  "maxAbsError": 2.6645352591003757e-15,
+  "maxRelError": 8.397248729788504e-15,
+  "n": 55,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy.stats.chi2.sf (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "independent-benchmark",
+  "testName": "Standard normal CDF on [−8, 8]",
+  "expectedResult": "n=65, first=6.220960574e-16, last=1.000000000",
+  "actualResult": "n=65, first=6.220960574e-16, last=1.000000000",
+  "tolerance": {
+   "abs": 1e-14,
+   "rel": 1e-11
+  },
+  "maxAbsError": 2.7755575615628914e-16,
+  "maxRelError": 8.4129094025835e-15,
+  "n": 65,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy.stats.norm.cdf (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "numerical",
+  "testName": "AR(1) φ=0.5: ρ̂_1 within 4 s.e. of φ",
+  "expectedResult": "0.5000000000",
+  "actualResult": "0.4400611736",
+  "tolerance": {
+   "abs": 0.17888543819998318,
+   "rel": 0
+  },
+  "maxAbsError": 0.05993882640354914,
+  "maxRelError": 0.11987765280709828,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Theory: ρ_1 = φ",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0",
+  "notes": "Statistical tolerance 4/√n"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "numerical",
+  "testName": "Ljung–Box detects AR(1) and ARCH effects in r², not in ARCH returns",
+  "expectedResult": "n=3, first=true, last=true",
+  "actualResult": "n=3, first=true, last=true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 3,
+  "passed": true,
+  "evidence": {
+   "reference": "Theory (power check on synthetic DGPs)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "numerical",
+  "testName": "ADF: random walk not rejected; stationary AR(1) and white noise rejected",
+  "expectedResult": "n=3, first=true, last=true",
+  "actualResult": "n=3, first=true, last=true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 3,
+  "passed": true,
+  "evidence": {
+   "reference": "Theory (size/power on synthetic DGPs)",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "numerical",
+  "testName": "Hand-checkable ACF of [1,2,3,4] (ρ̂1 = 0.25)",
+  "expectedResult": "n=2, first=1.000000000, last=0.2500000000",
+  "actualResult": "n=2, first=1.000000000, last=0.2500000000",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 0
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "Manual calculation",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "numerical",
+  "testName": "χ² survival closed form for even df",
+  "expectedResult": "n=2, first=0.1353352832, last=0.4404932851",
+  "actualResult": "n=2, first=0.1353352832, last=0.4404932851",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-13
+  },
+  "maxAbsError": 7.216449660063518e-16,
+  "maxRelError": 1.6382655320149013e-15,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "Q(k, x) = e^{−x} Σ_{i<k} xⁱ/i!",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "numerical",
+  "testName": "Schwert max lag ⌈12(n/100)^¼⌉ capped at n/2−2",
+  "expectedResult": "n=3, first=18, last=8",
+  "actualResult": "n=3, first=18, last=8",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 3,
+  "passed": true,
+  "evidence": {
+   "reference": "Manual calculation",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ },
+ {
+  "modelId": "STA-002",
+  "validationType": "numerical",
+  "testName": "Constant → null ACF/LB, ADF error; NaN and too-short inputs rejected (no NaN outputs)",
+  "expectedResult": "n=6, first=true, last=true",
+  "actualResult": "n=6, first=true, last=true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 6,
+  "passed": true,
+  "evidence": {
+   "reference": "Spec",
+   "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
+  },
+  "validationDate": "2026-10-13",
+  "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
+ }
+]

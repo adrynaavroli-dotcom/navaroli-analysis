@@ -60,7 +60,7 @@ describe('matrix status consistency (regression: DAT-001)', () => {
   // Overall progress = matrix item status; validation layer = recorded evidence. They are different fields.
   const map = { 'NOT STARTED': ['NOT STARTED', 'PLANNED'], 'IN PROGRESS': ['IN PROGRESS', 'VALIDATION'], COMPLETED: ['COMPLETED'], FAILED: ['IN PROGRESS'] } as const;
   it('validation layer in the matrix agrees with evidence for every planned model', () => {
-    for (const id of ['DAT-001', 'DAT-002', 'DAT-003', 'STA-001', 'VOL-001', 'VOL-002', 'COR-001', 'COR-002', 'COR-003']) {
+    for (const id of ['DAT-001', 'DAT-002', 'DAT-003', 'STA-001', 'VOL-001', 'VOL-002', 'COR-001', 'COR-002', 'COR-003', 'STA-002']) {
       const i = allMatrixItems.find((x) => x.id === id)!;
       expect((map[validationStatusFor(id)] as readonly string[]).includes(i.layers.validation), id).toBe(true);
     }

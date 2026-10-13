@@ -5,3 +5,5 @@
 - Model validation uses the reusable framework in src/lib/validation/ (plans + ValidationResult evidence, Python reference fixtures, regenerated via validation/run-*.ts); a matrix item's validation layer may be COMPLETED only if its recorded evidence closes its plan, enforced by tests.
 - Technical docs live at /quant/* (QuantDoc) and render from the matrix item's docPath plus validation evidence — no duplicated content.
 - Covariance/correlation live in src/lib/correlation/ and consume only aligned return panels from the Returns Engine; undefined correlations are null (never NaN/clipped) — keeps every downstream risk/portfolio model on one consistent estimator. EWMA covariance reuses the VOL-002 conventions (λ, seed, timing) so its diagonal equals univariate EWMA — one EWMA definition.
+
+- Time-series diagnostics live in src/lib/timeseries/ (ACF, Ljung–Box, ADF, own special functions with no new dependencies) and are benchmarked against statsmodels; p-value coefficients are transcribed constants with a cited source — keeps GARCH prerequisites deterministic and auditable.
