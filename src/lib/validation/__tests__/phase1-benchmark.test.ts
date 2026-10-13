@@ -34,7 +34,7 @@ describe('validation framework', () => {
     expect(validationStatus({ modelId: 'X', required: ['numerical'] }, [ok])).toBe('COMPLETED');
   });
   it('phase 1 statuses', () => {
-    for (const id of ['DAT-002', 'DAT-003', 'STA-001', 'VOL-001', 'VOL-002']) expect(validationStatusFor(id)).toBe('COMPLETED');
+    for (const id of ['DAT-002', 'DAT-003', 'STA-001', 'STA-002', 'VOL-001', 'VOL-002']) expect(validationStatusFor(id)).toBe('COMPLETED');
     expect(validationStatusFor('DAT-001')).toBe('NOT STARTED');
     expect(VALIDATION_PLANS.map((p) => p.modelId)).toEqual(['DAT-001', 'DAT-002', 'DAT-003', 'STA-001', 'VOL-001', 'VOL-002', 'COR-001', 'COR-003', 'COR-002']);
   });

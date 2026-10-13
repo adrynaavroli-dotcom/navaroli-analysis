@@ -90,10 +90,11 @@ export const quantitativeProjectMatrix: MatrixItem[] = [
     layers: layers(CO, CO, CO, CO, CO, CO), dependencies: ['DAT-003'], nextAction: 'Closed — validated vs scipy.stats',
     portfolioValue: 'MEDIUM', master: R.python, phase: 1, docPath: '/quant/statistics/descriptive', livePath: '/volatility', limitations: ['Skewness/kurtosis are biased moment estimators (match the Jarque-Bera definition)', 'Jarque-Bera is asymptotic and assumes i.i.d.; volatility clustering inflates rejections'] }),
   item({ id: 'STA-002', module: 'Statistics', submodule: 'Time Series', concept: 'Autocorrelation and stationarity',
-    mathematicalModel: 'ACF/PACF, Ljung-Box, ADF', mathematicalConcepts: ['Stationarity', 'Autocorrelation'], requiredData: [D.derived],
-    implementation: 'Planned: src/lib/timeseries/', validation: ['Unit tests', 'Benchmark against independent implementation'],
-    professionalUse: ['Quantitative Research'], priority: 'P1', status: 'PLANNED', dependencies: ['DAT-003'],
-    nextAction: 'Specify ACF + Ljung-Box on returns and squared returns (ARCH effects)', portfolioValue: 'MEDIUM', master: VOL_TS, phase: 1, docPath: '/quant/statistics/time-series' }),
+    mathematicalModel: 'ACF (denominator n); Ljung–Box Q(m) ~ χ²(m), m = 10, 20; ADF with constant, AIC lag selection, MacKinnon p-values', mathematicalConcepts: ['Stationarity', 'Autocorrelation', 'Unit roots'], requiredData: [D.derived],
+    implementation: 'src/lib/timeseries/ · acf(), ljungBox(), adfTest()', validation: ['Unit tests', 'Benchmark against independent implementation', 'Statistical diagnostics'],
+    professionalUse: ['Quantitative Research', 'Model Validation'], priority: 'P1', status: 'COMPLETED', layers: layers(PL, CO, CO, CO, CO, CO), dependencies: ['DAT-003'],
+    nextAction: 'Closed — validated vs statsmodels 0.15.0 / scipy. Academic source still to verify. Unblocks VOL-003', portfolioValue: 'MEDIUM', master: VOL_TS, phase: 1, docPath: '/quant/statistics/time-series', livePath: '/volatility',
+    limitations: ['ADF uses the constant-only specification; no trend variant', 'MacKinnon p-values are response-surface approximations (asymptotic, 1994); critical values are finite-sample (2010)', 'Ljung–Box df = m assumes raw series, not ARMA residuals', 'AIC lag choice can change with small data revisions near ties', 'Tests assume no structural breaks'] }),
 
   /* ===== Phase 2 — Volatility ===== */
   item({ id: 'VOL-001', module: 'Volatility', submodule: 'Historical Volatility', concept: 'Realized volatility',
