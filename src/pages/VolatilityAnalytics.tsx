@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useVolatilityData } from '@/hooks/useVolatilityData';
 import { StatCard, pct, num } from '@/components/volatility/StatCard';
 import { Methodology } from '@/components/volatility/Methodology';
+import { TimeSeriesDiagnostics } from '@/components/volatility/TimeSeriesDiagnostics';
 import {
   TRADING_DAYS, mean, stdDev, skewness, kurtosis, jarqueBera, histogram,
   historicalVolatility, rollingVolatility, ewmaVolatility, comparisonModels,
@@ -127,6 +128,8 @@ export default function VolatilityAnalytics() {
               <StatCard label="Kurtosis" value={num(a.kurt)} hint="Normal = 3" />
             </CardContent>
           </Card>
+
+          <TimeSeriesDiagnostics returns={data!.returns.returns} prices={data!.prices.prices} />
 
           {/* 3. Models */}
           <Card>
