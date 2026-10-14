@@ -138,7 +138,7 @@ export function fitGarch(r: number[]): GarchFit {
     // Restart from the optimum with a fresh simplex: guards against premature simplex collapse.
     const re = nelderMead(nll, res.x, { step: 0.05 }); restarts++;
     iters += re.iterations; evalsTot += re.evaluations; nonF += re.nonFinite;
-    res = { ...re, converged: re.converged && Math.abs(re.f - res.f) <= 1e-8 * Math.abs(res.f) + 1e-10 ? true : re.converged };
+    res = re;
     if (res.f < best.f) best = res;
   }
   const qy = toParams(best.x);
