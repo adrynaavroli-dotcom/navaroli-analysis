@@ -160,17 +160,40 @@ export function fitGarch(r: number[]): GarchFit {
   };
 }
 
-/** VolatilityModel adapter for the comparison table (in-sample conditional σ, annualized). */
+/**
+ * Next-period (t = n) conditional variance, daily decimal², from a fit on r_0..r_{n−1}:
+ *   h_n = ω + α (r_{n−1} − μ)² + β h_{n−1}.
+ * Distinct from the in-sample path `fit.variance` (h_0..h_{n−1}), which uses only
+ * information up to t−1 at each t but with parameters estimated on the full sample.
+ * Variance bounds are not applied (they are estimation safeguards; reported hits are 0).
+ */
+export function garchNextVariance(fit: GarchFit, r: number[]): number {
+  const last = r.length - 1, eps = r[last] - fit.params.mu;
+  return fit.params.omega + fit.params.alpha * eps * eps + fit.params.beta * fit.variance[last];
+}
+
+/** Safe wrapper for UIs: returns the fit or the error message, never stale values. */
+export function tryFitGarch(r: number[]): { fit: GarchFit | null; error: string | null } {
+  try { return { fit: fitGarch(r), error: null }; }
+  catch (e) { return { fit: null, error: e instanceof Error ? e.message : String(e) }; }
+}
+
+// One-entry cache keyed by array identity so the comparison table and the diagnostics panel share one fit.
+let lastInput: number[] | null = null, lastOut: ReturnType<typeof tryFitGarch> | null = null;
+export function cachedFitGarch(r: number[]) {
+  if (r !== lastInput || !lastOut) { lastInput = r; lastOut = tryFitGarch(r); }
+  return lastOut;
+}
+
+/**
+ * VolatilityModel adapter: `values` = in-sample conditional σ_t (annualized),
+ * `current` = next-period conditional σ_{n} (annualized). Non-converged or invalid → nulls.
+ */
 export const garchModel: VolatilityModel = {
-  id: 'garch-1-1', name: 'GARCH(1,1)', method: 'Gaussian MLE, constant mean',
+  id: 'garch-1-1', name: 'GARCH(1,1)', method: 'Gaussian MLE, constant mean · next-period σ',
   calculate(returns, dates) {
-    try {
-      const f = fitGarch(returns);
-      if (f.status === 'NOT_CONVERGED') return { dates, values: returns.map(() => null), current: null };
-      // One-step-ahead σ for the day after the sample: h_{n} = ω + α ε²_{n−1} + β h_{n−1}.
-      const last = f.variance.length - 1, eps = returns[last] - f.params.mu;
-      const next = f.params.omega + f.params.alpha * eps * eps + f.params.beta * f.variance[last];
-      return { dates, values: f.annualizedVolatility, current: Math.sqrt(next * TRADING_DAYS) };
-    } catch { return { dates, values: returns.map(() => null), current: null }; }
+    const { fit } = cachedFitGarch(returns);
+    if (!fit || fit.status === 'NOT_CONVERGED') return { dates, values: returns.map(() => null), current: null };
+    return { dates, values: fit.annualizedVolatility, current: Math.sqrt(garchNextVariance(fit, returns) * TRADING_DAYS) };
   },
 };
