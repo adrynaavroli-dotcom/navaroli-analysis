@@ -1,6 +1,7 @@
 import { historicalVolatility } from './historical';
 import { rollingVolatility } from './rolling';
 import { ewmaVolatility } from './ewma';
+import { garchModel } from './garch';
 import type { VolatilityModel } from './types';
 
 export const historicalModel: VolatilityModel = {

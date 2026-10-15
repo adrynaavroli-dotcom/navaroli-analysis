@@ -1,0 +1,8 @@
+# Pinned reference environment for the VOL-003 GARCH(1,1) benchmark (validation only —
+# never an application dependency). Install: python -m pip install -r validation/python/requirements-vol003.txt
+# statsmodels is NOT required by benchmark_vol003.py (residual Ljung–Box diagnostics run in
+# TypeScript via STA-002, itself validated against statsmodels 0.15.0 in benchmark_sta002.py).
+arch==8.0.0
+numpy==2.4.3
+scipy==1.18.0
+pandas==3.0.3

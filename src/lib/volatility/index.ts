@@ -5,3 +5,4 @@ export * from './historical';
 export * from './rolling';
 export * from './ewma';
 export * from './models';
+export * from './garch';

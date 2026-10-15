@@ -50,7 +50,7 @@ export function runVol003(fx: Vol003Fixture, validationDate: string): Validation
     if (INTERIOR.includes(name)) {
       out.push(compareNumeric(KEYS.map((k) => (qy[k] - c.fit[k]) / c.fit.se[k]), [0, 0, 0, 0], { abs: 0.02, rel: 0 },
         m(`Fitted μ, ω, α, β vs arch (error in SE units) · ${name}`, 'arch_model(...).fit(backcast=…) SLSQP', 'independent-benchmark', `ours y-units: ${KEYS.map((k) => `${k}=${qy[k].toPrecision(6)}`).join(', ')}`)));
-      out.push(compareNumeric([llY, f.aic, f.bic].map((v, i) => (i ? v - 2 * y.length * Math.log(GARCH_SCALE) * 0 : v)).slice(0, 1), [c.fit.logLik], { abs: 1e-5, rel: 0 }, m(`Maximized log-likelihood (y units) · ${name}`, 'arch fit loglikelihood')));
+      out.push(compareNumeric([llY], [c.fit.logLik], { abs: 1e-5, rel: 0 }, m(`Maximized log-likelihood (y units) · ${name}`, 'arch fit loglikelihood')));
       out.push(compareNumeric([-2 * llY + 8, -2 * llY + 4 * Math.log(y.length)], [c.fit.aic, c.fit.bic], { abs: 2e-5, rel: 0 }, m(`AIC / BIC (y units) · ${name}`, 'arch fit aic / bic')));
       out.push(compareNumeric(f.variance.map((v) => v * S2), c.fit.h, { abs: 0, rel: 1e-3 }, m(`Fitted conditional variance path · ${name}`, 'arch conditional_volatility²', 'independent-benchmark', 'Follows from parameter differences ≤ 0.02 SE')));
       out.push(compareExact([f.status, f.diagnostics.boundHits], ['CONVERGED', 0], m(`Converged, interior optimum, bounds inactive · ${name}`, 'Optimizer diagnostics', 'numerical', `iter ${f.diagnostics.iterations}, evals ${f.diagnostics.evaluations}, |∇ℓ_y| ${f.diagnostics.gradientNorm.toExponential(2)}`)));
@@ -73,8 +73,8 @@ export function runVol003(fx: Vol003Fixture, validationDate: string): Validation
   const yy = r.map((v) => v * GARCH_SCALE), ybar = yy.reduce((a, b) => a + b, 0) / yy.length, e0 = yy.map((v) => v - ybar);
   const recY = garchRecursion(yy, toY(f0.params), garchBackcast(e0), garchVarianceBounds(e0));
   out.push(compareNumeric([f0.logLik, ...f0.variance], [recY.logLik + yy.length * Math.log(GARCH_SCALE), ...recY.h.map((v) => v / S2)], { abs: 0, rel: 1e-12 }, m('Unit scaling: ℓ_r = ℓ_y + n·ln100 and h_r = h_y/10⁴', 'Change of variables y = 100·r', 'numerical')));
-  const rr = r.map((v) => v - f0.params.mu), recR = garchRecursion(r, f0.params, garchBackcast(r.map((v) => v - r.reduce((a, b) => a + b, 0) / r.length)));
-  out.push(compareNumeric([recR.logLik, f0.unconditionalVariance!], [f0.logLik, f0.params.omega / (1 - f0.persistence)], { abs: 1e-7, rel: 1e-9 }, m('Unbounded recursion in r units reproduces ℓ_r; h̄ = ω/(1−α−β)', 'Change of variables (bounds inactive)', 'numerical', `n=${rr.length}`)));
+  const recR = garchRecursion(r, f0.params, garchBackcast(r.map((v) => v - r.reduce((a, b) => a + b, 0) / r.length)));
+  out.push(compareNumeric([recR.logLik, f0.unconditionalVariance!], [f0.logLik, f0.params.omega / (1 - f0.persistence)], { abs: 1e-7, rel: 1e-9 }, m('Unbounded recursion in r units reproduces ℓ_r; h̄ = ω/(1−α−β)', 'Change of variables (bounds inactive)', 'numerical', `n=${r.length}`)));
 
   // Hand-checkable recursion: y = [1, −1, 2], μ=0, ω=0.1, α=0.2, β=0.7.
   const w = [1, 0.94, 0.94 ** 2], bH = (w[0] * 1 + w[1] * 1 + w[2] * 4) / (w[0] + w[1] + w[2]);
