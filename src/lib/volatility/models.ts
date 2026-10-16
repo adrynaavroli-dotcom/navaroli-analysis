@@ -23,7 +23,7 @@ export const ewmaModel = (lambda: number): VolatilityModel => ({
   calculate: (r, d) => ewmaVolatility(r, d, lambda),
 });
 
-/** Default comparison set. Future: GARCH(1,1), EGARCH, GJR-GARCH register here. */
+/** Default comparison set. Future: EGARCH, GJR-GARCH register here. */
 export const comparisonModels = (lambda: number): VolatilityModel[] => [
-  historicalModel, rollingModel(20), rollingModel(60), ewmaModel(lambda),
+  historicalModel, rollingModel(20), rollingModel(60), ewmaModel(lambda), garchModel,
 ];
