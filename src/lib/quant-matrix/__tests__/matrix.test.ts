@@ -20,8 +20,8 @@ describe('quantitative project matrix integrity', () => {
     for (const i of allMatrixItems) expect(effectiveStatus(i, 'COMPLETED')).toBe(i.layers.validation === 'COMPLETED' ? 'COMPLETED' : 'VALIDATION');
   });
   it('overrides are applied but COMPLETED is guarded', () => {
-    const out = applyState({ items: { 'VOL-003': { status: 'COMPLETED' } }, phases: {} });
-    expect(out.find((i) => i.id === 'VOL-003')!.status).toBe('VALIDATION');
+    const out = applyState({ items: { 'VOL-004': { status: 'COMPLETED' } }, phases: {} });
+    expect(out.find((i) => i.id === 'VOL-004')!.status).toBe('VALIDATION');
   });
   it('validation layer COMPLETED ⇔ recorded evidence closes the validation plan', () => {
     for (const i of allMatrixItems) {
