@@ -24,14 +24,14 @@ export function GarchPanel({ returns }: { returns: number[] }) {
             {r.error ?? `Estimation did not converge (${f?.diagnostics.reason}). No parameters are shown.`}</p>
         ) : (<>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard label="μ (daily mean)" value={pct(f!.params.mu, 4)} />
-            <StatCard label="ω (daily, decimal²)" value={sci(f!.params.omega)} />
-            <StatCard label="α (ARCH)" value={num(f!.params.alpha, 4)} />
-            <StatCard label="β (GARCH)" value={num(f!.params.beta, 4)} />
-            <StatCard label="Persistence α+β" value={num(f!.persistence, 4)} />
-            <StatCard label="Unconditional σ (annualized)" value={f!.unconditionalVariance != null ? pct(Math.sqrt(f!.unconditionalVariance * TRADING_DAYS)) : 'undefined'} hint="√(252·ω/(1−α−β))" />
-            <StatCard label="In-sample σ, last day" value={pct(last)} hint="Annualized, full-sample parameters" />
-            <StatCard label="Next-period σ estimate" value={pct(next)} hint="One step ahead, annualized · not validated as forecast" />
+            <StatCard label="Mean (daily)" value={pct(f!.params.mu, 4)} />
+            <StatCard label="Omega (daily, decimal²)" value={sci(f!.params.omega)} />
+            <StatCard label="Alpha (ARCH)" value={num(f!.params.alpha, 4)} />
+            <StatCard label="Beta (GARCH)" value={num(f!.params.beta, 4)} />
+            <StatCard label="Persistence (alpha+beta)" value={num(f!.persistence, 4)} />
+            <StatCard label="Unconditional vol (annualized)" value={f!.unconditionalVariance != null ? pct(Math.sqrt(f!.unconditionalVariance * TRADING_DAYS)) : 'undefined'} hint="√(252·ω/(1−α−β))" />
+            <StatCard label="In-sample vol, last day" value={pct(last)} hint="Annualized, full-sample parameters" />
+            <StatCard label="Next-period vol estimate" value={pct(next)} hint="One step ahead, annualized · not validated as forecast" />
             <StatCard label="Log-likelihood" value={num(f!.logLik, 2)} />
             <StatCard label="AIC" value={num(f!.aic, 2)} />
             <StatCard label="BIC" value={num(f!.bic, 2)} />
