@@ -179,9 +179,9 @@ export function tryFitGarch(r: number[]): { fit: GarchFit | null; error: string 
 }
 
 // One-entry cache keyed by array identity so the comparison table and the diagnostics panel share one fit.
-let lastInput: number[] | null = null, lastOut: ReturnType<typeof tryFitGarch> | null = null;
+let lastInput: number[] | null = null, lastOut: (ReturnType<typeof tryFitGarch> & { elapsedMs: number }) | null = null;
 export function cachedFitGarch(r: number[]) {
-  if (r !== lastInput || !lastOut) { lastInput = r; lastOut = tryFitGarch(r); }
+  if (r !== lastInput || !lastOut) { const t0 = Date.now(); const o = tryFitGarch(r); lastInput = r; lastOut = { ...o, elapsedMs: Date.now() - t0 }; }
   return lastOut;
 }
 

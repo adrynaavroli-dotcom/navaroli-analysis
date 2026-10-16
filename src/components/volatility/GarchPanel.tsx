@@ -6,11 +6,7 @@ import { cachedFitGarch, garchNextVariance, TRADING_DAYS } from '@/lib/volatilit
 
 /** GARCH(1,1) diagnostics. Composes src/lib/volatility/garch.ts only; no math here. */
 export function GarchPanel({ returns }: { returns: number[] }) {
-  const r = useMemo(() => {
-    const t0 = performance.now();
-    const out = cachedFitGarch(returns);
-    return { ...out, ms: performance.now() - t0 };
-  }, [returns]);
+  const r = useMemo(() => cachedFitGarch(returns), [returns]);
   const f = r.fit;
   const failed = !f || f.status === 'NOT_CONVERGED';
   const sci = (v: number) => v.toExponential(3);
@@ -45,7 +41,7 @@ export function GarchPanel({ returns }: { returns: number[] }) {
             <span>Status: <b className={f!.status === 'CONVERGED' ? 'text-foreground' : 'text-destructive'}>{f!.status}</b></span>
             <span>Iterations {f!.diagnostics.iterations} · evaluations {f!.diagnostics.evaluations}</span>
             <span>Variance-bound hits: {f!.diagnostics.boundHits}</span>
-            <span>Fit time: {r.ms.toFixed(0)} ms</span>
+            <span>Fit time: {r.elapsedMs.toFixed(0)} ms</span>
             {f!.diagnostics.nearBoundary.length > 0 && <span className="text-destructive">Near boundary: {f!.diagnostics.nearBoundary.join(', ')} — possible boundary optimum, interpret with care</span>}
           </div>
         </>)}
