@@ -14,6 +14,7 @@ import { useVolatilityData } from '@/hooks/useVolatilityData';
 import { StatCard, pct, num } from '@/components/volatility/StatCard';
 import { Methodology } from '@/components/volatility/Methodology';
 import { TimeSeriesDiagnostics } from '@/components/volatility/TimeSeriesDiagnostics';
+import { GarchPanel } from '@/components/volatility/GarchPanel';
 import {
   TRADING_DAYS, mean, stdDev, skewness, kurtosis, jarqueBera, histogram,
   historicalVolatility, rollingVolatility, ewmaVolatility, comparisonModels,
@@ -150,6 +151,8 @@ export default function VolatilityAnalytics() {
               </Table>
             </CardContent>
           </Card>
+
+          <GarchPanel returns={data!.returns.returns} />
 
           {/* 4. Dynamics */}
           <Card>
