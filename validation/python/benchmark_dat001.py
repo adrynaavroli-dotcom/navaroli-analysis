@@ -24,8 +24,12 @@ from datetime import datetime, timezone
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "src/lib/validation/fixtures/dat001-snapshot.json"
 TICKER = "AAPL"
+# Nasdaq's free historical endpoint only serves roughly the last two years and
+# requires the window to end at (or beyond) today, so we anchor START to a
+# fixed date and END to "now".  The snapshot records the exact retrievedAt
+# timestamp for reproducibility.
 START = datetime(2024, 1, 1, tzinfo=timezone.utc)
-END = datetime(2024, 12, 31, tzinfo=timezone.utc)
+END = datetime.now(tz=timezone.utc)
 UA = "Mozilla/5.0 (quant-matrix validation)"
 
 
