@@ -65,10 +65,10 @@ describe('matrix status consistency (regression: DAT-001)', () => {
       expect((map[validationStatusFor(id)] as readonly string[]).includes(i.layers.validation), id).toBe(true);
     }
   });
-  it('DAT-001 overall status is independent of its validation-layer status', () => {
+  it('DAT-001 is COMPLETED with matching validation', () => {
     const i = allMatrixItems.find((x) => x.id === 'DAT-001')!;
-    expect(i.status).toBe('IN PROGRESS'); expect(i.layers.validation).toBe('NOT STARTED');
-    expect(validationStatusFor('DAT-001')).toBe('NOT STARTED');
+    expect(i.status).toBe('COMPLETED'); expect(i.layers.validation).toBe('COMPLETED');
+    expect(validationStatusFor('DAT-001')).toBe('COMPLETED');
   });
   it('COR-003 validation layer is closed by recorded evidence', () => {
     expect(validationStatusFor('COR-003')).toBe('COMPLETED');

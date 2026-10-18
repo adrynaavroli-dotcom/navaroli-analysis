@@ -11,6 +11,8 @@
  */
 import { compareNumeric } from '../compare';
 import type { ValidationResult } from '../types';
+import { importCSV } from '../../returns/import';
+import { buildReturnsDataset } from '../../returns/pipeline';
 
 export const DAT001_IMPLEMENTATION_VERSION = 'quant-engine/dat001-ingestion@1.0.0';
 
@@ -45,8 +47,8 @@ export function runDat001(snapshot: Dat001Snapshot, validationDate: string): Val
   const { comparison, sources } = snapshot;
   const dataset = `AAPL ${snapshot.range.from} → ${snapshot.range.to} (snapshot ${snapshot.version}, retrieved ${snapshot.retrievedAt})`;
   const reference = `${sources.nasdaq.provider} vs ${sources.yahoo.provider} (${comparison.basis})`;
-  const meta = (testName: string) => ({
-    modelId: 'DAT-001', validationType: 'independent-benchmark' as const, testName,
+  const meta = (testName: string, type: 'independent-benchmark' | 'unit' = 'independent-benchmark') => ({
+    modelId: 'DAT-001', validationType: type, testName,
     reference, dataset, validationDate, implementationVersion: DAT001_IMPLEMENTATION_VERSION,
   });
 
@@ -65,5 +67,28 @@ export function runDat001(snapshot: Dat001Snapshot, validationDate: string): Val
       evidence: { reference, dataset }, notes: `onlyYahoo=${comparison.onlyA.length}, onlyNasdaq=${comparison.onlyB.length}`,
     },
   ];
+
+  // Unit: CSV round-trip — Yahoo snapshot re-imported via importCSV must produce
+  // identical returns through buildReturnsDataset (same pipeline, no special paths).
+  const csvLines = ['Date,Close,Adj Close', ...sources.yahoo.rows.map((r) => `${r.date},${r.close},${r.adjclose ?? ''}`)].join('\n');
+  const imp = importCSV(csvLines, { fileName: 'snapshot-roundtrip.csv', ticker: snapshot.ticker });
+  let unitPassed = imp.ok && !!imp.raw;
+  let unitDetail = '';
+  if (unitPassed && imp.raw && imp.metadata) {
+    const ds = buildReturnsDataset(imp.raw, imp.metadata, 'log');
+    unitPassed = ds.returns.returns.length === sources.yahoo.rows.length - 1;
+    unitDetail = `${ds.returns.returns.length} returns from ${sources.yahoo.rows.length} prices`;
+  } else {
+    unitDetail = 'Import failed';
+  }
+  results.push({
+    ...meta('CSV import round-trip: Yahoo snapshot → importCSV → buildReturnsDataset', 'unit'),
+    expectedResult: `${sources.yahoo.rows.length - 1} log returns`,
+    actualResult: unitDetail, tolerance: 'exact',
+    maxAbsError: unitPassed ? 0 : 1, maxRelError: 0, n: sources.yahoo.rows.length,
+    passed: unitPassed,
+    evidence: { reference: 'importCSV + buildReturnsDataset', dataset },
+  });
+
   return results;
 }
