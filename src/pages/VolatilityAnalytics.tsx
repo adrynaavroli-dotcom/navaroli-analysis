@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { Loader2, Activity, AlertTriangle, Info } from 'lucide-react';
 import {
   ResponsiveContainer, ComposedChart, LineChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -10,11 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useVolatilityData } from '@/hooks/useVolatilityData';
+import { useVolatilityData, type VolatilityDataset } from '@/hooks/useVolatilityData';
 import { StatCard, pct, num } from '@/components/volatility/StatCard';
 import { Methodology } from '@/components/volatility/Methodology';
 import { TimeSeriesDiagnostics } from '@/components/volatility/TimeSeriesDiagnostics';
 import { GarchPanel } from '@/components/volatility/GarchPanel';
+import { MarketDataImport } from '@/components/volatility/MarketDataImport';
 import {
   TRADING_DAYS, mean, stdDev, skewness, kurtosis, jarqueBera, histogram,
   historicalVolatility, rollingVolatility, ewmaVolatility, comparisonModels,
@@ -31,7 +32,15 @@ export default function VolatilityAnalytics() {
   const [window, setWindow] = useState(60);
   const [lambda, setLambda] = useState(0.94);
   const [alpha, setAlpha] = useState(0.05);
-  const { data, isFetching, error } = useVolatilityData(ticker, period);
+  const [importedData, setImportedData] = useState<VolatilityDataset | null>(null);
+  const { data: liveData, isFetching, error } = useVolatilityData(importedData ? null : ticker, period);
+  const data = importedData ?? liveData;
+
+  const handleImport = useCallback((ds: VolatilityDataset) => {
+    setImportedData(ds);
+    setInput(ds.ticker);
+  }, []);
+
 
   const load = () => {
     const t = input.trim().toUpperCase();
@@ -112,6 +121,8 @@ export default function VolatilityAnalytics() {
             )}
           </CardContent>
         </Card>
+
+        <MarketDataImport onImported={handleImport} />
 
         {a && (<>
           {/* 2. Stats */}

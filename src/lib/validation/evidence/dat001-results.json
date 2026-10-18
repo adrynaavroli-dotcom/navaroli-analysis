@@ -1,0 +1,67 @@
+[
+ {
+  "modelId": "DAT-001",
+  "validationType": "independent-benchmark",
+  "testName": "Element-wise split-adjusted close agreement over 400 overlapping dates",
+  "expectedResult": "n=400, first=214.0000000, last=343.4600000",
+  "actualResult": "n=400, first=214.0000000, last=343.4599915",
+  "tolerance": {
+   "abs": 0.02,
+   "rel": 0.0002
+  },
+  "maxAbsError": 0.00001464843751364242,
+  "maxRelError": 5.6588262047602644e-8,
+  "n": 400,
+  "passed": true,
+  "evidence": {
+   "reference": "Nasdaq (api.nasdaq.com) vs Yahoo Finance (split-adjusted close (both providers))",
+   "dataset": "AAPL 2024-01-01 → 2026-10-17 (snapshot dat001-snapshot/1.0.0, retrieved 2026-10-17T14:35:06+00:00)"
+  },
+  "validationDate": "2026-10-18",
+  "implementationVersion": "quant-engine/dat001-ingestion@1.0.0"
+ },
+ {
+  "modelId": "DAT-001",
+  "validationType": "independent-benchmark",
+  "testName": "Overlap coverage ≥ 95% of Nasdaq observations",
+  "reference": "Nasdaq (api.nasdaq.com) vs Yahoo Finance (split-adjusted close (both providers))",
+  "dataset": "AAPL 2024-01-01 → 2026-10-17 (snapshot dat001-snapshot/1.0.0, retrieved 2026-10-17T14:35:06+00:00)",
+  "validationDate": "2026-10-18",
+  "implementationVersion": "quant-engine/dat001-ingestion@1.0.0",
+  "expectedResult": "≥ 380",
+  "actualResult": "400",
+  "tolerance": {
+   "abs": 0,
+   "rel": 0
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 400,
+  "passed": true,
+  "evidence": {
+   "reference": "Nasdaq (api.nasdaq.com) vs Yahoo Finance (split-adjusted close (both providers))",
+   "dataset": "AAPL 2024-01-01 → 2026-10-17 (snapshot dat001-snapshot/1.0.0, retrieved 2026-10-17T14:35:06+00:00)"
+  },
+  "notes": "onlyYahoo=301, onlyNasdaq=0"
+ },
+ {
+  "modelId": "DAT-001",
+  "validationType": "unit",
+  "testName": "CSV import round-trip: Yahoo snapshot → importCSV → buildReturnsDataset",
+  "reference": "Nasdaq (api.nasdaq.com) vs Yahoo Finance (split-adjusted close (both providers))",
+  "dataset": "AAPL 2024-01-01 → 2026-10-17 (snapshot dat001-snapshot/1.0.0, retrieved 2026-10-17T14:35:06+00:00)",
+  "validationDate": "2026-10-18",
+  "implementationVersion": "quant-engine/dat001-ingestion@1.0.0",
+  "expectedResult": "700 log returns",
+  "actualResult": "700 returns from 701 prices",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 701,
+  "passed": true,
+  "evidence": {
+   "reference": "importCSV + buildReturnsDataset",
+   "dataset": "AAPL 2024-01-01 → 2026-10-17 (snapshot dat001-snapshot/1.0.0, retrieved 2026-10-17T14:35:06+00:00)"
+  }
+ }
+]

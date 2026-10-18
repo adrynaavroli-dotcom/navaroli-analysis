@@ -124,7 +124,7 @@ export function parseCellDate(cell: unknown): ParsedDate {
   }
   const dm = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})$/);
   if (dm) {
-    let [, A, B, Y] = dm; const a = +A, b = +B;
+    const [, A, B, Y] = dm; const a = +A, b = +B;
     const yNum = +Y + (Y.length === 2 ? (+Y >= 70 ? 1900 : 2000) : 0);
     if (a > 12 && isValid(yNum, b, a)) return { iso: iso(yNum, b, a), ambiguous: false, format: 'DMY' };
     if (b > 12 && isValid(yNum, a, b)) return { iso: iso(yNum, a, b), ambiguous: false, format: 'MDY' };
