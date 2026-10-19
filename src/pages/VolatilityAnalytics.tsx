@@ -44,7 +44,7 @@ export default function VolatilityAnalytics() {
 
   const load = () => {
     const t = input.trim().toUpperCase();
-    if (/^[A-Z0-9.\-^=]{1,15}$/.test(t)) setTicker(t);
+    if (/^[A-Z0-9.\-^=]{1,15}$/.test(t)) { setImportedData(null); setTicker(t); }
   };
   const invalid = input.trim() !== '' && !/^[A-Za-z0-9.\-^=]{1,15}$/.test(input.trim());
 
@@ -122,7 +122,7 @@ export default function VolatilityAnalytics() {
           </CardContent>
         </Card>
 
-        <MarketDataImport onImported={handleImport} />
+        <MarketDataImport onImported={handleImport} onCleared={() => setImportedData(null)} />
 
         {a && (<>
           {/* 2. Stats */}
