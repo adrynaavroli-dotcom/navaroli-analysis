@@ -10,9 +10,11 @@ import type { VolatilityDataset } from '@/hooks/useVolatilityData';
 
 interface MarketDataImportProps {
   onImported: (dataset: VolatilityDataset) => void;
+  /** Called when the user dismisses a successful import (live data takes over again). */
+  onCleared?: () => void;
 }
 
-export function MarketDataImport({ onImported }: MarketDataImportProps) {
+export function MarketDataImport({ onImported, onCleared }: MarketDataImportProps) {
   const [result, setResult] = useState<ImportResult | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -58,7 +60,7 @@ export function MarketDataImport({ onImported }: MarketDataImportProps) {
     e.target.value = '';
   }, [processFile]);
 
-  const clear = () => { setResult(null); };
+  const clear = () => { setResult(null); onCleared?.(); };
 
   const rep = result?.report;
   const issues = rep?.issues ?? [];
