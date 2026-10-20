@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   evaluateForecastModels, garchVarianceForecastAnalytic, garchVarianceForecastPath,
   GARCH_REFIT_EVERY, MIN_OOS_ORIGINS, MIN_TRAIN_SIZE, TRAIN_FRACTION,
-  type ForecastEvaluation, type GarchParams,
+  type ForecastEvaluation,
 } from '..';
-import { fitGarch, type GarchFit } from '../../garch';
+import { fitGarch, type GarchParams } from '../../garch';
 
 /** Deterministic pseudo-random GARCH-like return path (no RNG dependency on Date/Math.random). */
 function syntheticReturns(n: number, seed = 7): { returns: number[]; dates: string[] } {
