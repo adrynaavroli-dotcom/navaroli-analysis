@@ -56,7 +56,7 @@ describe('rolling-origin evaluation protocol', () => {
     expect(out.status).toBe('ok');
     expect(out.trainSize).toBe(Math.max(MIN_TRAIN_SIZE, Math.floor(TRAIN_FRACTION * n)));
     const h20 = out.horizons.find((h) => h.horizon === 20)!;
-    expect(h20.origins).toBe(n - out.trainSize - 20);
+    expect(h20.origins).toBe(n - out.trainSize - 20 + 1);
     expect(h20.origins).toBeGreaterThanOrEqual(MIN_OOS_ORIGINS);
     // Shorter horizons have more origins (more room before the end).
     expect(out.horizons.find((h) => h.horizon === 1)!.origins).toBe(h20.origins + 19);
@@ -134,18 +134,21 @@ describe('rolling-origin evaluation protocol', () => {
     expect(out.horizons[0].scores.ewma).toBeDefined();
   });
 
-  it('metrics on hand-computable data: perfect constant forecast', () => {
-    // r_t constant → r² constant = c; a model forecasting v̂ = c has QLIKE = ln c + 1, MSE = 0.
+  it('metrics on hand-computable data: alternating ±√c returns', () => {
+    // r_t = ±√c alternating → r² = c constant; a length-w window holds w/2 of each
+    // sign, so sample variance = c·w/(w−1) and the proxy is c at every origin.
     const c = 0.0004;
-    const returnsC = new Array(700).fill(Math.sqrt(c));
+    const returnsC = Array.from({ length: 700 }, (_, i) => (i % 2 ? 1 : -1) * Math.sqrt(c));
     const datesC = returnsC.map((_, i) => `d${i}`);
     const out = evaluateForecastModels(returnsC, datesC, {
       fitter: () => { throw new Error('skip garch'); },
     }) as ForecastEvaluation;
     const h1 = out.horizons.find((h) => h.horizon === 1)!;
-    // Historical windows on constant returns give exactly c.
-    expect(h1.scores.hist20!.mse).toBe(0);
-    expect(h1.scores.hist20!.qlike).toBeCloseTo(Math.log(c) + 1, 10);
-    expect(h1.scores.hist60!.rmse).toBe(0);
+    const v20 = (c * 20) / 19, v60 = (c * 60) / 59;
+    expect(h1.scores.hist20!.mse).toBeCloseTo((v20 - c) ** 2, 15);
+    expect(h1.scores.hist20!.qlike).toBeCloseTo(Math.log(v20) + c / v20, 10);
+    expect(h1.scores.hist60!.rmse).toBeCloseTo(Math.abs(v60 - c), 15);
+    // EWMA fixed point of v = λv + (1−λ)c is exactly c.
+    expect(h1.scores.ewma!.mse).toBeCloseTo(0, 12);
   });
 });
