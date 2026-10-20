@@ -170,9 +170,9 @@ export function evaluateForecastModels(returns: number[], dates: string[], opts:
   refit(t0);
 
   // EWMA: seed = sample variance of the first EWMA_SEED returns (inside the
-  // training window), then v_{t+1} = λv_t + (1−λ)r_t² through the origin.
+  // training window) = v at t = SEED−1; then v_{t+1} = λv_t + (1−λ)r_t².
   let vEwma = sampleVar(returns, 0, EWMA_SEED);
-  for (let t = EWMA_SEED; t <= t0; t++) vEwma = EWMA_LAMBDA * vEwma + (1 - EWMA_LAMBDA) * r2[t - 1];
+  for (let t = EWMA_SEED; t <= t0; t++) vEwma = EWMA_LAMBDA * vEwma + (1 - EWMA_LAMBDA) * r2[t];
   // vEwma now forecasts day t0+1 (uses returns through t0).
 
   // Historical windows: sliding sums for trailing sample variance.
@@ -209,7 +209,7 @@ export function evaluateForecastModels(returns: number[], dates: string[], opts:
         const p = garchFit.params;
         gH = p.omega + p.alpha * (returns[t] - p.mu) ** 2 + p.beta * gH;
       }
-      vEwma = EWMA_LAMBDA * vEwma + (1 - EWMA_LAMBDA) * r2[t];
+      vEwma = EWMA_LAMBDA * vEwma + (1 - EWMA_LAMBDA) * r2[t + 1];
       s20.sum += returns[t + 1] - returns[t + 1 - HIST20];
       s20.sumSq += r2[t + 1] - r2[t + 1 - HIST20];
       s60.sum += returns[t + 1] - returns[t + 1 - HIST60];
