@@ -135,8 +135,10 @@ export function evaluateForecastModels(returns: number[], dates: string[], opts:
   const maxH = horizons[horizons.length - 1];
   const train = Math.max(MIN_TRAIN_SIZE, Math.floor(TRAIN_FRACTION * n));
   const t0 = train - 1;
-  const tLast = n - 1 - maxH;
-  const originsCount = tLast - t0 + 1;
+  // Origins run to the last scorable day; each horizon keeps origins with t+H ≤ n−1,
+  // so shorter horizons legitimately have more origins than the longest one.
+  const tLast = n - 2;
+  const originsCount = n - 1 - maxH - t0 + 1; // origins available at the longest horizon
   const requiredMin = train + maxH + minOrigins - 1;
   if (n < requiredMin || originsCount < minOrigins) {
     return {
