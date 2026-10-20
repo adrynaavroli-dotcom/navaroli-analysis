@@ -1,0 +1,7 @@
+# Pinned reference environment for the VOL-005 forecast-evaluation benchmark (validation
+# only — never an application dependency).
+# Install: python -m pip install -r validation/python/requirements-vol005.txt
+arch==8.0.0
+numpy==2.4.3
+scipy==1.18.0
+pandas==3.0.3
