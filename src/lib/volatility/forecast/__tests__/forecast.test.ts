@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   evaluateForecastModels, garchVarianceForecastAnalytic, garchVarianceForecastPath,
   GARCH_REFIT_EVERY, MIN_OOS_ORIGINS, MIN_TRAIN_SIZE, TRAIN_FRACTION,
-  type ForecastEvaluation,
+  forecastMetrics, type ForecastEvaluation,
 } from '..';
 import { fitGarch, type GarchParams } from '../../garch';
 
@@ -17,7 +17,7 @@ function syntheticReturns(n: number, seed = 7): { returns: number[]; dates: stri
     returns.push(Math.sqrt(h) * z * 2);
     h = 0.00002 + 0.08 * returns[t] ** 2 + 0.9 * h;
   }
-  const dates = Array.from({ length: n }, (_, i) => `2020-01-${String(i + 1).padStart(2, '0')}`);
+  const dates = Array.from({ length: n }, (_, i) => new Date(Date.UTC(2020, 0, i + 1)).toISOString().slice(0, 10));
   return { returns, dates };
 }
 
@@ -55,11 +55,11 @@ describe('rolling-origin evaluation protocol', () => {
     const out = evaluateForecastModels(returns, dates) as ForecastEvaluation;
     expect(out.status).toBe('ok');
     expect(out.trainSize).toBe(Math.max(MIN_TRAIN_SIZE, Math.floor(TRAIN_FRACTION * n)));
-    const h20 = out.horizons.find((h) => h.horizon === 20)!;
-    expect(h20.origins).toBe(n - out.trainSize - 20 + 1);
-    expect(h20.origins).toBeGreaterThanOrEqual(MIN_OOS_ORIGINS);
+    const h20 = out.horizons.find((h) => h.horizon === 20);
+    expect(h20?.origins).toBe(n - out.trainSize - 20 + 1);
+    expect(h20?.origins).toBeGreaterThanOrEqual(MIN_OOS_ORIGINS);
     // Shorter horizons have more origins (more room before the end).
-    expect(out.horizons.find((h) => h.horizon === 1)!.origins).toBe(h20.origins + 19);
+    expect(out.horizons.find((h) => h.horizon === 1).origins).toBe((h20?.origins ?? 0) + 19);
   });
 
   it('refit cadence: fits at t0, t0+20, t0+40, …', () => {
@@ -82,16 +82,13 @@ describe('rolling-origin evaluation protocol', () => {
   it('no look-ahead: changing a future return leaves earlier forecasts untouched', () => {
     const mod = [...returns];
     mod[500] = 0.5; // huge shock deep in the OOS region
-    const a = evaluateForecastModels(returns, dates) as ForecastEvaluation;
-    const b = evaluateForecastModels(mod, dates) as ForecastEvaluation;
-    // Scores at H=1 use origins up to n−2; origins before index 500 see identical data,
-    // so the FIRST 500−train origins must produce identical GARCH paths. We verify via
-    // a truncated series: evaluation on r[0..500] must be identical for both.
-    const aT = evaluateForecastModels(returns.slice(0, 500), dates.slice(0, 500), { minOrigins: 10 }) as ForecastEvaluation;
-    const bT = evaluateForecastModels(mod.slice(0, 500), dates.slice(0, 500), { minOrigins: 10 }) as ForecastEvaluation;
-    expect(aT.status).toBe('ok');
-    expect(bT.status).toBe('ok'); // the shock is the last point; it only enters scores, not earlier forecasts
-    expect(a.horizons[0].scores.garch!.qlike).not.toBe(b.horizons[0].scores.garch!.qlike); // shock matters when included
+    const a = evaluateForecastModels(returns, dates, { captureTrace: true }) as ForecastEvaluation;
+    const b = evaluateForecastModels(mod, dates, { captureTrace: true }) as ForecastEvaluation;
+    const earlyA = a.trace?.filter(r => r.originIndex < 500);
+    const earlyB = b.trace?.filter(r => r.originIndex < 500);
+    expect(earlyA?.length).toBe(81);
+    expect(earlyA).toEqual(earlyB);
+    expect(a.trace?.find(r => r.originIndex === 500)?.paths).not.toEqual(b.trace?.find(r => r.originIndex === 500)?.paths);
   });
 
   it('all models are scored on exactly the same origins per horizon', () => {
@@ -109,8 +106,8 @@ describe('rolling-origin evaluation protocol', () => {
     const out = evaluateForecastModels(flat.returns, flat.dates) as ForecastEvaluation;
     for (const h of out.horizons) {
       for (const id of ['ewma', 'hist20', 'hist60'] as const) {
-        expect(Number.isFinite(h.scores[id]!.qlike)).toBe(true);
-        expect(h.scores[id]!.mse).toBeGreaterThanOrEqual(0);
+        expect(Number.isFinite(h.scores[id]?.qlike)).toBe(true);
+        expect(h.scores[id]?.mse).toBeGreaterThanOrEqual(0);
       }
     }
   });
@@ -139,16 +136,64 @@ describe('rolling-origin evaluation protocol', () => {
     // sign, so sample variance = c·w/(w−1) and the proxy is c at every origin.
     const c = 0.0004;
     const returnsC = Array.from({ length: 700 }, (_, i) => (i % 2 ? 1 : -1) * Math.sqrt(c));
-    const datesC = returnsC.map((_, i) => `d${i}`);
+    const datesC = dates;
     const out = evaluateForecastModels(returnsC, datesC, {
       fitter: () => { throw new Error('skip garch'); },
     }) as ForecastEvaluation;
-    const h1 = out.horizons.find((h) => h.horizon === 1)!;
+    const h1 = out.horizons.find((h) => h.horizon === 1);
     const v20 = (c * 20) / 19, v60 = (c * 60) / 59;
-    expect(h1.scores.hist20!.mse).toBeCloseTo((v20 - c) ** 2, 15);
-    expect(h1.scores.hist20!.qlike).toBeCloseTo(Math.log(v20) + c / v20, 10);
-    expect(h1.scores.hist60!.rmse).toBeCloseTo(Math.abs(v60 - c), 15);
+    expect(h1?.scores.hist20?.mse).toBeCloseTo((v20 - c) ** 2, 15);
+    expect(h1?.scores.hist20?.qlike).toBeCloseTo(Math.log(v20) + c / v20, 10);
+    expect(h1?.scores.hist60?.rmse).toBeCloseTo(Math.abs(v60 - c), 15);
     // EWMA fixed point of v = λv + (1−λ)c is exactly c.
-    expect(h1.scores.ewma!.mse).toBeCloseTo(0, 12);
+    expect(h1?.scores.ewma?.mse).toBeCloseTo(0, 12);
+  });
+});
+
+
+describe('VOL-005 input and failure safety', () => {
+  const { returns, dates } = syntheticReturns(700);
+  it('rejects misalignment, nonfinite returns, duplicates and malformed dates', () => {
+    for (const [r, d] of [[returns, dates.slice(1)], [[NaN, ...returns.slice(1)], dates], [returns, [dates[1], ...dates.slice(1)]], [returns, ['2020-02-30', ...dates.slice(1)]]] as [number[], string[]][])
+      expect(evaluateForecastModels(r, d).status).toBe('invalid-input');
+  });
+  it('rejects invalid horizons, cadence and minimum-origin options', () => {
+    for (const options of [{ horizons: [] }, { horizons: [0] }, { horizons: [5, 5] }, { refitEvery: 0 }, { refitEvery: 1.5 }, { minOrigins: 0 }])
+      expect(evaluateForecastModels(returns, dates, options).status).toBe('invalid-input');
+  });
+  it('metrics reject empty, nonpositive, misaligned and nonfinite forecasts', () => {
+    for (const v of [[], [0], [-1], [NaN], [Infinity]]) expect(() => forecastMetrics(v, [1])).toThrow();
+    expect(forecastMetrics([1, 2], [2, 1])).toEqual({ qlike: (2 + Math.log(2) + 0.5) / 2, mse: 1, rmse: 1 });
+  });
+  it('never returns empty ok on total model failure', () => {
+    expect(evaluateForecastModels(new Array(700).fill(0), dates).status).toBe('failed');
+  });
+  it('invalidates a failed new refit instead of using its parameters, recovers next cadence', () => {
+    const good = fitGarch(returns.slice(0, 420)); let calls = 0;
+    const out = evaluateForecastModels(returns, dates, { captureTrace: true, fitter: r => {
+      calls++; return { ...good, variance: new Array(r.length).fill(0.0002), status: calls === 2 ? 'NOT_CONVERGED' : good.status };
+    } }) as ForecastEvaluation;
+    expect(out.garchFailures.map(f => f.originIndex)).toEqual([439]);
+    expect(out.trace?.filter(t => t.originIndex >= 439 && t.originIndex < 459).every(t => t.paths.garch === null)).toBe(true);
+    expect(out.trace?.find(t => t.originIndex === 459)?.paths.garch).not.toBeNull();
+    for (const h of out.horizons) {
+      expect(h.excludedOrigins).toBe(20);
+      expect(h.originIndices).not.toContain(439);
+      expect(h.origins).toBe(700 - 420 - h.horizon + 1 - 20);
+    }
+  });
+  it('baselines use strictly trailing windows and causal EWMA timing', () => {
+    const out = evaluateForecastModels(returns, dates, { captureTrace: true, fitter: () => { throw Error('skip'); } }) as ForecastEvaluation;
+    let v = returns.slice(0, 20).reduce((a,x) => a + (x - returns.slice(0,20).reduce((a,b)=>a+b,0)/20)**2,0)/19;
+    for (let i=19;i<=419;i++) v=0.94*v+0.06*returns[i]**2;
+    const first = out.trace?.[0];
+    expect(first?.paths.ewma?.[0]).toBeCloseTo(v, 15);
+    for (const w of [20, 60]) {
+      const r=returns.slice(420-w,420), m=r.reduce((a,b)=>a+b,0)/w;
+      const expected=r.reduce((a,b)=>a+(b-m)**2,0)/(w-1);
+      const path=first?.paths[w===20?'hist20':'hist60'];
+      expect(path?.[0]).toBeCloseTo(expected,15);
+      expect(new Set(path).size).toBe(1);
+    }
   });
 });
