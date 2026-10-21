@@ -6,7 +6,7 @@
  * - Input: daily log returns r_0..r_{n-1} (decimal) from the Returns Engine.
  * - Initial training window: train = max(252, floor(0.6·n)) returns; the first
  *   forecast origin is t0 = train − 1 (uses r_0..r_{t0} only).
- * - Origins t = t0 .. n−1−maxH. At each origin every model forecasts the
+ * - Origins t = t0 .. n−2 (each horizon keeps t+H ≤ n−1). At each origin every model forecasts the
  *   conditional variance of days t+1..t+H using ONLY r_0..r_t.
  * - GARCH(1,1): parameters refit every `refitEvery` origins on r_0..r_t
  *   (expanding window); between refits the conditional variance state is
@@ -26,7 +26,7 @@
  *   Overlapping multi-day windows make origins dependent: no significance
  *   test is applied and none is claimed.
  */
-import { fitGarch, type GarchFit, type GarchParams } from '../garch';
+import { fitGarch, garchNextVariance, type GarchFit, type GarchParams } from '../garch';
 
 export const HORIZONS = [1, 5, 10, 20] as const;
 export const GARCH_REFIT_EVERY = 20;
@@ -60,6 +60,7 @@ const sampleVar = (x: number[], from: number, to: number): number => {
  * one-step forecast h1 = h_{t+1|t}.
  */
 export function garchVarianceForecastPath(p: GarchParams, h1: number, horizon: number): number[] {
+  checkForecastInput(p, h1, horizon);
   const rho = p.alpha + p.beta;
   const out = [h1];
   for (let k = 1; k < horizon; k++) out.push(p.omega + rho * out[k - 1]);
@@ -73,16 +74,37 @@ export function garchVarianceForecastPath(p: GarchParams, h1: number, horizon: n
  * reversion to a finite h̄).
  */
 export function garchVarianceForecastAnalytic(p: GarchParams, h1: number, horizon: number): number[] {
+  checkForecastInput(p, h1, horizon);
   const rho = p.alpha + p.beta;
-  if (!(rho < 1)) return garchVarianceForecastPath(p, h1, horizon);
+  if (!(rho < 1) || 1 - rho < 1e-8) return garchVarianceForecastPath(p, h1, horizon);
   const hbar = p.omega / (1 - rho);
-  return Array.from({ length: horizon }, (_, k) => hbar + rho ** k * (h1 - hbar));
+  return Array.from({ length: horizon }, (_, k) => k === 0 ? h1 : hbar + rho ** k * (h1 - hbar));
 }
+
+/** Validate public formula helpers rather than returning empty or non-finite paths. */
+function checkForecastInput(p: GarchParams, h1: number, horizon: number) {
+  if (!Number.isInteger(horizon) || horizon < 1 || horizon > 10000 ||
+      !Object.values(p).every(Number.isFinite) || p.omega <= 0 || p.alpha < 0 || p.beta < 0 || !Number.isFinite(h1) || h1 <= 0)
+    throw new Error('Invalid GARCH forecast parameters, variance or horizon');
+}
+
+/** Robust comparison QLIKE (realized-only term omitted), MSE and RMSE in daily decimal² units. */
+export function forecastMetrics(v: number[], proxy: number[]) {
+  if (!v.length || v.length !== proxy.length || v.some(x => !Number.isFinite(x) || x <= 0) || proxy.some(x => !Number.isFinite(x) || x < 0))
+    throw new Error('Metrics require aligned nonempty finite proxies and positive forecasts');
+  const qlike = mean(v.map((x, i) => Math.log(x) + proxy[i] / x));
+  const mse = mean(v.map((x, i) => (x - proxy[i]) ** 2));
+  if (![qlike, mse].every(Number.isFinite)) throw new Error('Metric overflow');
+  return { qlike, mse, rmse: Math.sqrt(mse) };
+}
+export interface ForecastTrace { originIndex: number; date: string; paths: Record<ForecastModelId, number[] | null> }
 
 export interface ModelScore { qlike: number; mse: number; rmse: number; qlikeDiffVsBaseline: number | null; relMseVsBaseline: number | null; rank: number }
 export interface HorizonResult {
   horizon: number;
   origins: number;
+  excludedOrigins: number;
+  originIndices: number[];
   /** Dates of the first/last forecast origin (last known return date). */
   originFrom: string;
   originTo: string;
@@ -99,6 +121,8 @@ export interface ForecastEvaluation {
   refitEvery: number;
   /** Number of GARCH parameter fits performed (initial + refits). */
   garchFits: number;
+  refitOrigins: { originIndex: number; date: string; success: boolean }[];
+  trace?: ForecastTrace[];
   garchFailures: GarchFailure[];
   /** Models excluded because they produced no valid forecast. */
   failedModels: { id: ForecastModelId; reason: string }[];
@@ -110,10 +134,13 @@ export interface InsufficientHistory {
   requiredMin: number;
   detail: string;
 }
-export type ForecastOutcome = ForecastEvaluation | InsufficientHistory;
+export interface ForecastFailure { status: 'invalid-input' | 'failed'; detail: string }
+export type ForecastOutcome = ForecastEvaluation | InsufficientHistory | ForecastFailure;
 
 export interface ForecastOptions {
   horizons?: number[];
+  /** Capture causal paths for audit/tests, not needed for normal UI runs. */
+  captureTrace?: boolean;
   refitEvery?: number;
   minOrigins?: number;
   /** Injectable for tests (count refits, force failures). Defaults to fitGarch. */
@@ -132,6 +159,11 @@ export function evaluateForecastModels(returns: number[], dates: string[], opts:
   const minOrigins = opts.minOrigins ?? MIN_OOS_ORIGINS;
   const fitter = opts.fitter ?? fitGarch;
   const n = returns.length;
+  if (n !== dates.length || returns.some(v => !Number.isFinite(v) || !Number.isFinite(v * v)) ||
+      dates.some((d, i) => !/^\d{4}-\d{2}-\d{2}$/.test(d) || !Number.isFinite(Date.parse(d)) || new Date(d).toISOString().slice(0, 10) !== d || (i > 0 && d <= dates[i - 1])) ||
+      !horizons.length || horizons.some(h => !HORIZONS.some(valid => valid === h)) || new Set(horizons).size !== horizons.length ||
+      !Number.isInteger(refitEvery) || refitEvery < 1 || !Number.isInteger(minOrigins) || minOrigins < 1)
+    return { status: 'invalid-input', detail: 'Require aligned finite daily returns, strictly increasing ISO dates, unique horizons 1/5/10/20, and positive integer cadence/minimum origins.' };
   const maxH = horizons[horizons.length - 1];
   const train = Math.max(MIN_TRAIN_SIZE, Math.floor(TRAIN_FRACTION * n));
   const t0 = train - 1;
@@ -158,14 +190,26 @@ export function evaluateForecastModels(returns: number[], dates: string[], opts:
   let garchFit: GarchFit | null = null;
   let garchFits = 0;
   const garchFailures: GarchFailure[] = [];
+  const refitOrigins: ForecastEvaluation['refitOrigins'] = [];
+  const trace: ForecastTrace[] = [];
   let gH = NaN; // last conditional variance h_t (state)
   const refit = (t: number) => {
     try {
-      garchFit = fitter(returns.slice(0, t + 1));
       garchFits++;
-      if (garchFit.status === 'NOT_CONVERGED') throw new Error('optimizer did not converge');
-      gH = garchFit.variance[t];
+      const candidate = fitter(returns.slice(0, t + 1));
+      if (candidate.status === 'NOT_CONVERGED' || candidate.variance.length !== t + 1 ||
+          !Object.values(candidate.params).every(Number.isFinite) || candidate.params.omega <= 0 || candidate.params.alpha < 0 || candidate.params.beta < 0 ||
+          candidate.params.alpha + candidate.params.beta >= 1 || !Number.isFinite(candidate.variance[t]) || candidate.variance[t] <= 0)
+        throw new Error('Invalid or non-converged fit');
+      garchFit = candidate;
+      gH = candidate.variance[t]; // h_t excludes r_t; one-step helper applies r_t exactly once.
+      refitOrigins.push({ originIndex: t, date: dates[t], success: true });
     } catch (e) {
+      // A failed refit invalidates forecasts until the next successful scheduled fit.
+      // Never assign failed candidate parameters or silently label an old fit current.
+      garchFit = null;
+      gH = NaN;
+      refitOrigins.push({ originIndex: t, date: dates[t], success: false });
       garchFailures.push({ originIndex: t, date: dates[t], message: e instanceof Error ? e.message : String(e) });
     }
   };
@@ -174,7 +218,7 @@ export function evaluateForecastModels(returns: number[], dates: string[], opts:
   // EWMA: seed = sample variance of the first EWMA_SEED returns (inside the
   // training window) = v at t = SEED−1; then v_{t+1} = λv_t + (1−λ)r_t².
   let vEwma = sampleVar(returns, 0, EWMA_SEED);
-  for (let t = EWMA_SEED; t <= t0; t++) vEwma = EWMA_LAMBDA * vEwma + (1 - EWMA_LAMBDA) * r2[t];
+  for (let t = EWMA_SEED - 1; t <= t0; t++) vEwma = EWMA_LAMBDA * vEwma + (1 - EWMA_LAMBDA) * r2[t];
   // vEwma now forecasts day t0+1 (uses returns through t0).
 
   // Historical windows: sliding sums for trailing sample variance.
@@ -196,7 +240,7 @@ export function evaluateForecastModels(returns: number[], dates: string[], opts:
     // GARCH multi-step path for days t+1..t+maxH.
     if (garchFit) {
       const p = garchFit.params;
-      const h1 = p.omega + p.alpha * (returns[t] - p.mu) ** 2 + p.beta * gH;
+      const h1 = garchNextVariance({ ...garchFit, variance: [gH] }, [returns[t]]);
       vhat.garch.push(garchVarianceForecastAnalytic(p, h1, maxH));
     } else vhat.garch.push(null);
 
@@ -204,6 +248,10 @@ export function evaluateForecastModels(returns: number[], dates: string[], opts:
     vhat.ewma.push(new Array(maxH).fill(vEwma));
     vhat.hist20.push(new Array(maxH).fill(histVar(s20, HIST20)));
     vhat.hist60.push(new Array(maxH).fill(histVar(s60, HIST60)));
+
+    if (opts.captureTrace) trace.push({ originIndex: t, date: dates[t], paths: Object.fromEntries(
+      FORECAST_MODELS.map(({ id }) => [id, vhat[id][vhat[id].length - 1]])
+    ) as ForecastTrace['paths'] });
 
     // Advance states to origin t+1 using the newly observed return r_{t+1}.
     if (t < tLast) {
@@ -228,7 +276,9 @@ export function evaluateForecastModels(returns: number[], dates: string[], opts:
     return ok;
   });
 
-  const horizonResults: HorizonResult[] = horizons.map((H) => {
+  if (!usable.length) return { status: 'failed', detail: 'No model produced a finite positive variance forecast.' };
+  const horizonResults: HorizonResult[] = [];
+  for (const H of horizons) {
     // Common origins: every usable model has a finite positive mean variance.
     const rows: { t: number; v: Partial<Record<ForecastModelId, number>>; rv: number }[] = [];
     for (let j = 0; j < originIdx.length; j++) {
@@ -239,35 +289,37 @@ export function evaluateForecastModels(returns: number[], dates: string[], opts:
       for (const id of usable) {
         const path = vhat[id][j];
         const m = path ? mean(path.slice(0, H)) : NaN;
-        if (!Number.isFinite(m) || m <= 0) { ok = false; break; }
+        if (!path?.slice(0, H).every(x => Number.isFinite(x) && x > 0) || !Number.isFinite(m) || m <= 0) { ok = false; break; }
         v[id] = m;
       }
       if (ok) rows.push({ t, v, rv: rvProxy(t, H) });
     }
+    if (rows.length < minOrigins) return { status: 'failed', detail: `Only ${rows.length} common valid origins at H=${H}; minimum ${minOrigins}. No partial/stale scores published.` };
     const scores: Partial<Record<ForecastModelId, ModelScore>> = {};
     const raw: Partial<Record<ForecastModelId, { qlike: number; mse: number }>> = {};
     for (const id of usable) {
-      const vs = rows.map((r) => r.v[id]!), ps = rows.map((r) => r.rv);
-      raw[id] = { qlike: mean(vs.map((v, i) => Math.log(v) + ps[i] / v)), mse: mean(vs.map((v, i) => (v - ps[i]) ** 2)) };
+      const vs = rows.map((r) => r.v[id] ?? NaN), ps = rows.map((r) => r.rv);
+      try { raw[id] = forecastMetrics(vs, ps); } catch { return { status: 'failed', detail: 'Non-finite metric; evaluation rejected.' }; }
     }
     const base = raw[BASELINE_MODEL];
-    const ranked = usable.filter((id) => raw[id]).sort((a, b) => raw[a]!.qlike - raw[b]!.qlike);
+    const ranked = usable.filter((id) => raw[id]).sort((a, b) => (raw[a]?.qlike ?? Infinity) - (raw[b]?.qlike ?? Infinity));
     for (const id of usable) {
-      if (!raw[id]) continue;
+      const metric = raw[id];
+      if (!metric) continue;
       scores[id] = {
-        qlike: raw[id]!.qlike, mse: raw[id]!.mse, rmse: Math.sqrt(raw[id]!.mse),
-        qlikeDiffVsBaseline: base && id !== BASELINE_MODEL ? raw[id]!.qlike - base.qlike : null,
-        relMseVsBaseline: base && id !== BASELINE_MODEL && base.mse > 0 ? 1 - raw[id]!.mse / base.mse : null,
+        qlike: metric.qlike, mse: metric.mse, rmse: Math.sqrt(metric.mse),
+        qlikeDiffVsBaseline: base && id !== BASELINE_MODEL ? metric.qlike - base.qlike : null,
+        relMseVsBaseline: base && id !== BASELINE_MODEL && base.mse > 0 ? 1 - metric.mse / base.mse : null,
         rank: ranked.indexOf(id) + 1,
       };
     }
-    return {
-      horizon: H, origins: rows.length,
+    horizonResults.push({
+      horizon: H, origins: rows.length, excludedOrigins: n - train - H + 1 - rows.length, originIndices: rows.map(r => r.t),
       originFrom: dates[rows[0].t], originTo: dates[rows[rows.length - 1].t],
       targetFrom: dates[rows[0].t + 1], targetTo: dates[rows[rows.length - 1].t + H],
       scores,
-    };
-  });
+    });
+  }
 
-  return { status: 'ok', n, trainSize: train, refitEvery, garchFits, garchFailures, failedModels, horizons: horizonResults };
+  return { status: 'ok', n, trainSize: train, refitEvery, garchFits, refitOrigins, ...(opts.captureTrace ? { trace } : {}), garchFailures, failedModels, horizons: horizonResults };
 }
