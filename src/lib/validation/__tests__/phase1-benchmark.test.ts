@@ -35,6 +35,6 @@ describe('validation framework', () => {
   });
   it('phase 1 statuses', () => {
     for (const id of ['DAT-001', 'DAT-002', 'DAT-003', 'STA-001', 'STA-002', 'VOL-001', 'VOL-002']) expect(validationStatusFor(id)).toBe('COMPLETED');
-    expect(VALIDATION_PLANS.map((p) => p.modelId)).toEqual(['DAT-001', 'DAT-002', 'DAT-003', 'STA-001', 'STA-002', 'VOL-001', 'VOL-002', 'COR-001', 'VOL-003', 'COR-003', 'COR-002']);
+    expect(VALIDATION_PLANS.map((p) => p.modelId)).toEqual(['DAT-001', 'DAT-002', 'DAT-003', 'STA-001', 'STA-002', 'VOL-001', 'VOL-002', 'COR-001', 'VOL-003', 'COR-003', 'VOL-005', 'COR-002']);
   });
 });
