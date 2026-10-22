@@ -15,6 +15,7 @@ import { StatCard, pct, num } from '@/components/volatility/StatCard';
 import { Methodology } from '@/components/volatility/Methodology';
 import { TimeSeriesDiagnostics } from '@/components/volatility/TimeSeriesDiagnostics';
 import { GarchPanel } from '@/components/volatility/GarchPanel';
+import { ForecastEvaluation } from '@/components/volatility/ForecastEvaluation';
 import { MarketDataImport } from '@/components/volatility/MarketDataImport';
 import {
   TRADING_DAYS, mean, stdDev, skewness, kurtosis, jarqueBera, histogram,
@@ -164,6 +165,9 @@ export default function VolatilityAnalytics() {
           </Card>
 
           <GarchPanel returns={data!.returns.returns} />
+
+          <ForecastEvaluation returns={data!.returns.returns} dates={data!.returns.dates}
+            provenance={`${data!.ticker} · ${importedData ? 'imported file' : `Yahoo Finance ${period}`} · ${data!.priceField}`} />
 
           {/* 4. Dynamics */}
           <Card>
