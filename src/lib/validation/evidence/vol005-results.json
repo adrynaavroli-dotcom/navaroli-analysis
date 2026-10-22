@@ -1,0 +1,561 @@
+[
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "One-step h_{t+1|t} from arch state, origin 1000",
+  "expectedResult": "1.192583569",
+  "actualResult": "1.192583569",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "arch.forecast horizon 1 (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "Analytic multi-step path h_{t+k|t}, k=1..20, origin 1000",
+  "expectedResult": "n=20, first=1.192583569, last=1.002840900",
+  "actualResult": "n=20, first=1.192583569, last=1.002840900",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 6.661338147750939e-16,
+  "maxRelError": 6.511435808970152e-16,
+  "n": 20,
+  "passed": true,
+  "evidence": {
+   "reference": "arch.forecast(horizon=20, reindex=False) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "Recursive multi-step path, k=1..20, origin 1000",
+  "expectedResult": "n=20, first=1.192583569, last=1.002840900",
+  "actualResult": "n=20, first=1.192583569, last=1.002840900",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 8.881784197001252e-16,
+  "maxRelError": 8.856623413073715e-16,
+  "n": 20,
+  "passed": true,
+  "evidence": {
+   "reference": "arch.forecast(horizon=20) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "v̂, proxy, QLIKE, MSE at H=1, origin 1000",
+  "expectedResult": "n=4, first=1.192583569, last=1.149377850",
+  "actualResult": "n=4, first=1.192583569, last=1.149377850",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "v̂, proxy, QLIKE, MSE at H=5, origin 1000",
+  "expectedResult": "n=4, first=1.158154436, last=0.6785618806",
+  "actualResult": "n=4, first=1.158154436, last=0.6785618806",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "v̂, proxy, QLIKE, MSE at H=10, origin 1000",
+  "expectedResult": "n=4, first=1.123900938, last=0.04868852708",
+  "actualResult": "n=4, first=1.123900938, last=0.04868852708",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "v̂, proxy, QLIKE, MSE at H=20, origin 1000",
+  "expectedResult": "n=4, first=1.075971042, last=0.4408427884",
+  "actualResult": "n=4, first=1.075971042, last=0.4408427884",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 2.7755575615628914e-16,
+  "maxRelError": 6.296025781936079e-16,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "One-step h_{t+1|t} from arch state, origin 1200",
+  "expectedResult": "0.5134242773",
+  "actualResult": "0.5134242773",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "arch.forecast horizon 1 (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "Analytic multi-step path h_{t+k|t}, k=1..20, origin 1200",
+  "expectedResult": "n=20, first=0.5134242773, last=0.8521302365",
+  "actualResult": "n=20, first=0.5134242773, last=0.8521302365",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 3.3306690738754696e-16,
+  "maxRelError": 5.078641130567404e-16,
+  "n": 20,
+  "passed": true,
+  "evidence": {
+   "reference": "arch.forecast(horizon=20, reindex=False) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "Recursive multi-step path, k=1..20, origin 1200",
+  "expectedResult": "n=20, first=0.5134242773, last=0.8521302365",
+  "actualResult": "n=20, first=0.5134242773, last=0.8521302365",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 2.220446049250313e-16,
+  "maxRelError": 3.515223792032915e-16,
+  "n": 20,
+  "passed": true,
+  "evidence": {
+   "reference": "arch.forecast(horizon=20) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "v̂, proxy, QLIKE, MSE at H=1, origin 1200",
+  "expectedResult": "n=4, first=0.5134242773, last=0.1430673789",
+  "actualResult": "n=4, first=0.5134242773, last=0.1430673789",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "v̂, proxy, QLIKE, MSE at H=5, origin 1200",
+  "expectedResult": "n=4, first=0.5748830550, last=0.01463193260",
+  "actualResult": "n=4, first=0.5748830550, last=0.01463193260",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "v̂, proxy, QLIKE, MSE at H=10, origin 1200",
+  "expectedResult": "n=4, first=0.6360283092, last=0.05682755691",
+  "actualResult": "n=4, first=0.6360283092, last=0.05682755691",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.1102230246251565e-16,
+  "maxRelError": 6.429187701526753e-16,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "v̂, proxy, QLIKE, MSE at H=20, origin 1200",
+  "expectedResult": "n=4, first=0.7215870380, last=0.06036645062",
+  "actualResult": "n=4, first=0.7215870380, last=0.06036645062",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 2.220446049250313e-16,
+  "maxRelError": 1.8391391464041786e-15,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "One-step h_{t+1|t} from arch state, origin 1400",
+  "expectedResult": "0.5551331582",
+  "actualResult": "0.5551331582",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "arch.forecast horizon 1 (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "Analytic multi-step path h_{t+k|t}, k=1..20, origin 1400",
+  "expectedResult": "n=20, first=0.5551331582, last=0.8613857575",
+  "actualResult": "n=20, first=0.5551331582, last=0.8613857575",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 2.220446049250313e-16,
+  "maxRelError": 3.246815941681318e-16,
+  "n": 20,
+  "passed": true,
+  "evidence": {
+   "reference": "arch.forecast(horizon=20, reindex=False) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "Recursive multi-step path, k=1..20, origin 1400",
+  "expectedResult": "n=20, first=0.5551331582, last=0.8613857575",
+  "actualResult": "n=20, first=0.5551331582, last=0.8613857575",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 2.220446049250313e-16,
+  "maxRelError": 2.5994952299830835e-16,
+  "n": 20,
+  "passed": true,
+  "evidence": {
+   "reference": "arch.forecast(horizon=20) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "v̂, proxy, QLIKE, MSE at H=1, origin 1400",
+  "expectedResult": "n=4, first=0.5551331582, last=0.3080773455",
+  "actualResult": "n=4, first=0.5551331582, last=0.3080773455",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "v̂, proxy, QLIKE, MSE at H=5, origin 1400",
+  "expectedResult": "n=4, first=0.6107032180, last=0.1662550373",
+  "actualResult": "n=4, first=0.6107032180, last=0.1662550373",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "v̂, proxy, QLIKE, MSE at H=10, origin 1400",
+  "expectedResult": "n=4, first=0.6659897949, last=0.2434697752",
+  "actualResult": "n=4, first=0.6659897949, last=0.2434697752",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "independent-benchmark",
+  "testName": "v̂, proxy, QLIKE, MSE at H=20, origin 1400",
+  "expectedResult": "n=4, first=0.7433506513, last=0.004328784169",
+  "actualResult": "n=4, first=0.7433506513, last=0.004328784169",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.1102230246251565e-16,
+  "maxRelError": 3.4063027792713986e-15,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "numerical",
+  "testName": "Closed form ≡ direct recursion, 250 steps",
+  "expectedResult": "n=250, first=2.500000000, last=0.9487273313",
+  "actualResult": "n=250, first=2.500000000, last=0.9487273313",
+  "tolerance": {
+   "abs": 1e-12,
+   "rel": 1e-12
+  },
+  "maxAbsError": 6.661338147750939e-16,
+  "maxRelError": 6.711030384570408e-16,
+  "n": 250,
+  "passed": true,
+  "evidence": {
+   "reference": "garchVarianceForecastPath (recursion)",
+   "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "numerical",
+  "testName": "Hand-computable metrics: alternating ±√c returns (H=1)",
+  "expectedResult": "n=4, first=-6.822752716, last=0.000000000",
+  "actualResult": "n=4, first=-6.822752716, last=3.471763685e-33",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-10
+  },
+  "maxAbsError": 1.2434497875801753e-14,
+  "maxRelError": 1.6531711438151691e-12,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "closed-form values",
+   "dataset": "DETERMINISTIC CONSTRUCTED SERIES"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "out-of-sample",
+  "testName": "Observed OOS evaluation H=1: 280 common origins (2025-09-05→2026-10-15; targets 2025-09-08→2026-10-16)",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "VOL-005 rolling-origin protocol (expanding window, refit every 20)",
+   "dataset": "OBSERVED — Yahoo Finance AAPL adjclose (split + dividend adjusted), dat001-snapshot/1.0.0, returns 2024-01-03→2026-10-16 (n=700)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0",
+  "notes": "garch: QLIKE -7.3223 (Δ vs hist60 -0.0551), RMSE 5.496e-4, rank 1 · ewma: QLIKE -7.3188 (Δ vs hist60 -0.0516), RMSE 5.495e-4, rank 2 · hist20: QLIKE -7.2573 (Δ vs hist60 0.0099), RMSE 5.537e-4, rank 4 · hist60: QLIKE -7.2672 (Δ vs hist60 —), RMSE 5.510e-4, rank 3"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "out-of-sample",
+  "testName": "Observed OOS evaluation H=5: 276 common origins (2025-09-05→2026-10-09; targets 2025-09-08→2026-10-16)",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "VOL-005 rolling-origin protocol (expanding window, refit every 20)",
+   "dataset": "OBSERVED — Yahoo Finance AAPL adjclose (split + dividend adjusted), dat001-snapshot/1.0.0, returns 2024-01-03→2026-10-16 (n=700)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0",
+  "notes": "garch: QLIKE -7.3205 (Δ vs hist60 -0.0600), RMSE 2.565e-4, rank 1 · ewma: QLIKE -7.3177 (Δ vs hist60 -0.0572), RMSE 2.586e-4, rank 2 · hist20: QLIKE -7.2488 (Δ vs hist60 0.0117), RMSE 2.718e-4, rank 4 · hist60: QLIKE -7.2605 (Δ vs hist60 —), RMSE 2.629e-4, rank 3"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "out-of-sample",
+  "testName": "Observed OOS evaluation H=10: 271 common origins (2025-09-05→2026-10-02; targets 2025-09-08→2026-10-16)",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "VOL-005 rolling-origin protocol (expanding window, refit every 20)",
+   "dataset": "OBSERVED — Yahoo Finance AAPL adjclose (split + dividend adjusted), dat001-snapshot/1.0.0, returns 2024-01-03→2026-10-16 (n=700)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0",
+  "notes": "garch: QLIKE -7.3125 (Δ vs hist60 -0.0752), RMSE 1.956e-4, rank 1 · ewma: QLIKE -7.2951 (Δ vs hist60 -0.0578), RMSE 2.018e-4, rank 2 · hist20: QLIKE -7.2190 (Δ vs hist60 0.0183), RMSE 2.095e-4, rank 4 · hist60: QLIKE -7.2373 (Δ vs hist60 —), RMSE 2.076e-4, rank 3"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "out-of-sample",
+  "testName": "Observed OOS evaluation H=20: 261 common origins (2025-09-05→2026-09-18; targets 2025-09-08→2026-10-16)",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "VOL-005 rolling-origin protocol (expanding window, refit every 20)",
+   "dataset": "OBSERVED — Yahoo Finance AAPL adjclose (split + dividend adjusted), dat001-snapshot/1.0.0, returns 2024-01-03→2026-10-16 (n=700)"
+  },
+  "validationDate": "2026-10-22",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0",
+  "notes": "garch: QLIKE -7.3072 (Δ vs hist60 -0.1002), RMSE 1.524e-4, rank 1 · ewma: QLIKE -7.2325 (Δ vs hist60 -0.0255), RMSE 1.653e-4, rank 2 · hist20: QLIKE -7.0975 (Δ vs hist60 0.1095), RMSE 1.794e-4, rank 4 · hist60: QLIKE -7.2070 (Δ vs hist60 —), RMSE 1.723e-4, rank 3"
+ }
+]

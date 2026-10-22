@@ -80,7 +80,7 @@ export function runVol005(fx: Vol005Fixture, observed: ObservedEvaluationRecord,
   const m = (testName: string, validationType: CompareMeta['validationType'], reference: string, dataset = syn, notes?: string): CompareMeta =>
     ({ modelId: 'VOL-005', testName, validationType, reference, dataset, validationDate, implementationVersion: VOL005_IMPLEMENTATION_VERSION, notes });
   const out: ValidationResult[] = [];
-  const p = fx.fit;
+  const p: GarchParams = { mu: fx.fit.mu, omega: fx.fit.omega, alpha: fx.fit.alpha, beta: fx.fit.beta };
   const tol = { abs: 1e-12, rel: 1e-9 };
 
   for (const t of fx.meta.origins) {
