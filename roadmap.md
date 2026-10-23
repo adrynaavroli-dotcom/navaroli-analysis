@@ -4,4 +4,4 @@
 - [x] Regression, lint and automatic preview build verification
 - [x] Browser AAPL agreement and state checks
 - [ ] Explicit production-build/typecheck exit statuses (manual execution prohibited by environment; automatic build reports OK only)
-- [ ] Final diff and factual report
+- [x] Final diff and factual report
