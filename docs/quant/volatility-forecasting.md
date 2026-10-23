@@ -27,10 +27,18 @@ Compares daily variance forecasts of GARCH(1,1) (VOL-003), EWMA λ = 0.94 (VOL-0
 
 ## Evidence
 - Synthetic (fixed seed 20261020, percent units): `validation/python/benchmark_vol005.py` → `src/lib/validation/fixtures/vol005-benchmark.json`. It checks the one-step and 20-step paths against `arch.forecast` and QLIKE/MSE against numpy. Pinned environment: `validation/python/requirements-vol005.txt` (arch 8.0.0). It validates formulas and metrics only, not the rolling protocol.
-- Observed: DAT-001 AAPL Yahoo snapshot (`dat001-snapshot.json`, 701 prices from 2024-01-02 to 2026-10-16, adjclose basis via Returns Engine), 700 log returns, train 420, 14 GARCH fits, 0 failures. Full record: `src/lib/validation/evidence/vol005-observed.json`. Pass/fail rows: `vol005-results.json`. A Vitest test re-runs the evaluation and requires an exact match.
+- Observed: DAT-001 AAPL Yahoo snapshot (`dat001-snapshot.json`, 701 prices from 2024-01-02 to 2026-10-16, adjclose basis via Returns Engine), 700 log returns, train 420, 14 GARCH fits, 0 failures. Full record: `src/lib/validation/evidence/vol005-observed.json`. Pass/fail rows: `vol005-results.json`. The runner compares the complete fresh record with the saved reference before writing it; a failing comparison cannot overwrite the reference.
+
+### Reproduction across JavaScript runtimes
+The original exact test failed only on GARCH score leaves when Bun/JavaScriptCore evidence ran under Vitest/V8. Bun reproduced the saved substantive record exactly; V8 repeated its own substantive record exactly. Different `log`/`exp` rounding perturbs near-tied deterministic Nelder–Mead steps. Measured differences were below 9e−10 QLIKE, 8e−17 MSE, 3e−13 RMSE and 3e−9 relative MSE. Only `runtimeMs` and `evaluatedAt` are omitted. All source identity, protocol, dates, counts, refit schedule, common origins, exclusions, failures, ranks and baseline scores compare exactly. Only GARCH QLIKE/ΔQLIKE use absolute 2e−9; MSE uses absolute 1e−16 + relative 1e−8; RMSE uses absolute 1e−12 + relative 1e−8; relative MSE uses absolute 5e−9. These are cross-runtime arithmetic bounds, not forecast-quality tolerances. Tests reject substantive mutations and report expected/actual values at their JSON paths.
+
+The page distinguishes current loaded/imported data from recorded historical evidence. Changing data cancels pending work and removes current scores. Computation remains synchronous during each run; a short scheduling delay lets the busy state paint but is not a worker or background service.
 
 ## Limitations
 One ticker and about one year of origins, so results are sample-dependent. Gaussian QMLE GARCH. No Diebold–Mariano test. The academic source has not been verified.
+
+## Close-out verification (2026-10-23)
+Reproduction: 23/23 targeted tests and 245/245 full Vitest tests passed; runner 28/28 (including complete-record reproduction). Browser `/volatility` imported the exact saved AAPL price rows, checked all four horizons against saved scores at display precision, confirmed counts/date ranges, busy/disabled state, dataset invalidation, insufficient history on 300 observed returns, and total failure on explicitly synthetic constant prices. No page errors; observed browser run 307 ms, uncached forecast fits. Automatic preview build logs report `build OK`. Separate production-build and TypeScript exit statuses were not available: this environment prohibits manually running those commands. Overall remains IN PROGRESS pending those checks; UI and validation are COMPLETED, academic PLANNED. This is technical correctness, not general predictive superiority.
 
 ## Reproduce
 ```

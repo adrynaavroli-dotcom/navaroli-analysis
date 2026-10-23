@@ -17,7 +17,7 @@
    "reference": "arch.forecast horizon 1 (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -38,7 +38,7 @@
    "reference": "arch.forecast(horizon=20, reindex=False) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -59,7 +59,7 @@
    "reference": "arch.forecast(horizon=20) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -80,7 +80,7 @@
    "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -101,7 +101,7 @@
    "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -122,7 +122,7 @@
    "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -143,7 +143,7 @@
    "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -164,7 +164,7 @@
    "reference": "arch.forecast horizon 1 (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -185,7 +185,7 @@
    "reference": "arch.forecast(horizon=20, reindex=False) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -206,7 +206,7 @@
    "reference": "arch.forecast(horizon=20) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -227,7 +227,7 @@
    "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -248,7 +248,7 @@
    "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -269,7 +269,7 @@
    "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -290,7 +290,7 @@
    "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -311,7 +311,7 @@
    "reference": "arch.forecast horizon 1 (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -332,7 +332,7 @@
    "reference": "arch.forecast(horizon=20, reindex=False) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -353,7 +353,7 @@
    "reference": "arch.forecast(horizon=20) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -374,7 +374,7 @@
    "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -395,7 +395,7 @@
    "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -416,7 +416,7 @@
    "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -437,7 +437,7 @@
    "reference": "numpy (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -458,7 +458,7 @@
    "reference": "garchVarianceForecastPath (recursion)",
    "dataset": "SYNTHETIC TEST DATA — vol005-benchmark/1.0.0, seed 20261020 (percent units)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -479,7 +479,7 @@
    "reference": "closed-form values",
    "dataset": "DETERMINISTIC CONSTRUCTED SERIES"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0"
  },
  {
@@ -497,7 +497,7 @@
    "reference": "VOL-005 rolling-origin protocol (expanding window, refit every 20)",
    "dataset": "OBSERVED — Yahoo Finance AAPL adjclose (split + dividend adjusted), dat001-snapshot/1.0.0, returns 2024-01-03→2026-10-16 (n=700)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0",
   "notes": "garch: QLIKE -7.3223 (Δ vs hist60 -0.0551), RMSE 5.496e-4, rank 1 · ewma: QLIKE -7.3188 (Δ vs hist60 -0.0516), RMSE 5.495e-4, rank 2 · hist20: QLIKE -7.2573 (Δ vs hist60 0.0099), RMSE 5.537e-4, rank 4 · hist60: QLIKE -7.2672 (Δ vs hist60 —), RMSE 5.510e-4, rank 3"
  },
@@ -516,7 +516,7 @@
    "reference": "VOL-005 rolling-origin protocol (expanding window, refit every 20)",
    "dataset": "OBSERVED — Yahoo Finance AAPL adjclose (split + dividend adjusted), dat001-snapshot/1.0.0, returns 2024-01-03→2026-10-16 (n=700)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0",
   "notes": "garch: QLIKE -7.3205 (Δ vs hist60 -0.0600), RMSE 2.565e-4, rank 1 · ewma: QLIKE -7.3177 (Δ vs hist60 -0.0572), RMSE 2.586e-4, rank 2 · hist20: QLIKE -7.2488 (Δ vs hist60 0.0117), RMSE 2.718e-4, rank 4 · hist60: QLIKE -7.2605 (Δ vs hist60 —), RMSE 2.629e-4, rank 3"
  },
@@ -535,7 +535,7 @@
    "reference": "VOL-005 rolling-origin protocol (expanding window, refit every 20)",
    "dataset": "OBSERVED — Yahoo Finance AAPL adjclose (split + dividend adjusted), dat001-snapshot/1.0.0, returns 2024-01-03→2026-10-16 (n=700)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0",
   "notes": "garch: QLIKE -7.3125 (Δ vs hist60 -0.0752), RMSE 1.956e-4, rank 1 · ewma: QLIKE -7.2951 (Δ vs hist60 -0.0578), RMSE 2.018e-4, rank 2 · hist20: QLIKE -7.2190 (Δ vs hist60 0.0183), RMSE 2.095e-4, rank 4 · hist60: QLIKE -7.2373 (Δ vs hist60 —), RMSE 2.076e-4, rank 3"
  },
@@ -554,8 +554,27 @@
    "reference": "VOL-005 rolling-origin protocol (expanding window, refit every 20)",
    "dataset": "OBSERVED — Yahoo Finance AAPL adjclose (split + dividend adjusted), dat001-snapshot/1.0.0, returns 2024-01-03→2026-10-16 (n=700)"
   },
-  "validationDate": "2026-10-22",
+  "validationDate": "2026-10-23",
   "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0",
   "notes": "garch: QLIKE -7.3072 (Δ vs hist60 -0.1002), RMSE 1.524e-4, rank 1 · ewma: QLIKE -7.2325 (Δ vs hist60 -0.0255), RMSE 1.653e-4, rank 2 · hist20: QLIKE -7.0975 (Δ vs hist60 0.1095), RMSE 1.794e-4, rank 4 · hist60: QLIKE -7.2070 (Δ vs hist60 —), RMSE 1.723e-4, rank 3"
+ },
+ {
+  "modelId": "VOL-005",
+  "validationType": "unit",
+  "testName": "Complete observed record reproduces persisted evidence",
+  "expectedResult": "0",
+  "actualResult": "0",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Persisted vol005-observed.json; only runtimeMs/evaluatedAt volatile, named GARCH cross-runtime score tolerances",
+   "dataset": "OBSERVED DAT-001 AAPL dat001-snapshot/1.0.0"
+  },
+  "validationDate": "2026-10-23",
+  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0",
+  "notes": "[]"
  }
 ]

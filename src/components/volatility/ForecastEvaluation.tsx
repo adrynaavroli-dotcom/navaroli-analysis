@@ -20,8 +20,9 @@ function ScoreTable({ ev, horizon }: { ev: Eval; horizon: number }) {
       <p className="text-xs text-muted-foreground">{h.origins} common origins · origins {h.originFrom} → {h.originTo} · targets {h.targetFrom} → {h.targetTo}{h.excludedOrigins ? ` · ${h.excludedOrigins} excluded` : ''}</p>
       <Table>
         <TableHeader><TableRow><TableHead>Rank</TableHead><TableHead>Model</TableHead><TableHead className="text-right">QLIKE</TableHead><TableHead className="text-right">ΔQLIKE vs Hist 60D</TableHead><TableHead className="text-right">MSE</TableHead><TableHead className="text-right">RMSE</TableHead></TableRow></TableHeader>
-        <TableBody>{FORECAST_MODELS.filter((m) => h.scores[m.id]).sort((a, b) => h.scores[a.id]!.rank - h.scores[b.id]!.rank).map((m) => {
-          const s = h.scores[m.id]!;
+        <TableBody>{FORECAST_MODELS.filter((m) => h.scores[m.id]).sort((a, b) => (h.scores[a.id]?.rank ?? Infinity) - (h.scores[b.id]?.rank ?? Infinity)).map((m) => {
+          const s = h.scores[m.id];
+          if (!s) return null;
           return <TableRow key={m.id} data-testid={`oos-row-${m.id}`}><TableCell>{s.rank}</TableCell><TableCell className="font-medium" title={m.convention}>{m.name}</TableCell>
             <TableCell className="text-right font-mono tabular-nums">{fx(s.qlike)}</TableCell><TableCell className="text-right font-mono tabular-nums">{fx(s.qlikeDiffVsBaseline)}</TableCell>
             <TableCell className="text-right font-mono tabular-nums">{sci(s.mse)}</TableCell><TableCell className="text-right font-mono tabular-nums">{sci(s.rmse)}</TableCell></TableRow>;
@@ -39,22 +40,28 @@ export function ForecastEvaluation({ returns, dates, provenance }: Props) {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<{ out: ForecastOutcome; ms: number } | null>(null);
   const runId = useRef(0);
+  const busy = useRef(false);
 
   // A new dataset invalidates any previous result (never show stale scores).
-  useEffect(() => { runId.current++; setResult(null); setRunning(false); }, [returns, dates]);
+  useEffect(() => {
+    runId.current++; busy.current = false; setResult(null); setRunning(false);
+    return () => { runId.current++; busy.current = false; };
+  }, [returns, dates, provenance]);
 
   const run = () => {
-    if (running) return;
+    if (busy.current) return;
+    busy.current = true;
     const id = ++runId.current;
     setRunning(true);
     setTimeout(() => {
+      if (id !== runId.current) return;
       const t = performance.now();
       let out: ForecastOutcome;
       try { out = evaluateForecastModels(returns, dates); } catch (e) { out = { status: 'failed', detail: e instanceof Error ? e.message : String(e) }; }
       const ms = Math.round(performance.now() - t);
       if (id !== runId.current) return;
-      setResult({ out, ms }); setRunning(false);
-    }, 0);
+      setResult({ out, ms }); busy.current = false; setRunning(false);
+    }, 50);
   };
 
   const rec = observed.outcome as unknown as Eval;
@@ -71,7 +78,7 @@ export function ForecastEvaluation({ returns, dates, provenance }: Props) {
           </ToggleGroup></div>
       </CardHeader>
       <CardContent className="space-y-6 overflow-x-auto">
-        <section className="space-y-2">
+        <section className="space-y-2" data-testid="oos-current" aria-busy={running}>
           <div className="flex flex-wrap items-center gap-3">
             <Button size="sm" onClick={run} disabled={running}>{running ? <><Loader2 className="h-4 w-4 animate-spin mr-1" />Running…</> : 'Run evaluation'}</Button>
             <span className="text-xs text-muted-foreground">Current data: {provenance} · {returns.length} returns · GARCH refit every {GARCH_REFIT_EVERY} origins</span>

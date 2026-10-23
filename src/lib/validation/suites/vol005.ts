@@ -63,11 +63,13 @@ export function runObservedEvaluation(s: Dat001Snapshot, now = () => performance
   const t = now();
   const outcome = evaluateForecastModels(ds.returns.returns, ds.returns.dates);
   const runtimeMs = Math.round(now() - t);
+  const lastPrice = rows.at(-1), lastReturnDate = ds.returns.dates.at(-1);
+  if (!lastPrice || !lastReturnDate) throw new Error('Observed snapshot has no usable return coverage');
   return {
     dataType: 'OBSERVED MARKET DATA',
     snapshot: { path: 'src/lib/validation/fixtures/dat001-snapshot.json', version: s.version, retrievedAt: s.retrievedAt, provider: s.sources.yahoo.provider, ticker: s.ticker, currency: s.currency,
-      priceBasis: ds.metadata.priceField === 'adjclose' ? 'adjclose (split + dividend adjusted)' : 'close (split-adjusted)', priceRows: rows.length, firstPriceDate: rows[0].date, lastPriceDate: rows.at(-1)!.date },
-    returns: { kind: 'log', n: ds.returns.returns.length, firstDate: ds.returns.dates[0], lastDate: ds.returns.dates.at(-1)! },
+      priceBasis: ds.metadata.priceField === 'adjclose' ? 'adjclose (split + dividend adjusted)' : 'close (split-adjusted)', priceRows: rows.length, firstPriceDate: rows[0].date, lastPriceDate: lastPrice.date },
+    returns: { kind: 'log', n: ds.returns.returns.length, firstDate: ds.returns.dates[0], lastDate: lastReturnDate },
     protocol: { trainSize: outcome.status === 'ok' ? outcome.trainSize : NaN, refitEvery: GARCH_REFIT_EVERY, minOrigins: MIN_OOS_ORIGINS, baseline: BASELINE_MODEL, horizons: [1, 5, 10, 20],
       proxy: 'mean of future squared daily log returns over the horizon (noisy proxy for latent variance)', qlike: 'mean(ln v̂ + proxy/v̂), realized-only term omitted' },
     outcome, runtimeMs, implementationVersion: VOL005_IMPLEMENTATION_VERSION, evaluatedAt: new Date().toISOString(),
@@ -126,7 +128,7 @@ export function runVol005(fx: Vol005Fixture, observed: ObservedEvaluationRecord,
   const ev2 = o as ForecastEvaluation;
   for (const h of ev2.horizons) {
     const models = FORECAST_MODELS.map(x => x.id).filter(id => h.scores[id]);
-    const fmt = (id: string) => { const s = h.scores[id as keyof typeof h.scores]!; return `${id}: QLIKE ${s.qlike.toFixed(4)} (Δ vs hist60 ${s.qlikeDiffVsBaseline === null ? '—' : s.qlikeDiffVsBaseline.toFixed(4)}), RMSE ${s.rmse.toExponential(3)}, rank ${s.rank}`; };
+    const fmt = (id: string) => { const s = h.scores[id as keyof typeof h.scores]; if (!s) return `${id}: unavailable`; return `${id}: QLIKE ${s.qlike.toFixed(4)} (Δ vs hist60 ${s.qlikeDiffVsBaseline === null ? '—' : s.qlikeDiffVsBaseline.toFixed(4)}), RMSE ${s.rmse.toExponential(3)}, rank ${s.rank}`; };
     out.push(compareExact([models.length === 4 && h.origins >= MIN_OOS_ORIGINS && ev2.garchFailures.length === 0],
       [true], m(`Observed OOS evaluation H=${h.horizon}: ${h.origins} common origins (${h.originFrom}→${h.originTo}; targets ${h.targetFrom}→${h.targetTo})`, 'out-of-sample',
         'VOL-005 rolling-origin protocol (expanding window, refit every 20)', obsDs, models.map(fmt).join(' · '))));
