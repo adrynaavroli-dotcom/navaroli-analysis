@@ -37,6 +37,9 @@ The page distinguishes current loaded/imported data from recorded historical evi
 ## Limitations
 One ticker and about one year of origins, so results are sample-dependent. Gaussian QMLE GARCH. No Diebold–Mariano test. The academic source has not been verified.
 
+## Close-out verification (2026-10-23)
+Reproduction: 23/23 targeted tests and 245/245 full Vitest tests passed; runner 28/28 (including complete-record reproduction). Browser `/volatility` imported the exact saved AAPL price rows, checked all four horizons against saved scores at display precision, confirmed counts/date ranges, busy/disabled state, dataset invalidation, insufficient history on 300 observed returns, and total failure on explicitly synthetic constant prices. No page errors; observed browser run 307 ms, uncached forecast fits. Automatic preview build logs report `build OK`. Separate production-build and TypeScript exit statuses were not available: this environment prohibits manually running those commands. Overall remains IN PROGRESS pending those checks; UI and validation are COMPLETED, academic PLANNED. This is technical correctness, not general predictive superiority.
+
 ## Reproduce
 ```
 python -m pip install -r validation/python/requirements-vol005.txt
