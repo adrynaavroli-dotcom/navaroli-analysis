@@ -4,5 +4,5 @@
 - [x] Regression, lint and automatic preview build verification
 - [x] Browser AAPL agreement and state checks
 - [x] Configure explicit app/node TypeScript and non-deploying quality CI gates
-- [ ] Verify Quality checks on the resulting synced commit (TypeScript, full suite, VOL-005 runner and production build); awaiting actual GitHub Actions results, no manual build/typecheck execution
+- [x] Verify Quality checks run 40079914183 on e936bdd35b5cfe4673388c5c603f73294538c256: explicit TypeScript PASS, 245/245 tests, 28/28 VOL-005 checks and production build PASS
 - [x] Final diff and factual report
