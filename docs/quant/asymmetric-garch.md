@@ -30,8 +30,18 @@ h_t = ω + (α + γ·I[ε_{t−1} < 0]) ε²_{t−1} + β h_{t−1}
 ## Optimizer
 Deterministic Nelder–Mead (`src/lib/optim/`) on a feasible transform: ρ = logistic(θ2), ω = e^{θ1},
 shares s = softmax(θ3, θ4, 0) of the three non-negative parts ρ = α/2 + (α+γ)/2 + β, so α = 2s1ρ,
-α+γ = 2s2ρ, β = s3ρ. Starts: arch's grid (best 3) plus the converged VOL-003 optimum with γ ≈ 0, ensuring
-ℓ_GJR ≥ ℓ_GARCH. Exact α = 0, α+γ = 0, β = 0, ρ = 1 are unattainable → flagged near-boundary.
+α+γ = 2s2ρ, β = s3ρ. Starts: the project's deterministic multi-start grid, which uses the grid VALUES of
+arch v8.0.0 `GARCH.starting_values` (α, γ ∈ {0.01,0.05,0.1,0.2}, ρ ∈ {0.5,0.7,0.9,0.98}) but is not
+identical to it: β ≤ 0 points are skipped, the best 3 (arch: best 1) are refined, and the VOL-003 optimum
+(γ = 1e-6) is an extra seed. Source: https://github.com/bashtage/arch/blob/v8.0.0/arch/univariate/volatility.py.
+
+Nested-likelihood safeguard: starts alone do not guarantee ℓ_GJR ≥ ℓ_GARCH. After optimization the converged
+VOL-003 solution is evaluated exactly as a GJR candidate with γ = 0 (same returns, backcast, bounds, units and
+Gaussian likelihood; with γ = 0 the GJR recursion equals VOL-003's, including t = 0). The valid candidate with
+the higher likelihood is selected (ties keep the optimizer); `selectedCandidate` records which. If the optimizer
+fails but the nested candidate is valid, the nested candidate is reported; if neither is valid the status is
+NOT_CONVERGED. This is a numerical safeguard, not a statistical claim.
+Exact α = 0, α+γ = 0, β = 0, ρ = 1 are unattainable → flagged near-boundary; γ = 0 alone is not a boundary.
 |γ| < 1e-6 is reported as "same as GARCH(1,1)" (an interior point, never forced positive).
 Non-convergence → no values displayed.
 

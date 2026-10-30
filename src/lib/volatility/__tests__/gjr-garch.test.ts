@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { fitGarch, garchBackcast, garchRecursion, garchVarianceBounds, GARCH_SCALE } from '../garch';
 import {
   fitGjrGarch, gjrRecursion, gjrToParams, gjrFromParams, gjrPersistence, gjrNextVariance, gjrGarchModel,
-  tryFitGjrGarch, GjrInputError, type GjrParams,
+  tryFitGjrGarch, GjrInputError, selectGjrCandidate, type GjrParams,
 } from '../gjr-garch';
 import { TRADING_DAYS } from '../types';
 import fx from '../../validation/fixtures/vol004-benchmark.json';
@@ -108,5 +108,53 @@ describe('fitGjrGarch', () => {
     const res = gjrGarchModel.calculate(RA, RA.map((_, i) => String(i)));
     expect(res.values[10]).toBeCloseTo(Math.sqrt(FIT.variance[10] * TRADING_DAYS), 12);
     expect(gjrGarchModel.calculate([0.01, 0.02], ['a', 'b'])).toEqual({ dates: ['a', 'b'], values: [null, null], current: null });
+  });
+});
+
+describe('Nested-likelihood safeguard (exact γ = 0 candidate)', () => {
+  const R0 = toR(fx.cases.gjr_true_gamma0_n800.y);
+  const cases = [['asymmetric', RA], ['gamma0', R0]] as const;
+  it.each(cases)('selected ℓ is never below the converged VOL-003 ℓ on identical data (%s)', (_n, r) => {
+    const f = fitGjrGarch(r), g = fitGarch(r);
+    expect(g.status).not.toBe('NOT_CONVERGED');
+    expect(f.logLik).toBeGreaterThanOrEqual(g.logLik - 1e-9);
+    expect(f.nested!.deltaLogLik).toBeGreaterThanOrEqual(-1e-9);
+  });
+  it('a genuinely asymmetric optimum with higher ℓ is retained (γ not forced to 0)', () => {
+    expect(FIT.selectedCandidate).toBe('optimizer');
+    expect(FIT.params.gamma).toBeGreaterThan(0.01);
+    expect(FIT.logLik).toBeGreaterThan(fitGarch(RA).logLik);
+  });
+  it.each(cases)('exact γ = 0 candidate reproduces VOL-003 recursion and ℓ bit-for-bit (%s)', (_n, r) => {
+    const g = fitGarch(r), S = GARCH_SCALE, y = r.map((v) => v * S);
+    const ybar = y.reduce((a, b) => a + b, 0) / y.length, e0 = y.map((v) => v - ybar);
+    const b = garchBackcast(e0), bd = garchVarianceBounds(e0);
+    const q = { mu: g.params.mu * S, omega: g.params.omega * S * S, alpha: g.params.alpha, beta: g.params.beta };
+    const a = gjrRecursion(y, { ...q, gamma: 0 }, b, bd), c = garchRecursion(y, q, b, bd);
+    expect(a.h).toEqual(c.h);
+    expect(a.logLik).toBe(c.logLik);
+    expect(a.logLik + y.length * Math.log(S)).toBeCloseTo(g.logLik, 9);
+  });
+  it('selector: highest valid ℓ wins; ties keep optimizer; failed optimizer falls back; neither → none', () => {
+    expect(selectGjrCandidate({ valid: true, logLik: -10 }, { valid: true, logLik: -9 })).toBe('nested-garch');
+    expect(selectGjrCandidate({ valid: true, logLik: -9 }, { valid: true, logLik: -10 })).toBe('optimizer');
+    expect(selectGjrCandidate({ valid: true, logLik: -9 }, { valid: true, logLik: -9 })).toBe('optimizer');
+    expect(selectGjrCandidate({ valid: false, logLik: -1 }, { valid: true, logLik: -9 })).toBe('nested-garch');
+    expect(selectGjrCandidate({ valid: true, logLik: NaN }, { valid: true, logLik: -9 })).toBe('nested-garch');
+    expect(selectGjrCandidate({ valid: false, logLik: -1 }, { valid: false, logLik: -1 })).toBe('none');
+    expect(selectGjrCandidate({ valid: true, logLik: -1 }, { valid: true, logLik: Infinity })).toBe('optimizer');
+  });
+  it('a γ = 0 nested solution is reported as nested, not as a boundary solution', () => {
+    const p = { mu: 0, omega: 1e-5, alpha: 0.08, gamma: 0, beta: 0.9 };
+    expect(gjrPersistence(p)).toBeLessThan(0.999);
+    const f = fitGjrGarch(R0);
+    if (f.selectedCandidate === 'nested-garch') {
+      expect(f.params.gamma).toBe(0);
+      expect(f.nestedGarch).toBe(true);
+      expect(f.status).toBe('CONVERGED');
+      expect(f.diagnostics.nearBoundary).toEqual([]);
+    } else {
+      expect(f.diagnostics.nearBoundary.some((s) => s.includes('γ'))).toBe(false);
+    }
   });
 });
