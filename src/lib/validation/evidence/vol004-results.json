@@ -1,0 +1,468 @@
+[
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "Backcast and variance bounds · gjr_asymmetric_n2000",
+  "expectedResult": "n=4001, first=1.895013374, last=367369.4935",
+  "actualResult": "n=4001, first=1.895013374, last=367369.4935",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.1641532182693481e-9,
+  "maxRelError": 7.09564082916702e-16,
+  "n": 4001,
+  "passed": true,
+  "evidence": {
+   "reference": "arch GARCH(1,1,1).backcast / variance_bounds (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "Fixed-parameter variance path h_t (γ=0.12, incl. t=0 term (α+γ/2+β)·b) · gjr_asymmetric_n2000",
+  "expectedResult": "n=2000, first=1.858162973, last=0.2989639548",
+  "actualResult": "n=2000, first=1.858162973, last=0.2989639548",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-10
+  },
+  "maxAbsError": 1.7763568394002505e-15,
+  "maxRelError": 7.169810446993554e-16,
+  "n": 2000,
+  "passed": true,
+  "evidence": {
+   "reference": "arch GARCH.compute_variance (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "Fixed-parameter Gaussian log-likelihood (γ=0.12) · gjr_asymmetric_n2000",
+  "expectedResult": "-2240.926649",
+  "actualResult": "-2240.926649",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-10
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy on arch variance path (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "numerical",
+  "testName": "Variance bounds inactive at fixed parameters (γ=0.12) · gjr_asymmetric_n2000",
+  "expectedResult": "n=2, first=0, last=0",
+  "actualResult": "n=2, first=0, last=0",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "arch variance_bounds",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "Fixed-parameter variance path h_t (γ=-0.05, incl. t=0 term (α+γ/2+β)·b) · gjr_asymmetric_n2000",
+  "expectedResult": "n=2000, first=1.791837505, last=0.3355671236",
+  "actualResult": "n=2000, first=1.791837505, last=0.3355671236",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-10
+  },
+  "maxAbsError": 1.1102230246251565e-15,
+  "maxRelError": 6.196002827443876e-16,
+  "n": 2000,
+  "passed": true,
+  "evidence": {
+   "reference": "arch GARCH.compute_variance (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "Fixed-parameter Gaussian log-likelihood (γ=-0.05) · gjr_asymmetric_n2000",
+  "expectedResult": "-2362.322971",
+  "actualResult": "-2362.322971",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-10
+  },
+  "maxAbsError": 4.547473508864641e-13,
+  "maxRelError": 1.925000757872519e-16,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy on arch variance path (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "numerical",
+  "testName": "Variance bounds inactive at fixed parameters (γ=-0.05) · gjr_asymmetric_n2000",
+  "expectedResult": "n=2, first=0, last=0",
+  "actualResult": "n=2, first=0, last=0",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "arch variance_bounds",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "Maximized ℓ_y ≥ ℓ_arch − 1e-4 · gjr_asymmetric_n2000",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "arch fit loglikelihood (SLSQP) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0",
+  "notes": "Δℓ_y = 3.64e-11"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "Fitted μ, ω, α, γ, β vs arch (error in SE units) · gjr_asymmetric_n2000",
+  "expectedResult": "n=5, first=0.000000000, last=0.000000000",
+  "actualResult": "n=5, first=-0.000002314815902, last=-0.000002792261851",
+  "tolerance": {
+   "abs": 0.05,
+   "rel": 0
+  },
+  "maxAbsError": 0.000006776526826700603,
+  "maxRelError": 0,
+  "n": 5,
+  "passed": true,
+  "evidence": {
+   "reference": "arch_model(p=1,o=1,q=1).fit(backcast=…) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0",
+  "notes": "ours y-units: mu=0.0547405, omega=0.0151611, alpha=0.00930184, gamma=0.154049, beta=0.891696"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "AIC / BIC with k = 5 (y units) · gjr_asymmetric_n2000",
+  "expectedResult": "n=2, first=4485.603405, last=4513.607917",
+  "actualResult": "n=2, first=4485.603405, last=4513.607917",
+  "tolerance": {
+   "abs": 0.0002,
+   "rel": 0
+  },
+  "maxAbsError": 7.275957614183426e-11,
+  "maxRelError": 1.6220688629270436e-14,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "arch fit aic / bic (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "numerical",
+  "testName": "Converged, interior optimum, bounds inactive · gjr_asymmetric_n2000",
+  "expectedResult": "n=2, first=CONVERGED, last=0",
+  "actualResult": "n=2, first=CONVERGED, last=0",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "Optimizer diagnostics",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0",
+  "notes": "iter 1836, evals 3395, γ̂=0.15405"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "Backcast and variance bounds · gjr_true_gamma0_n800",
+  "expectedResult": "n=1601, first=0.9042400926, last=786115.6276",
+  "actualResult": "n=1601, first=0.9042400926, last=786115.6276",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-9
+  },
+  "maxAbsError": 6.984919309616089e-10,
+  "maxRelError": 7.638272710834735e-16,
+  "n": 1601,
+  "passed": true,
+  "evidence": {
+   "reference": "arch GARCH(1,1,1).backcast / variance_bounds (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "Fixed-parameter variance path h_t (γ=0, incl. t=0 term (α+γ/2+β)·b) · gjr_true_gamma0_n800",
+  "expectedResult": "n=800, first=0.9090280880, last=0.8566585136",
+  "actualResult": "n=800, first=0.9090280880, last=0.8566585136",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-10
+  },
+  "maxAbsError": 2.220446049250313e-16,
+  "maxRelError": 4.216096892019324e-16,
+  "n": 800,
+  "passed": true,
+  "evidence": {
+   "reference": "arch GARCH.compute_variance (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "Fixed-parameter Gaussian log-likelihood (γ=0) · gjr_true_gamma0_n800",
+  "expectedResult": "-1021.109404",
+  "actualResult": "-1021.109404",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-10
+  },
+  "maxAbsError": 2.2737367544323206e-13,
+  "maxRelError": 2.2267317730075064e-16,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy on arch variance path (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "numerical",
+  "testName": "Variance bounds inactive at fixed parameters (γ=0) · gjr_true_gamma0_n800",
+  "expectedResult": "n=2, first=0, last=0",
+  "actualResult": "n=2, first=0, last=0",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "arch variance_bounds",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "Maximized ℓ_y ≥ ℓ_arch − 1e-4 · gjr_true_gamma0_n800",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "arch fit loglikelihood (SLSQP) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0",
+  "notes": "Δℓ_y = 6.14e-12"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "Fitted μ, ω, α, γ, β vs arch (error in SE units) · gjr_true_gamma0_n800",
+  "expectedResult": "n=5, first=0.000000000, last=0.000000000",
+  "actualResult": "n=5, first=3.391991213e-7, last=-0.000001344351955",
+  "tolerance": {
+   "abs": 0.05,
+   "rel": 0
+  },
+  "maxAbsError": 0.0000022685973936756294,
+  "maxRelError": 0,
+  "n": 5,
+  "passed": true,
+  "evidence": {
+   "reference": "arch_model(p=1,o=1,q=1).fit(backcast=…) (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0",
+  "notes": "ours y-units: mu=0.0274054, omega=0.0521132, alpha=0.0980456, gamma=-0.0412181, beta=0.855761"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "independent-benchmark",
+  "testName": "AIC / BIC with k = 5 (y units) · gjr_true_gamma0_n800",
+  "expectedResult": "n=2, first=2047.589758, last=2071.012817",
+  "actualResult": "n=2, first=2047.589758, last=2071.012817",
+  "tolerance": {
+   "abs": 0.0002,
+   "rel": 0
+  },
+  "maxAbsError": 1.2278178473934531e-11,
+  "maxRelError": 5.9964054938868194e-15,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "arch fit aic / bic (Python 3.13.12 · arch 8.0.0 · numpy 2.4.3)",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "numerical",
+  "testName": "Converged, interior optimum, bounds inactive · gjr_true_gamma0_n800",
+  "expectedResult": "n=2, first=CONVERGED, last=0",
+  "actualResult": "n=2, first=CONVERGED, last=0",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "Optimizer diagnostics",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0",
+  "notes": "iter 1713, evals 3205, γ̂=-0.04122"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "numerical",
+  "testName": "Parameter recovery within 3 SE of truth (μ=0.05, ω=0.02, α=0.03, γ=0.12, β=0.88, y units)",
+  "expectedResult": "n=5, first=0.000000000, last=0.000000000",
+  "actualResult": "n=5, first=0.3187375768, last=0.7755378377",
+  "tolerance": {
+   "abs": 3,
+   "rel": 0
+  },
+  "maxAbsError": 1.5598460150339177,
+  "maxRelError": 0,
+  "n": 5,
+  "passed": true,
+  "evidence": {
+   "reference": "Asymptotic normality of MLE; SE from arch",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0",
+  "notes": "z = 0.32, -1.41, -1.44, 1.56, 0.78"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "numerical",
+  "testName": "γ = 0 identity: GJR recursion equals VOL-003 GARCH recursion",
+  "expectedResult": "n=2001, first=-2281.276286, last=0.4529132301",
+  "actualResult": "n=2001, first=-2281.276286, last=0.4529132301",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-14
+  },
+  "maxAbsError": 8.881784197001252e-16,
+  "maxRelError": 4.529742368851472e-16,
+  "n": 2001,
+  "passed": true,
+  "evidence": {
+   "reference": "Nested model",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "numerical",
+  "testName": "Hand-checkable h_0..h_2 (asymmetry applied after the negative shock only)",
+  "expectedResult": "n=3, first=1.844921377, last=1.444011475",
+  "actualResult": "n=3, first=1.844921377, last=1.444011475",
+  "tolerance": {
+   "abs": 1e-15,
+   "rel": 1e-14
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 3,
+  "passed": true,
+  "evidence": {
+   "reference": "Manual calculation",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ },
+ {
+  "modelId": "VOL-004",
+  "validationType": "numerical",
+  "testName": "Constant, short (<100) and non-finite inputs rejected",
+  "expectedResult": "n=3, first=true, last=true",
+  "actualResult": "n=3, first=true, last=true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 3,
+  "passed": true,
+  "evidence": {
+   "reference": "Spec",
+   "dataset": "SYNTHETIC TEST DATA — vol004-benchmark/1.0.0, seed 20261030"
+  },
+  "validationDate": "2026-10-30",
+  "implementationVersion": "quant-engine/vol004-gjr-garch111@1.0.0"
+ }
+]

@@ -6,3 +6,4 @@ export * from './rolling';
 export * from './ewma';
 export * from './models';
 export * from './garch';
+export * from './gjr-garch';

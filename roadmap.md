@@ -9,3 +9,8 @@
 # Skill quant-model-workflow
 - [x] Add improved skill with Model Design Review and proportional validation
 - [x] Apply targeted review: activation, benchmark lifecycle, approval gate, provenance
+
+# VOL-004 GJR-GARCH
+- [x] Engine, unit tests, arch benchmark (23/23), registry/matrix, UI panel, docs, CI step
+- [x] Browser check /volatility (AAPL 2y, no page errors)
+- [ ] Quality checks on a recorded commit → then COMPLETED
