@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   quality:
-    name: TypeScript, regression, VOL-005 and production build
+    name: TypeScript, regression, VOL-004/VOL-005 and production build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +34,9 @@ jobs:
       - name: VOL-005 benchmark and observed-record reproduction
         if: ${{ !cancelled() }}
         run: bun validation/run-vol005.ts
+      - name: VOL-004 benchmark vs approved arch fixture
+        if: ${{ !cancelled() }}
+        run: bun validation/run-vol004.ts
       - name: Production build (no deployment)
         if: ${{ !cancelled() }}
         run: bun run build
