@@ -2,6 +2,7 @@ import { historicalVolatility } from './historical';
 import { rollingVolatility } from './rolling';
 import { ewmaVolatility } from './ewma';
 import { garchModel } from './garch';
+import { gjrGarchModel } from './gjr-garch';
 import type { VolatilityModel } from './types';
 
 export const historicalModel: VolatilityModel = {
@@ -23,7 +24,7 @@ export const ewmaModel = (lambda: number): VolatilityModel => ({
   calculate: (r, d) => ewmaVolatility(r, d, lambda),
 });
 
-/** Default comparison set. Future: EGARCH, GJR-GARCH register here. */
+/** Default in-sample comparison set (not the VOL-005 OOS set, which is defined separately). */
 export const comparisonModels = (lambda: number): VolatilityModel[] => [
-  historicalModel, rollingModel(20), rollingModel(60), ewmaModel(lambda), garchModel,
+  historicalModel, rollingModel(20), rollingModel(60), ewmaModel(lambda), garchModel, gjrGarchModel,
 ];
