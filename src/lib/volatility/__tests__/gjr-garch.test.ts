@@ -30,11 +30,13 @@ describe('GJR recursion', () => {
     // ε_0 = 0 → no γ contribution (ε² = 0 anyway) and r_0 = μ gives the symmetric branch.
     const h = gjrRecursion([0.5, 0], p, 1).h; expect(h[1]).toBeCloseTo(0.1 + 0.5 * h[0], 14);
   });
-  it('γ = 0 reproduces the VOL-003 GARCH recursion exactly (same backcast and bounds)', () => {
+  it('γ = 0 reproduces the VOL-003 GARCH recursion (≤ 1e-14 relative) (same backcast and bounds)', () => {
     const y = fx.cases.gjr_asymmetric_n2000.y, m = y.reduce((a, b) => a + b, 0) / y.length, e0 = y.map((v) => v - m);
     const b = garchBackcast(e0), bd = garchVarianceBounds(e0), q = { mu: 0.05, omega: 0.02, alpha: 0.08, beta: 0.9 };
     const g = garchRecursion(y, q, b, bd), j = gjrRecursion(y, { ...q, gamma: 0 }, b, bd);
-    expect(j.logLik).toBe(g.logLik); j.h.forEach((v, t) => expect(v).toBe(g.h[t]));
+    // Equal up to floating-point operation order (e·e vs e**2): ≤ 1e-14 relative, as fixed in the design review.
+    expect(Math.abs(j.logLik - g.logLik) / Math.abs(g.logLik)).toBeLessThan(1e-14);
+    j.h.forEach((v, t) => expect(Math.abs(v - g.h[t]) / g.h[t]).toBeLessThan(1e-14));
   });
   it('no look-ahead: a shock at t=500 first enters h_501', () => {
     const p: GjrParams = { mu: 0, omega: 0.02, alpha: 0.03, gamma: 0.12, beta: 0.88 }, y = fx.cases.gjr_asymmetric_n2000.y;
