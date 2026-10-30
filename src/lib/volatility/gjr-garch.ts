@@ -1,5 +1,6 @@
 /**
  * VOL-004 — GJR-GARCH(1,1,1), constant mean, Gaussian MLE (in-sample estimation only).
+ * Spec: docs/quant/asymmetric-garch.md
  *
  * Mathematical specification:
  *   r_t = μ + ε_t,  ε_t = √h_t z_t,  z_t ~ N(0,1)
