@@ -91,6 +91,8 @@ export interface GjrFit {
   status: GjrStatus;
   /** |γ| < 1e-6: estimate coincides with the nested GARCH(1,1) (interior point, informational). */
   nestedGarch: boolean;
+  /** Which candidate was selected by the final likelihood comparison ('none' when neither is valid). */
+  selectedCandidate: 'optimizer' | 'nested-garch' | 'none';
   /** In-sample comparison with the VOL-003 fit on the same data (information only, no test). */
   nested: { garchLogLik: number; garchAic: number; deltaLogLik: number; deltaAic: number } | null;
   diagnostics: { iterations: number; evaluations: number; restarts: number; nonFinite: number; reason: string; boundHits: number; nearBoundary: string[] };
@@ -98,8 +100,18 @@ export interface GjrFit {
 
 /**
  * Fit GJR-GARCH(1,1,1) by Gaussian MLE on daily decimal log returns (from the Returns Engine).
- * Starts: arch's own grid (α, γ ∈ {0.01,0.05,0.1,0.2}, ρ ∈ {0.5,0.7,0.9,0.98}) — best 3 — plus the
- * converged VOL-003 optimum with γ ≈ 0, which guarantees ℓ_GJR ≥ ℓ_GARCH up to optimizer tolerance.
+ *
+ * Starts: the project's deterministic multi-start grid, using the same grid VALUES as arch v8.0.0
+ * `GARCH.starting_values` (α, γ ∈ {0.01,0.05,0.1,0.2}, ρ ∈ {0.5,0.7,0.9,0.98}; ω = (1−ρ)·mean ε²),
+ * but NOT identical to arch: points with β ≤ 0 are skipped, the best 3 (not 1) are refined, and the
+ * VOL-003 optimum (γ = 1e-6) is added as a further seed. Source:
+ * https://github.com/bashtage/arch/blob/v8.0.0/arch/univariate/volatility.py (GARCH.starting_values).
+ *
+ * Nested-likelihood safeguard: a start value alone does NOT guarantee ℓ_GJR ≥ ℓ_GARCH. After the
+ * optimizer, the converged VOL-003 solution is evaluated EXACTLY as a GJR candidate with γ = 0 (same
+ * returns, backcast, bounds, 100·r units, Gaussian likelihood; with γ = 0 the GJR recursion — incl.
+ * t = 0 — equals VOL-003's), and the valid candidate with the higher likelihood is selected. This is
+ * a numerical-correctness safeguard, not a statistical claim about asymmetry.
  */
 export function fitGjrGarch(r: number[]): GjrFit {
   if (!r.every(Number.isFinite)) throw new GjrInputError('GJR-GARCH: returns contain non-finite values');
@@ -121,8 +133,9 @@ export function fitGjrGarch(r: number[]): GjrFit {
   starts.sort((x, z) => x.f - z.f);
   const seeds = starts.slice(0, 3).map((s) => s.th);
   const g0 = cachedFitGarch(r).fit;
-  if (g0 && g0.status !== 'NOT_CONVERGED' && g0.params.alpha > 1e-8 && g0.params.beta > 1e-8 && g0.persistence < 1) {
-    seeds.push(gjrFromParams({ mu: g0.params.mu * S, omega: g0.params.omega * S2, alpha: g0.params.alpha, gamma: 1e-6, beta: g0.params.beta }));
+  const garchValid = !!g0 && g0.status !== 'NOT_CONVERGED' && Number.isFinite(g0.logLik);
+  if (garchValid && g0!.params.alpha > 1e-8 && g0!.params.beta > 1e-8 && g0!.persistence < 1) {
+    seeds.push(gjrFromParams({ mu: g0!.params.mu * S, omega: g0!.params.omega * S2, alpha: g0!.params.alpha, gamma: 1e-6, beta: g0!.params.beta }));
   }
 
   let best = { x: seeds[0], f: Infinity, iterations: 0, evaluations: 0, converged: false, nonFinite: 0, reason: '' };
@@ -135,7 +148,18 @@ export function fitGjrGarch(r: number[]): GjrFit {
     res = re;
     if (res.f < best.f) best = res;
   }
-  const qy = gjrToParams(best.x), rec = gjrRecursion(y, qy, b, bounds);
+
+  // Candidate A: optimizer. Candidate B: exact nested VOL-003 solution with γ = 0 (scaled units).
+  const optOk = best.converged && Number.isFinite(best.f);
+  const qOpt = gjrToParams(best.x), recOpt = gjrRecursion(y, qOpt, b, bounds);
+  const qNest: GjrParams | null = garchValid
+    ? { mu: g0!.params.mu * S, omega: g0!.params.omega * S2, alpha: g0!.params.alpha, gamma: 0, beta: g0!.params.beta } : null;
+  const recNest = qNest ? gjrRecursion(y, qNest, b, bounds) : null;
+  const nestOk = !!recNest && Number.isFinite(recNest.logLik);
+  const useNested = nestOk && (!optOk || !Number.isFinite(recOpt.logLik) || recNest!.logLik > recOpt.logLik);
+  const qy = useNested ? qNest! : qOpt, rec = useNested ? recNest! : recOpt;
+  const ok = useNested || optOk;
+
   const params: GjrParams = { mu: qy.mu / S, omega: qy.omega / S2, alpha: qy.alpha, gamma: qy.gamma, beta: qy.beta };
   const persistence = gjrPersistence(params);
   const variance = rec.h.map((v) => v / S2);
@@ -146,7 +170,6 @@ export function fitGjrGarch(r: number[]): GjrFit {
     params.beta < NEAR_BOUNDARY.beta && 'β ≈ 0',
     persistence > NEAR_BOUNDARY.persistence && 'ρ ≈ 1',
   ].filter(Boolean) as string[];
-  const ok = best.converged && Number.isFinite(best.f);
   const aic = -2 * logLik + 10;
   return {
     params, persistence, unconditionalVariance: persistence < 1 ? params.omega / (1 - persistence) : null,
@@ -156,8 +179,9 @@ export function fitGjrGarch(r: number[]): GjrFit {
     logLik, aic, bic: -2 * logLik + 5 * Math.log(n), nobs: n, k: 5, backcast: b / S2,
     status: !ok ? 'NOT_CONVERGED' : near.length ? 'CONVERGED_NEAR_BOUNDARY' : 'CONVERGED',
     nestedGarch: Math.abs(params.gamma) < GJR_NESTED_TOL,
-    nested: g0 && g0.status !== 'NOT_CONVERGED' ? { garchLogLik: g0.logLik, garchAic: g0.aic, deltaLogLik: logLik - g0.logLik, deltaAic: aic - g0.aic } : null,
-    diagnostics: { iterations: iters, evaluations: evalsTot, restarts, nonFinite: nonF, reason: best.reason, boundHits: rec.boundHits, nearBoundary: near },
+    selectedCandidate: !ok ? 'none' : useNested ? 'nested-garch' : 'optimizer',
+    nested: garchValid ? { garchLogLik: g0!.logLik, garchAic: g0!.aic, deltaLogLik: logLik - g0!.logLik, deltaAic: aic - g0!.aic } : null,
+    diagnostics: { iterations: iters, evaluations: evalsTot, restarts, nonFinite: nonF, reason: useNested && !optOk ? `optimizer: ${best.reason}; nested GARCH candidate selected` : best.reason, boundHits: rec.boundHits, nearBoundary: near },
   };
 }
 
