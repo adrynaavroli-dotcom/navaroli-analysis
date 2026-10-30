@@ -1,6 +1,6 @@
 ---
 name: quant-model-workflow
-description: Use when designing, implementing, changing, validating, benchmarking, documenting or closing a quantitative model of the Navaroli Quantitative Project Matrix (returns, volatility, GARCH, correlation, time series, risk, portfolio), or when a matrix ID such as VOL-004, COR-004 or RSK-001 is mentioned. Not for purely conceptual explanations or study questions.
+description: Use when designing, implementing, changing, validating, benchmarking, documenting or closing a quantitative model of the Navaroli Quantitative Project Matrix (returns, volatility, GARCH, correlation, time series, risk, portfolio), including work referenced by a matrix ID such as VOL-004, COR-004 or RSK-001. A model ID alone does not trigger it; skip purely conceptual explanations and study questions.
 ---
 
 # Skill: quant-model-workflow
@@ -31,7 +31,9 @@ Activate this Skill when the user requests:
 - Out-of-sample evaluation or statistical backtesting.
 - Integration of a quantitative model into the application.
 - Technical documentation or matrix status changes related to model implementation.
-- Work explicitly associated with an item in the quantitative matrix (e.g. VOL-004, COR-004, RSK-001).
+- Other project-level work on a matrix item (e.g. VOL-004, COR-004, RSK-001).
+
+Mentioning a model ID alone does not activate the workflow; the request must involve implementation, modification, validation, benchmarking, documentation or other project-level work.
 
 Do not activate it for purely conceptual questions, mathematical explanations, study summaries, exam exercises or general discussions that do not modify the project.
 
@@ -50,6 +52,7 @@ Do not activate it for purely conceptual questions, mathematical explanations, s
 - Other data types (rates, option chains, financial statements, etc.) must use their corresponding established data interfaces.
 - Document source, frequency, currency, units, corporate-action treatment, missing-data handling and historical coverage.
 - Never silently interpolate, forward-fill or alter observations unless explicitly justified by the model specification.
+- For models using historical market data, record snapshot-level provenance: source and extraction date, historical period and frequency, currency and timezone, corporate-action adjustment convention, cleaning/exclusion rules, and dataset version or hash when practical. Skip metadata irrelevant to models that use no historical market data.
 
 ### 3.3 Reuse and regression protection
 - Inspect existing modules before creating new implementations.
@@ -58,9 +61,11 @@ Do not activate it for purely conceptual questions, mathematical explanations, s
 - Never refactor validated models merely to make a new implementation look more uniform.
 - Preserve existing outputs and evidence unless a verified defect requires modification.
 
-## 4. Model Design Review (required before any code)
+## 4. Model Design Review
 
-Before Phase 0 ends, write a short design card and get the user's agreement on it. Skipping it is what causes later rewrites of validated work.
+Before Phase 0 ends, write a short design card. Skipping it is what causes later rewrites of validated work.
+
+Require explicit user approval of the card before coding when the task involves a new quantitative model, changes to mathematical definitions or estimation methodology, changes to data conventions, shared architecture or dependencies, or material changes to validation methodology. Clearly scoped, low-risk maintenance, documentation or isolated UI changes with no mathematical impact may proceed without a separate approval round; the regression and evidence requirements still apply where relevant.
 
 | Field | Content |
 | --- | --- |
@@ -172,7 +177,12 @@ Do not treat a successful synthetic benchmark as proof of predictive performance
 
 For cross-runtime comparisons (e.g. V8 versus JavaScriptCore), use exact equality for substantive fields where appropriate and named numerical tolerances only where floating-point differences justify them. Never loosen tolerances solely to make a failing comparison pass.
 
-Validation runners must compare against persisted reference evidence before updating or overwriting it. A failed comparison must not silently bless new results.
+Benchmark reference lifecycle:
+- For a new model, generate the initial reference outputs with the independent implementation and record library/version, configuration, parameter mapping, units, data and environment.
+- Have the initial reference reviewed and approved before committing it.
+- Normal validation runners are read-only with respect to approved benchmark fixtures; a failed comparison must never overwrite or automatically regenerate them.
+- Any later reference update requires an explicit reason, review and a traceable version change.
+- Keep generated run evidence separate from approved benchmark fixtures.
 
 ### Phase 4 — UI integration
 

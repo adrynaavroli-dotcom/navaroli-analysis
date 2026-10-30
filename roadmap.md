@@ -8,3 +8,4 @@
 - [x] Final diff and factual report
 # Skill quant-model-workflow
 - [x] Add improved skill with Model Design Review and proportional validation
+- [x] Apply targeted review: activation, benchmark lifecycle, approval gate, provenance
