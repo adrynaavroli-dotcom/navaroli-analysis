@@ -99,6 +99,16 @@ export interface GjrFit {
 }
 
 /**
+ * Final candidate selection: highest finite likelihood among VALID candidates. Ties keep the optimizer
+ * (an asymmetric optimum is never discarded unless the nested solution is strictly better).
+ */
+export function selectGjrCandidate(opt: { valid: boolean; logLik: number }, nest: { valid: boolean; logLik: number }): 'optimizer' | 'nested-garch' | 'none' {
+  const o = opt.valid && Number.isFinite(opt.logLik), g = nest.valid && Number.isFinite(nest.logLik);
+  if (o && g) return nest.logLik > opt.logLik ? 'nested-garch' : 'optimizer';
+  return o ? 'optimizer' : g ? 'nested-garch' : 'none';
+}
+
+/**
  * Fit GJR-GARCH(1,1,1) by Gaussian MLE on daily decimal log returns (from the Returns Engine).
  *
  * Starts: the project's deterministic multi-start grid, using the same grid VALUES as arch v8.0.0
@@ -156,9 +166,9 @@ export function fitGjrGarch(r: number[]): GjrFit {
     ? { mu: g0!.params.mu * S, omega: g0!.params.omega * S2, alpha: g0!.params.alpha, gamma: 0, beta: g0!.params.beta } : null;
   const recNest = qNest ? gjrRecursion(y, qNest, b, bounds) : null;
   const nestOk = !!recNest && Number.isFinite(recNest.logLik);
-  const useNested = nestOk && (!optOk || !Number.isFinite(recOpt.logLik) || recNest!.logLik > recOpt.logLik);
+  const sel = selectGjrCandidate({ valid: optOk, logLik: recOpt.logLik }, { valid: nestOk, logLik: recNest ? recNest.logLik : NaN });
+  const useNested = sel === 'nested-garch', ok = sel !== 'none';
   const qy = useNested ? qNest! : qOpt, rec = useNested ? recNest! : recOpt;
-  const ok = useNested || optOk;
 
   const params: GjrParams = { mu: qy.mu / S, omega: qy.omega / S2, alpha: qy.alpha, gamma: qy.gamma, beta: qy.beta };
   const persistence = gjrPersistence(params);
@@ -179,7 +189,7 @@ export function fitGjrGarch(r: number[]): GjrFit {
     logLik, aic, bic: -2 * logLik + 5 * Math.log(n), nobs: n, k: 5, backcast: b / S2,
     status: !ok ? 'NOT_CONVERGED' : near.length ? 'CONVERGED_NEAR_BOUNDARY' : 'CONVERGED',
     nestedGarch: Math.abs(params.gamma) < GJR_NESTED_TOL,
-    selectedCandidate: !ok ? 'none' : useNested ? 'nested-garch' : 'optimizer',
+    selectedCandidate: sel,
     nested: garchValid ? { garchLogLik: g0!.logLik, garchAic: g0!.aic, deltaLogLik: logLik - g0!.logLik, deltaAic: aic - g0!.aic } : null,
     diagnostics: { iterations: iters, evaluations: evalsTot, restarts, nonFinite: nonF, reason: useNested && !optOk ? `optimizer: ${best.reason}; nested GARCH candidate selected` : best.reason, boundHits: rec.boundHits, nearBoundary: near },
   };
