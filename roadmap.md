@@ -12,5 +12,5 @@
 
 # VOL-004 GJR-GARCH
 - [x] Engine, unit tests, arch benchmark (23/23), registry/matrix, UI panel, docs, CI step
-- [ ] Browser check /volatility
+- [x] Browser check /volatility (AAPL 2y, no page errors)
 - [ ] Quality checks on a recorded commit → then COMPLETED
