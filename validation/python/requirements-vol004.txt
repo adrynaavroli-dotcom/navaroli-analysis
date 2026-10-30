@@ -1,0 +1,5 @@
+# Pinned reference environment for the VOL-004 GJR-GARCH(1,1,1) benchmark (validation only —
+# never an application dependency). Install: python -m pip install -r validation/python/requirements-vol004.txt
+arch==8.0.0
+numpy==2.4.3
+scipy==1.18.0
