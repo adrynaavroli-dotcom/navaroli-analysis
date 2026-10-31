@@ -6,6 +6,7 @@ import sta002 from './evidence/sta002-results.json';
 import vol003 from './evidence/vol003-results.json';
 import vol004 from './evidence/vol004-results.json';
 import vol005 from './evidence/vol005-results.json';
+import por001 from './evidence/por001-results.json';
 import { validationStatus } from './compare';
 import type { ModelValidationPlan, ValidationResult } from './types';
 
