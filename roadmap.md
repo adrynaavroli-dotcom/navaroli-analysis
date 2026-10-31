@@ -18,3 +18,11 @@
 - [x] Browser smoke after nested-candidate change: GJR card + comparison row, γ=0.1414 asymmetric, ΔAIC −16.10, 2y→1y recalculation, no console errors
 - [x] Full Vitest 265/265, preview build OK
 - [ ] Quality checks on commit 3251f81 (blocked: pending GitHub sync after this turn) → then COMPLETED
+
+# POR-001 Minimum Variance Portfolio
+- [x] Model Design Review approved (active-set QP, reject ill-conditioned Σ, observed 4-asset snapshot, /portfolio page)
+- [x] Engine src/lib/portfolio/ (closed form + active-set QP + metrics + walk-forward) with 24 unit tests
+- [x] Independent numpy/scipy benchmark: 40/40, fixture approved read-only
+- [x] Observed walk-forward (AAPL/MSFT/SPY/TLT 2y): 17 origins, 0 failed, GMV 8.89% vs EW 12.08% realized vol; reproduction exact
+- [x] Registry plan, matrix IN PROGRESS (5 layers COMPLETED, Academic PLANNED), /portfolio page, docs, CI step
+- [ ] Quality checks on the closing commit (blocked: pending GitHub sync) → then COMPLETED
