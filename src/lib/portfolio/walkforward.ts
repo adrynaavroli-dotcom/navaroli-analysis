@@ -105,7 +105,7 @@ export function walkForward(panel: AlignedPanel, o: WalkForwardOptions = DEFAULT
     if (!S) continue; // warm-up: no estimate available yet
     const res = o.longOnly ? gmvLongOnly(S, o.maxWeight) : gmvClosedForm(S);
     if (res.status !== 'OK' || !res.weights) {
-      origins.push({ date: panel.dates[t], index: t, status: res.status, weights: null, conditionNumber: res.conditionNumber, realizedVol: null, hhi: null });
+      origins.push({ date: panel.dates[t], index: t, status: res.status, weights: null, conditionNumber: res.conditionNumber, realizedVol: null, ewRealizedVol: null, hhi: null });
       continue;
     }
     origins.push({
@@ -115,6 +115,7 @@ export function walkForward(panel: AlignedPanel, o: WalkForwardOptions = DEFAULT
       weights: res.weights,
       conditionNumber: res.conditionNumber,
       realizedVol: realizedVol(panel, res.weights, t + 1, t + 1 + o.rebalance),
+      ewRealizedVol: realizedVol(panel, ew, t + 1, t + 1 + o.rebalance),
       hhi: hhi(res.weights),
     });
   }
