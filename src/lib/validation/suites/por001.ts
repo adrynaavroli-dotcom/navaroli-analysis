@@ -20,7 +20,9 @@ export interface Por001Fixture {
 /**
  * Tolerances (fixed in the approved design review BEFORE comparing results):
  *  - closed-form weights: same linear solve, only floating-point order differs → 1e-10 absolute;
- *  - closed-form variance: 1e-12 relative;
+ *  - closed-form variance: 1e-12 relative for well-conditioned cases; for ill-conditioned Σ the
+ *    forward error of any linear solve scales with κ(Σ), so the tolerance is the condition-aware
+ *    bound max(1e-12, κ·1e-15) — i.e. κ·ε with a ~5× margin over machine epsilon, fixed a priori;
  *  - constrained weights: different solvers (active-set vs SLSQP), both exact for a convex QP → 1e-8 absolute;
  *  - constrained variance: 1e-10 relative, and ours must satisfy σ²_TS ≤ σ²_ref + 1e-12 (never worse);
  *  - KKT residual of our solution ≤ 1e-10 (optimality certificate);
