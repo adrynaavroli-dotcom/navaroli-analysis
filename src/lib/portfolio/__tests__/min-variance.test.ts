@@ -53,13 +53,14 @@ describe('gmvLongOnly', () => {
     expect(r.variance!).toBeCloseTo(0.01, 12);
   });
 
-  it('enforces the per-asset cap (σ²I, w_max = 0.3, N = 4 → [0.3, 0.3, 0.3, 0.1])', () => {
-    const S = [[0.01, 0, 0, 0], [0, 0.01, 0, 0], [0, 0, 0.01, 0], [0, 0, 0, 0.01]];
-    const r = gmvLongOnly(S, 0.3);
+  it('enforces the per-asset cap (diag([0.01, 0.01, 0.09]), w_max = 0.4 → [0.4, 0.4, 0.2])', () => {
+    // Closed form would be [0.474, 0.474, 0.053]; the cap binds on the two low-variance assets.
+    const S = [[0.01, 0, 0], [0, 0.01, 0], [0, 0, 0.09]];
+    const r = gmvLongOnly(S, 0.4);
     expect(r.status).toBe('OK');
-    const sorted = [...r.weights!].sort((a, b) => a - b);
-    expect(sorted[0]).toBeCloseTo(0.1, 10);
-    expect(sorted.slice(1).every((w) => Math.abs(w - 0.3) < 1e-10)).toBe(true);
+    expect(r.weights![0]).toBeCloseTo(0.4, 10);
+    expect(r.weights![1]).toBeCloseTo(0.4, 10);
+    expect(r.weights![2]).toBeCloseTo(0.2, 10);
   });
 
   it('reports INFEASIBLE when w_max < 1/N', () => {
