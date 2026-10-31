@@ -97,9 +97,8 @@ export function walkForward(panel: AlignedPanel, o: WalkForwardOptions = DEFAULT
 
   const ew = equalWeights(n);
   const origins: WalkForwardOrigin[] = [];
-  for (let t = 0; t + o.rebalance < T + 1 && t + o.rebalance <= T - 1 + 1; t += o.rebalance) {
-    // holding block: returns t+1 .. t+R (indices t+1 .. t+R inclusive → realizedVol(t+1, t+R+1))
-    if (t + o.rebalance >= T) break;
+  // Holding block of origin t: returns t+1 .. t+R, so the last valid origin has t + R ≤ T − 1.
+  for (let t = 0; t + o.rebalance < T; t += o.rebalance) {
     const S = covPath[t];
     if (!S) continue; // warm-up: no estimate available yet
     const res = o.longOnly ? gmvLongOnly(S, o.maxWeight) : gmvClosedForm(S);
