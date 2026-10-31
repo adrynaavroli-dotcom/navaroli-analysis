@@ -64,6 +64,7 @@ export default function PortfolioOptimization() {
   const wfChart = a?.wf.origins.filter((o) => o.status === 'OK').map((o) => ({
     date: o.date,
     gmv: o.realizedVol !== null ? +(o.realizedVol * 100).toFixed(2) : null,
+    ew: o.ewRealizedVol !== null ? +(o.ewRealizedVol * 100).toFixed(2) : null,
   })) ?? [];
 
   return (
@@ -135,7 +136,7 @@ export default function PortfolioOptimization() {
                       ))}</TableBody>
                     </Table>
                     <ResponsiveContainer width="100%" height={220}>
-                      <BarChart data={weightsData}><CartesianGrid strokeDasharray="3 3" className="stroke-muted" /><XAxis dataKey="ticker" fontSize={11} /><YAxis tickFormatter={(v) => `${v}%`} fontSize={11} /><Tooltip formatter={(v: number) => `${(v * 100).toFixed(1)}%`} />
+                      <BarChart data={weightsData}><CartesianGrid strokeDasharray="3 3" className="stroke-muted" /><XAxis dataKey="ticker" fontSize={11} /><YAxis tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} fontSize={11} /><Tooltip formatter={(v: number) => `${(v * 100).toFixed(1)}%`} />
                         <Bar dataKey="gmv" name="GMV" fill="hsl(var(--primary))">{weightsData.map((r) => <Cell key={r.ticker} />)}</Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -149,7 +150,7 @@ export default function PortfolioOptimization() {
         {a && !a.insufficient && (
           <Card>
             <CardHeader><CardTitle className="text-base">3. Walk-forward out-of-sample</CardTitle>
-              <CardDescription>Rolling {window}-day estimation, rebalanced every {DEFAULT_WALKFORWARD.rebalance} trading days; each origin uses only past returns. Out-of-sample: realized volatility over each holding block. Descriptive evidence — no superiority claim.</CardDescription></CardHeader>
+              <CardDescription>{estimator === 'ewma' ? 'EWMA' : `Rolling ${window}-day`} estimation, rebalanced every {DEFAULT_WALKFORWARD.rebalance} trading days; each origin uses only past returns. Out-of-sample: realized volatility over each holding block. Descriptive evidence — no superiority claim.</CardDescription></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
                 <div><div className="text-xs text-muted-foreground">Origins (converged)</div><div className="font-mono text-lg">{a.wf.summary.converged}/{a.wf.summary.origins}</div></div>
@@ -160,6 +161,7 @@ export default function PortfolioOptimization() {
               <ResponsiveContainer width="100%" height={240}>
                 <LineChart data={wfChart}><CartesianGrid strokeDasharray="3 3" className="stroke-muted" /><XAxis dataKey="date" fontSize={10} minTickGap={40} /><YAxis fontSize={11} unit="%" /><Tooltip /><Legend />
                   <Line type="monotone" dataKey="gmv" name="GMV realized vol (%)" stroke="hsl(var(--primary))" dot={false} strokeWidth={2} />
+                  <Line type="monotone" dataKey="ew" name="Equal weight realized vol (%)" stroke="hsl(var(--muted-foreground))" dot={false} strokeWidth={1.5} strokeDasharray="4 3" />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>

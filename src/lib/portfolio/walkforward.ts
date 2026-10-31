@@ -45,6 +45,8 @@ export interface WalkForwardOrigin {
   conditionNumber: number | null;
   /** Annualized realized volatility over the holding block; null when the origin failed. */
   realizedVol: number | null;
+  /** Equal-weight realized volatility over the same holding block (benchmark). */
+  ewRealizedVol: number | null;
   hhi: number | null;
 }
 
@@ -103,7 +105,7 @@ export function walkForward(panel: AlignedPanel, o: WalkForwardOptions = DEFAULT
     if (!S) continue; // warm-up: no estimate available yet
     const res = o.longOnly ? gmvLongOnly(S, o.maxWeight) : gmvClosedForm(S);
     if (res.status !== 'OK' || !res.weights) {
-      origins.push({ date: panel.dates[t], index: t, status: res.status, weights: null, conditionNumber: res.conditionNumber, realizedVol: null, hhi: null });
+      origins.push({ date: panel.dates[t], index: t, status: res.status, weights: null, conditionNumber: res.conditionNumber, realizedVol: null, ewRealizedVol: null, hhi: null });
       continue;
     }
     origins.push({
@@ -113,6 +115,7 @@ export function walkForward(panel: AlignedPanel, o: WalkForwardOptions = DEFAULT
       weights: res.weights,
       conditionNumber: res.conditionNumber,
       realizedVol: realizedVol(panel, res.weights, t + 1, t + 1 + o.rebalance),
+      ewRealizedVol: realizedVol(panel, ew, t + 1, t + 1 + o.rebalance),
       hhi: hhi(res.weights),
     });
   }
@@ -120,7 +123,7 @@ export function walkForward(panel: AlignedPanel, o: WalkForwardOptions = DEFAULT
   const ok = origins.filter((x) => x.status === 'OK' && x.realizedVol !== null && Number.isFinite(x.realizedVol));
   const mean = (xs: number[]) => (xs.length ? xs.reduce((a, v) => a + v, 0) / xs.length : null);
   const gmvVols = ok.map((x) => x.realizedVol!);
-  const ewVols = ok.map((x) => realizedVol(panel, ew, x.index + 1, x.index + 1 + o.rebalance)).filter(Number.isFinite);
+  const ewVols = ok.map((x) => x.ewRealizedVol!).filter(Number.isFinite);
   const turns: number[] = [];
   for (let i = 1; i < ok.length; i++) turns.push(turnover(ok[i - 1].weights!, ok[i].weights!));
 
