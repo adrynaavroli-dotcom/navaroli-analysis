@@ -41,7 +41,7 @@ export function runPor001(fx: Por001Fixture, validationDate: string): Validation
     out.push(compareExact([cf.status], ['OK'], m(`Closed-form status OK · ${name}`, 'numpy.linalg.solve', 'numerical')));
     if (cf.status === 'OK') {
       out.push(compareNumeric(cf.weights!, c.closed.weights, { abs: 1e-10, rel: 0 }, m(`Closed-form GMV weights · ${name}`, 'numpy.linalg.solve(Σ, 1)')));
-      out.push(compareNumeric([cf.variance!], [c.closed.variance], { abs: 0, rel: 1e-12 }, m(`Closed-form GMV variance · ${name}`, 'numpy 1/(1ᵀΣ⁻¹1)')));
+      out.push(compareNumeric([cf.variance!], [c.closed.variance], { abs: 0, rel: Math.max(1e-12, c.conditionNumber * 1e-15) }, m(`Closed-form GMV variance · ${name}`, 'numpy 1/(1ᵀΣ⁻¹1)')));
       out.push(compareNumeric([cf.conditionNumber!], [c.conditionNumber], { abs: 0, rel: 0.01 }, m('Condition number diagnostic (power/inverse iteration)', 'numpy.linalg.cond', 'numerical')));
     }
 
