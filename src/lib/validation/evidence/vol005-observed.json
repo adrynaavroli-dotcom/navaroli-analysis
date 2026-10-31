@@ -1383,7 +1383,7 @@
    }
   ]
  },
- "runtimeMs": 506,
+ "runtimeMs": 599,
  "implementationVersion": "quant-engine/vol005-forecast-eval@1.0.0",
- "evaluatedAt": "2026-10-31T19:21:13.030Z"
+ "evaluatedAt": "2026-10-23T09:09:57.698Z"
 }

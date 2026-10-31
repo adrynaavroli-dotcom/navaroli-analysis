@@ -17,7 +17,7 @@
    "reference": "Nasdaq (api.nasdaq.com) vs Yahoo Finance (split-adjusted close (both providers))",
    "dataset": "AAPL 2024-01-01 → 2026-10-17 (snapshot dat001-snapshot/1.0.0, retrieved 2026-10-17T14:35:06+00:00)"
   },
-  "validationDate": "2026-10-31",
+  "validationDate": "2026-10-18",
   "implementationVersion": "quant-engine/dat001-ingestion@1.0.0"
  },
  {
@@ -26,7 +26,7 @@
   "testName": "Overlap coverage ≥ 95% of Nasdaq observations",
   "reference": "Nasdaq (api.nasdaq.com) vs Yahoo Finance (split-adjusted close (both providers))",
   "dataset": "AAPL 2024-01-01 → 2026-10-17 (snapshot dat001-snapshot/1.0.0, retrieved 2026-10-17T14:35:06+00:00)",
-  "validationDate": "2026-10-31",
+  "validationDate": "2026-10-18",
   "implementationVersion": "quant-engine/dat001-ingestion@1.0.0",
   "expectedResult": "≥ 380",
   "actualResult": "400",
@@ -50,7 +50,7 @@
   "testName": "CSV import round-trip: Yahoo snapshot → importCSV → buildReturnsDataset",
   "reference": "Nasdaq (api.nasdaq.com) vs Yahoo Finance (split-adjusted close (both providers))",
   "dataset": "AAPL 2024-01-01 → 2026-10-17 (snapshot dat001-snapshot/1.0.0, retrieved 2026-10-17T14:35:06+00:00)",
-  "validationDate": "2026-10-31",
+  "validationDate": "2026-10-18",
   "implementationVersion": "quant-engine/dat001-ingestion@1.0.0",
   "expectedResult": "700 log returns",
   "actualResult": "700 returns from 701 prices",
