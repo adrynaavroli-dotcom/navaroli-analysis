@@ -209,10 +209,11 @@ export function gmvLongOnly(S: Matrix, maxWeight = 1): MinVarianceResult {
       if (Math.abs(budget - 1) > 1e-9) return fail('INFEASIBLE', 'active-set', cond, iter);
       // KKT at a vertex: need max_{upper} g ≤ min_{lower} g for some λ to exist.
       const g = grad(w);
+      // KKT at a vertex needs some λ with g_i ≥ λ at lower bounds and g_i ≤ λ at upper bounds.
       let lo = -Infinity, hi = Infinity;
       for (let i = 0; i < n; i++) {
-        if (fixed[i] === 1) lo = Math.max(lo, -Infinity), hi = Math.min(hi, g[i]); // lower: g_i ≥ λ
-        else hi = Math.min(hi, g[i]), lo = Math.max(lo, g[i]); // upper: g_i ≤ λ
+        if (fixed[i] === 1) hi = Math.min(hi, g[i]); // lower bound: g_i ≥ λ
+        else lo = Math.max(lo, g[i]); // upper bound: g_i ≤ λ
       }
       if (lo <= hi + KKT_TOL) {
         return { status: 'OK', method: 'active-set', weights: w.slice(), variance: quad(w, S), conditionNumber: cond, iterations: iter, kktResidual: Math.max(0, lo - hi) };
