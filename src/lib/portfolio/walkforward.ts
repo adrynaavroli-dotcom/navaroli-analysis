@@ -45,6 +45,8 @@ export interface WalkForwardOrigin {
   conditionNumber: number | null;
   /** Annualized realized volatility over the holding block; null when the origin failed. */
   realizedVol: number | null;
+  /** Equal-weight realized volatility over the same holding block (benchmark). */
+  ewRealizedVol: number | null;
   hhi: number | null;
 }
 
