@@ -162,10 +162,11 @@ export const quantitativeProjectMatrix: MatrixItem[] = [
 
   /* ===== Phase 5 — Portfolio ===== */
   item({ id: 'POR-001', module: 'Portfolio', submodule: 'Minimum Variance Portfolio', concept: 'Global minimum variance',
-    mathematicalModel: 'w = Σ⁻¹1 / (1ᵀΣ⁻¹1)', mathematicalConcepts: ['Quadratic optimization'], requiredData: [D.derived],
-    implementation: 'Planned: src/lib/portfolio/', validation: ['Unit tests', 'Benchmark against independent implementation', 'Out-of-sample testing'],
-    professionalUse: ['Portfolio Management'], priority: 'P0', status: 'NOT STARTED', dependencies: ['DAT-003', 'COR-001'],
-    nextAction: 'Closed form first, then constrained QP', portfolioValue: 'HIGH', master: R.mpt, phase: 5, docPath: '/quant/portfolio/minimum-variance' }),
+    mathematicalModel: 'w = Σ⁻¹1 / (1ᵀΣ⁻¹1); long-only: min ½wᵀΣw s.t. 1ᵀw = 1, 0 ≤ w_i ≤ w_max (active-set QP)', mathematicalConcepts: ['Quadratic optimization', 'KKT conditions'], requiredData: [D.derived],
+    implementation: 'src/lib/portfolio/ · gmvClosedForm(), gmvLongOnly(), walkForward()', validation: ['Unit tests', 'Benchmark against independent implementation', 'Out-of-sample testing'],
+    professionalUse: ['Portfolio Management'], priority: 'P0', status: 'IN PROGRESS', layers: layers(PL, CO, CO, CO, CO, CO), dependencies: ['DAT-003', 'COR-001'],
+    nextAction: 'Awaiting CI Quality checks on the closing commit to mark COMPLETED', portfolioValue: 'HIGH', master: R.mpt, phase: 5, docPath: '/quant/portfolio/minimum-variance', livePath: '/portfolio',
+    limitations: ['GMV uses no expected-return estimates; it minimizes variance only', 'Sample covariance requires window > N (singular otherwise → explicit SINGULAR state, no silent ridge)', 'Ill-conditioned Σ is reported via its condition number, not regularized (shrinkage is COR-004)', 'Walk-forward assumes exact rebalancing to target weights; transaction costs are POR-006', 'OOS evidence is descriptive (one 4-asset universe, ~2 years); no statistical significance test'] }),
   item({ id: 'POR-002', module: 'Portfolio', submodule: 'Maximum Sharpe Portfolio', concept: 'Tangency portfolio',
     mathematicalModel: 'w ∝ Σ⁻¹(μ − r_f)', mathematicalConcepts: ['Sharpe ratio', 'Capital market line'], requiredData: [D.derived, D.rates],
     implementation: 'Planned', validation: ['Unit tests', 'Sensitivity analysis', 'Out-of-sample testing'], professionalUse: ['Portfolio Management', 'Investment Research'],

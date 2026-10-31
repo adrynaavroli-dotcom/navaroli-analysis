@@ -15,6 +15,7 @@ const publicNavLinks = [
   { href: '/options-pricing', label: 'Options' },
   { href: '/volatility', label: 'Volatility' },
   { href: '/correlation', label: 'Correlation' },
+  { href: '/portfolio', label: 'Portfolio' },
   { href: '/macro', label: 'Macro' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },

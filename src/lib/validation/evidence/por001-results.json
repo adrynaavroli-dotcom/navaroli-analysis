@@ -1,0 +1,875 @@
+[
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Closed-form status OK · well_conditioned_3",
+  "expectedResult": "OK",
+  "actualResult": "OK",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.linalg.solve",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Closed-form GMV weights · well_conditioned_3",
+  "expectedResult": "n=3, first=0.6320522031, last=0.04915736291",
+  "actualResult": "n=3, first=0.6320522031, last=0.04915736291",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 0
+  },
+  "maxAbsError": 6.938893903907228e-18,
+  "maxRelError": 1.411567564594508e-16,
+  "n": 3,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.linalg.solve(Σ, 1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Closed-form GMV variance · well_conditioned_3",
+  "expectedResult": "0.00005801495500",
+  "actualResult": "0.00005801495500",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-12
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy 1/(1ᵀΣ⁻¹1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Condition number diagnostic (power/inverse iteration)",
+  "expectedResult": "10.00000000",
+  "actualResult": "10.00000000",
+  "tolerance": {
+   "abs": 0,
+   "rel": 0.01
+  },
+  "maxAbsError": 1.0658141036401503e-14,
+  "maxRelError": 1.0658141036401516e-15,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.linalg.cond",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Long-only status OK · well_conditioned_3",
+  "expectedResult": "OK",
+  "actualResult": "OK",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy SLSQP",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Long-only GMV weights (cap 1) · well_conditioned_3",
+  "expectedResult": "n=3, first=0.6320522031, last=0.04915736291",
+  "actualResult": "n=3, first=0.6320522031, last=0.04915736291",
+  "tolerance": {
+   "abs": 1e-8,
+   "rel": 0
+  },
+  "maxAbsError": 1.1102230246251565e-16,
+  "maxRelError": 1.7565369112591704e-16,
+  "n": 3,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy.optimize.minimize SLSQP (ftol 1e-15) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Long-only GMV variance · well_conditioned_3",
+  "expectedResult": "0.00005801495500",
+  "actualResult": "0.00005801495500",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-10
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Optimality: σ²_TS ≤ σ²_ref + 1e-12 · well_conditioned_3",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "notes": "Δσ² = 0.00e+0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "KKT residual ≤ 1e-10 · well_conditioned_3",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "KKT conditions (budget, bounds, stationarity)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "notes": "residual = 0.00e+0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Concentration metrics (HHI, N_eff) · well_conditioned_3",
+  "expectedResult": "n=2, first=0.5035337746, last=1.985964101",
+  "actualResult": "n=2, first=0.5035337746, last=1.985964101",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-9
+  },
+  "maxAbsError": 8.881784197001252e-16,
+  "maxRelError": 4.472278321817385e-16,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy on SLSQP weights",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Closed-form status OK · correlated_4",
+  "expectedResult": "OK",
+  "actualResult": "OK",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.linalg.solve",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Closed-form GMV weights · correlated_4",
+  "expectedResult": "n=4, first=0.2041736240, last=1.372964032",
+  "actualResult": "n=4, first=0.2041736240, last=1.372964032",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 0
+  },
+  "maxAbsError": 6.8833827526759706e-15,
+  "maxRelError": 7.801145095810012e-15,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.linalg.solve(Σ, 1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Closed-form GMV variance · correlated_4",
+  "expectedResult": "0.001786816486",
+  "actualResult": "0.001786816486",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-12
+  },
+  "maxAbsError": 1.5178830414797062e-18,
+  "maxRelError": 8.494901703806804e-16,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy 1/(1ᵀΣ⁻¹1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Condition number diagnostic (power/inverse iteration)",
+  "expectedResult": "200.0000000",
+  "actualResult": "200.0000000",
+  "tolerance": {
+   "abs": 0,
+   "rel": 0.01
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.linalg.cond",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Long-only status OK · correlated_4",
+  "expectedResult": "OK",
+  "actualResult": "OK",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy SLSQP",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Long-only GMV weights (cap 0.5) · correlated_4",
+  "expectedResult": "n=4, first=0.3522802645, last=0.4816882429",
+  "actualResult": "n=4, first=0.3522802644, last=0.4816882432",
+  "tolerance": {
+   "abs": 1e-8,
+   "rel": 0
+  },
+  "maxAbsError": 2.632290496684675e-10,
+  "maxRelError": 1,
+  "n": 4,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy.optimize.minimize SLSQP (ftol 1e-15) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Long-only GMV variance · correlated_4",
+  "expectedResult": "0.001958544911",
+  "actualResult": "0.001958544911",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-10
+  },
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Optimality: σ²_TS ≤ σ²_ref + 1e-12 · correlated_4",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "notes": "Δσ² = 0.00e+0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "KKT residual ≤ 1e-10 · correlated_4",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "KKT conditions (budget, bounds, stationarity)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "notes": "residual = 1.11e-16"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Concentration metrics (HHI, N_eff) · correlated_4",
+  "expectedResult": "n=2, first=0.3836914046, last=2.606261146",
+  "actualResult": "n=2, first=0.3836914048, last=2.606261145",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.0473191203175247e-9,
+  "maxRelError": 4.0184738259995277e-10,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy on SLSQP weights",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Closed-form status OK · cap_binds_5",
+  "expectedResult": "OK",
+  "actualResult": "OK",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.linalg.solve",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Closed-form GMV weights · cap_binds_5",
+  "expectedResult": "n=5, first=0.5659385395, last=0.6475626136",
+  "actualResult": "n=5, first=0.5659385395, last=0.6475626136",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 0
+  },
+  "maxAbsError": 6.661338147750939e-16,
+  "maxRelError": 4.13122314994378e-15,
+  "n": 5,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.linalg.solve(Σ, 1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Closed-form GMV variance · cap_binds_5",
+  "expectedResult": "0.0002611175210",
+  "actualResult": "0.0002611175210",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-12
+  },
+  "maxAbsError": 4.336808689942018e-19,
+  "maxRelError": 1.6608646838358518e-15,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy 1/(1ᵀΣ⁻¹1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Condition number diagnostic (power/inverse iteration)",
+  "expectedResult": "50.00000000",
+  "actualResult": "50.00000000",
+  "tolerance": {
+   "abs": 0,
+   "rel": 0.01
+  },
+  "maxAbsError": 7.815970093361102e-14,
+  "maxRelError": 1.5631940186722236e-15,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.linalg.cond",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Long-only status OK · cap_binds_5",
+  "expectedResult": "OK",
+  "actualResult": "OK",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy SLSQP",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Long-only GMV weights (cap 0.24) · cap_binds_5",
+  "expectedResult": "n=5, first=0.2400000000, last=0.2400000000",
+  "actualResult": "n=5, first=0.2400000000, last=0.2400000000",
+  "tolerance": {
+   "abs": 1e-8,
+   "rel": 0
+  },
+  "maxAbsError": 1.6653345369377348e-16,
+  "maxRelError": 2.1305432686089076e-15,
+  "n": 5,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy.optimize.minimize SLSQP (ftol 1e-15) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Long-only GMV variance · cap_binds_5",
+  "expectedResult": "0.0005801837451",
+  "actualResult": "0.0005801837451",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-10
+  },
+  "maxAbsError": 4.336808689942018e-19,
+  "maxRelError": 7.474888303512761e-16,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Optimality: σ²_TS ≤ σ²_ref + 1e-12 · cap_binds_5",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "notes": "Δσ² = 4.34e-19"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "KKT residual ≤ 1e-10 · cap_binds_5",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "KKT conditions (budget, bounds, stationarity)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "notes": "residual = 0.00e+0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Concentration metrics (HHI, N_eff) · cap_binds_5",
+  "expectedResult": "n=2, first=0.2196471880, last=4.552755759",
+  "actualResult": "n=2, first=0.2196471880, last=4.552755759",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-9
+  },
+  "maxAbsError": 8.881784197001252e-16,
+  "maxRelError": 2.52728713477475e-16,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy on SLSQP weights",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Closed-form status OK · near_singular_3",
+  "expectedResult": "OK",
+  "actualResult": "OK",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.linalg.solve",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Closed-form GMV weights · near_singular_3",
+  "expectedResult": "n=3, first=2.079139091, last=1.318607851",
+  "actualResult": "n=3, first=2.079139091, last=1.318607851",
+  "tolerance": {
+   "abs": 1e-10,
+   "rel": 0
+  },
+  "maxAbsError": 5.773159728050814e-15,
+  "maxRelError": 2.4077435472386024e-15,
+  "n": 3,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.linalg.solve(Σ, 1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Closed-form GMV variance · near_singular_3",
+  "expectedResult": "0.001181154860",
+  "actualResult": "0.001181154860",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1.0000000000181728e-9
+  },
+  "maxAbsError": 4.082498228363818e-14,
+  "maxRelError": 3.4563615367262273e-11,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy 1/(1ᵀΣ⁻¹1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Condition number diagnostic (power/inverse iteration)",
+  "expectedResult": "1000000.000",
+  "actualResult": "1000000.000",
+  "tolerance": {
+   "abs": 0,
+   "rel": 0.01
+  },
+  "maxAbsError": 0.000010897871106863022,
+  "maxRelError": 1.0897871106664978e-11,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy.linalg.cond",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Long-only status OK · near_singular_3",
+  "expectedResult": "OK",
+  "actualResult": "OK",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy SLSQP",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Long-only GMV weights (cap 1) · near_singular_3",
+  "expectedResult": "n=3, first=0.5612501634, last=0.4387498366",
+  "actualResult": "n=3, first=0.5612501634, last=0.4387498366",
+  "tolerance": {
+   "abs": 1e-8,
+   "rel": 0
+  },
+  "maxAbsError": 5.773159728050814e-15,
+  "maxRelError": 1,
+  "n": 3,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy.optimize.minimize SLSQP (ftol 1e-15) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Long-only GMV variance · near_singular_3",
+  "expectedResult": "12.48045427",
+  "actualResult": "12.48045427",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-10
+  },
+  "maxAbsError": 1.2434497875801753e-14,
+  "maxRelError": 9.963177309960529e-16,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "independent-benchmark",
+  "testName": "Optimality: σ²_TS ≤ σ²_ref + 1e-12 · near_singular_3",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "notes": "Δσ² = -1.24e-14"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "KKT residual ≤ 1e-10 · near_singular_3",
+  "expectedResult": "true",
+  "actualResult": "true",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "KKT conditions (budget, bounds, stationarity)",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "notes": "residual = 0.00e+0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "numerical",
+  "testName": "Concentration metrics (HHI, N_eff) · near_singular_3",
+  "expectedResult": "n=2, first=0.5075031650, last=1.970431061",
+  "actualResult": "n=2, first=0.5075031650, last=1.970431061",
+  "tolerance": {
+   "abs": 0,
+   "rel": 1e-9
+  },
+  "maxAbsError": 1.021405182655144e-14,
+  "maxRelError": 5.250283038085015e-15,
+  "n": 2,
+  "passed": true,
+  "evidence": {
+   "reference": "numpy on SLSQP weights",
+   "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "out-of-sample",
+  "testName": "Walk-forward executed on observed data with enough origins",
+  "expectedResult": "≥ 5",
+  "actualResult": "17",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Walk-forward protocol (window 120, rebalance 21, no look-ahead)",
+   "dataset": "OBSERVED MARKET DATA — AAPL/MSFT/SPY/TLT, 2024-10-31→2026-10-30"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "out-of-sample",
+  "testName": "All observed origins converged",
+  "expectedResult": "0 failed",
+  "actualResult": "17/17 converged",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Walk-forward protocol (window 120, rebalance 21, no look-ahead)",
+   "dataset": "OBSERVED MARKET DATA — AAPL/MSFT/SPY/TLT, 2024-10-31→2026-10-30"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "out-of-sample",
+  "testName": "Realized GMV and equal-weight volatilities are finite and positive",
+  "expectedResult": "both > 0",
+  "actualResult": "GMV 8.89% vs EW 12.08% (ratio 0.736)",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Walk-forward protocol (window 120, rebalance 21, no look-ahead)",
+   "dataset": "OBSERVED MARKET DATA — AAPL/MSFT/SPY/TLT, 2024-10-31→2026-10-30"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "notes": "Descriptive: no superiority claim; ratio reported as observed."
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "unit",
+  "testName": "Complete observed record reproduces persisted evidence",
+  "expectedResult": "no differences",
+  "actualResult": "no differences",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Persisted por001-observed.json; only runtimeMs/evaluatedAt volatile",
+   "dataset": "OBSERVED MARKET DATA — por001-snapshot.json"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ }
+]

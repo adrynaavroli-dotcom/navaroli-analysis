@@ -43,6 +43,9 @@ jobs:
       - name: VOL-004 benchmark vs approved arch fixture
         if: ${{ !cancelled() }}
         run: bun validation/run-vol004.ts
+      - name: POR-001 benchmark vs approved numpy/scipy fixture + observed walk-forward reproduction
+        if: ${{ !cancelled() }}
+        run: bun validation/run-por001.ts
       - name: Production build (no deployment)
         if: ${{ !cancelled() }}
         run: bun run build
