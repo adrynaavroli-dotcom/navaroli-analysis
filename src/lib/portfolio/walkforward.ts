@@ -123,7 +123,7 @@ export function walkForward(panel: AlignedPanel, o: WalkForwardOptions = DEFAULT
   const ok = origins.filter((x) => x.status === 'OK' && x.realizedVol !== null && Number.isFinite(x.realizedVol));
   const mean = (xs: number[]) => (xs.length ? xs.reduce((a, v) => a + v, 0) / xs.length : null);
   const gmvVols = ok.map((x) => x.realizedVol!);
-  const ewVols = ok.map((x) => realizedVol(panel, ew, x.index + 1, x.index + 1 + o.rebalance)).filter(Number.isFinite);
+  const ewVols = ok.map((x) => x.ewRealizedVol!).filter(Number.isFinite);
   const turns: number[] = [];
   for (let i = 1; i < ok.length; i++) turns.push(turnover(ok[i - 1].weights!, ok[i].weights!));
 
