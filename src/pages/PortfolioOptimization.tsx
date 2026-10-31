@@ -150,7 +150,7 @@ export default function PortfolioOptimization() {
         {a && !a.insufficient && (
           <Card>
             <CardHeader><CardTitle className="text-base">3. Walk-forward out-of-sample</CardTitle>
-              <CardDescription>Rolling {window}-day estimation, rebalanced every {DEFAULT_WALKFORWARD.rebalance} trading days; each origin uses only past returns. Out-of-sample: realized volatility over each holding block. Descriptive evidence — no superiority claim.</CardDescription></CardHeader>
+              <CardDescription>{estimator === 'ewma' ? 'EWMA' : `Rolling ${window}-day`} estimation, rebalanced every {DEFAULT_WALKFORWARD.rebalance} trading days; each origin uses only past returns. Out-of-sample: realized volatility over each holding block. Descriptive evidence — no superiority claim.</CardDescription></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
                 <div><div className="text-xs text-muted-foreground">Origins (converged)</div><div className="font-mono text-lg">{a.wf.summary.converged}/{a.wf.summary.origins}</div></div>
