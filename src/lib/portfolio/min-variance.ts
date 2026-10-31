@@ -93,38 +93,36 @@ function cholSolve(L: Matrix, b: number[]): number[] {
 /** Condition-number diagnostic: λmax by power iteration, λmin by inverse iteration (Cholesky solves). */
 function conditionNumber(L: Matrix, n: number): number {
   const norm = (v: number[]) => Math.sqrt(v.reduce((a, x) => a + x * x, 0));
+  /** Rayleigh quotient vᵀΣv for a unit vector, computed as ‖Lᵀv‖² without forming Σ. */
+  const rayleigh = (vec: number[]) => {
+    let q = 0;
+    for (let k = 0; k < n; k++) {
+      let s = 0;
+      for (let i = k; i < n; i++) s += L[i][k] * vec[i];
+      q += s * s;
+    }
+    return q;
+  };
   let v = new Array(n).fill(1 / Math.sqrt(n));
-  let lamMax = 0;
   for (let it = 0; it < 200; it++) {
-    const w = v.map((_, i) => L[i].reduce((a, lik, k) => a + lik * (i >= k ? v[k] : 0), 0));
-    // (L·v) then (Lᵀ·(L·v)) = Σ·v without forming Σ again
-    const Sv = new Array(n).fill(0);
-    for (let i = 0; i < n; i++) for (let k = 0; k <= i; k++) Sv[i] += L[i][k] * v[k];
-    const w2 = new Array(n).fill(0);
-    for (let i = 0; i < n; i++) for (let k = i; k < n; k++) w2[i] += L[k][i] * Sv[k];
-    void w;
-    const nv = norm(w2);
-    if (nv === 0) return Infinity;
-    lamMax = w2.reduce((a, x, i) => a + x * v[i], 0) / 1; // Rayleigh quotient vᵀΣv with ‖v‖=1
-    v = w2.map((x) => x / nv);
+    // w = Σ·v = L·(Lᵀ·v)
+    const LtV = new Array(n).fill(0);
+    for (let k = 0; k < n; k++) for (let i = k; i < n; i++) LtV[k] += L[i][k] * v[i];
+    const w = new Array(n).fill(0);
+    for (let i = 0; i < n; i++) for (let k = 0; k <= i; k++) w[i] += L[i][k] * LtV[k];
+    const nw = norm(w);
+    if (!Number.isFinite(nw) || nw === 0) return Infinity;
+    v = w.map((x) => x / nw);
   }
   let u = new Array(n).fill(1 / Math.sqrt(n));
-  let lamMin = 0;
   for (let it = 0; it < 200; it++) {
     const x = cholSolve(L, u);
     const nx = norm(x);
     if (!Number.isFinite(nx) || nx === 0) return Infinity;
-    lamMin = 1 / (nx * nx) ** 0.5 / nx; // placeholder, replaced below
     u = x.map((z) => z / nx);
   }
-  // Rayleigh quotients with unit vectors
-  const rayleigh = (vec: number[]) => {
-    const Sv = new Array(n).fill(0);
-    for (let i = 0; i < n; i++) for (let k = 0; k <= i; k++) { Sv[i] += L[i][k] * vec[k]; if (k < i) Sv[k] += L[i][k] * vec[i]; }
-    return vec.reduce((a, x, i) => a + x * Sv[i], 0);
-  };
-  lamMax = rayleigh(v);
-  lamMin = rayleigh(u);
+  const lamMax = rayleigh(v);
+  const lamMin = rayleigh(u);
   return lamMin > 0 ? lamMax / lamMin : Infinity;
 }
 
