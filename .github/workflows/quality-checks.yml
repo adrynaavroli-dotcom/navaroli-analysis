@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   quality:
-    name: TypeScript, regression, VOL-004/VOL-005 and production build
+    name: TypeScript, regression, VOL-003/VOL-004/VOL-005 and production build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +31,12 @@ jobs:
       - name: Full Vitest suite
         if: ${{ !cancelled() }}
         run: bunx --no-install vitest run
+      - name: VOL-003 independent benchmark runner
+        # Regression gate for the upstream model whose fitted solution is the
+        # nested GJR candidate. Runs in the disposable CI checkout only; its
+        # regenerated output is never committed or used to refresh evidence.
+        if: ${{ !cancelled() }}
+        run: bun validation/run-vol003.ts
       - name: VOL-005 benchmark and observed-record reproduction
         if: ${{ !cancelled() }}
         run: bun validation/run-vol005.ts
