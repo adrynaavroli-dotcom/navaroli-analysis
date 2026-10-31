@@ -17,7 +17,7 @@
    "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -38,7 +38,7 @@
    "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -59,7 +59,7 @@
    "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -77,7 +77,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -98,7 +98,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -119,7 +119,7 @@
    "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -140,7 +140,7 @@
    "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -161,7 +161,7 @@
    "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -182,7 +182,7 @@
    "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -200,7 +200,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -221,7 +221,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -242,7 +242,7 @@
    "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -263,7 +263,7 @@
    "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -284,7 +284,7 @@
    "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -305,7 +305,7 @@
    "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -323,7 +323,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -344,7 +344,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -365,7 +365,7 @@
    "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -386,7 +386,7 @@
    "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -407,7 +407,7 @@
    "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -428,7 +428,7 @@
    "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -446,7 +446,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -467,7 +467,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -488,7 +488,7 @@
    "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -509,7 +509,7 @@
    "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -530,7 +530,7 @@
    "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -551,7 +551,7 @@
    "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -569,7 +569,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -590,7 +590,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -611,7 +611,7 @@
    "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -632,7 +632,7 @@
    "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -653,7 +653,7 @@
    "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -674,7 +674,7 @@
    "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -692,7 +692,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -713,7 +713,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -734,7 +734,7 @@
    "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -755,7 +755,7 @@
    "reference": "statsmodels acf(adjusted=False, fft=False) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -776,7 +776,7 @@
    "reference": "statsmodels acorr_ljungbox (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -797,7 +797,7 @@
    "reference": "statsmodels acorr_ljungbox (scipy chi2.sf) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -815,7 +815,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -836,7 +836,7 @@
    "reference": "statsmodels adfuller(regression=\"c\", autolag=\"AIC\") (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -857,7 +857,7 @@
    "reference": "statsmodels mackinnonp / mackinnoncrit (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -878,7 +878,7 @@
    "reference": "statsmodels mackinnonp(regression=\"c\", N=1) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -899,7 +899,7 @@
    "reference": "statsmodels mackinnoncrit(regression=\"c\", N=1) (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -920,7 +920,7 @@
    "reference": "scipy.stats.chi2.sf (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -941,7 +941,7 @@
    "reference": "scipy.stats.norm.cdf (Python 3.13.12 · statsmodels 0.15.0 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -962,7 +962,7 @@
    "reference": "Theory: ρ_1 = φ",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0",
   "notes": "Statistical tolerance 4/√n"
  },
@@ -981,7 +981,7 @@
    "reference": "Theory (power check on synthetic DGPs)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -999,7 +999,7 @@
    "reference": "Theory (size/power on synthetic DGPs)",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -1020,7 +1020,7 @@
    "reference": "Manual calculation",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -1041,7 +1041,7 @@
    "reference": "Q(k, x) = e^{−x} Σ_{i<k} xⁱ/i!",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -1059,7 +1059,7 @@
    "reference": "Manual calculation",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  },
  {
@@ -1077,7 +1077,7 @@
    "reference": "Spec",
    "dataset": "SYNTHETIC TEST DATA — sta002-benchmark/1.0.0, seed 20261012"
   },
-  "validationDate": "2026-10-13",
+  "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/sta002-timeseries@1.0.0"
  }
 ]
