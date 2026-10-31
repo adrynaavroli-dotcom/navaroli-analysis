@@ -10,7 +10,9 @@ function lcg(seed: number) {
 
 function makePanel(T: number, N: number, collinear = false): AlignedPanel {
   const rand = lcg(12345);
-  const dates = Array.from({ length: T }, (_, i) => `2024-01-${String((i % 28) + 1).padStart(2, '0')}`);
+  // Unique sequential dates so index lookups are unambiguous.
+  const epoch = Date.UTC(2024, 0, 1);
+  const dates = Array.from({ length: T }, (_, i) => new Date(epoch + i * 86400000).toISOString().slice(0, 10));
   const values: number[][] = [];
   for (let t = 0; t < T; t++) {
     const row: number[] = [];
