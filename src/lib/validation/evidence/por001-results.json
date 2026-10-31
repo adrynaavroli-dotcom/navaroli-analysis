@@ -798,5 +798,78 @@
   },
   "validationDate": "2026-10-31",
   "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "out-of-sample",
+  "testName": "Walk-forward executed on observed data with enough origins",
+  "expectedResult": "≥ 5",
+  "actualResult": "17",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Walk-forward protocol (window 120, rebalance 21, no look-ahead)",
+   "dataset": "OBSERVED MARKET DATA — AAPL/MSFT/SPY/TLT, 2024-10-31→2026-10-30"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "out-of-sample",
+  "testName": "All observed origins converged",
+  "expectedResult": "0 failed",
+  "actualResult": "17/17 converged",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Walk-forward protocol (window 120, rebalance 21, no look-ahead)",
+   "dataset": "OBSERVED MARKET DATA — AAPL/MSFT/SPY/TLT, 2024-10-31→2026-10-30"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "out-of-sample",
+  "testName": "Realized GMV and equal-weight volatilities are finite and positive",
+  "expectedResult": "both > 0",
+  "actualResult": "GMV 8.89% vs EW 12.08% (ratio 0.736)",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Walk-forward protocol (window 120, rebalance 21, no look-ahead)",
+   "dataset": "OBSERVED MARKET DATA — AAPL/MSFT/SPY/TLT, 2024-10-31→2026-10-30"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "notes": "Descriptive: no superiority claim; ratio reported as observed."
+ },
+ {
+  "modelId": "POR-001",
+  "validationType": "unit",
+  "testName": "Complete observed record reproduces persisted evidence",
+  "expectedResult": "no differences",
+  "actualResult": "no differences",
+  "tolerance": "exact",
+  "maxAbsError": 0,
+  "maxRelError": 0,
+  "n": 1,
+  "passed": true,
+  "evidence": {
+   "reference": "Persisted por001-observed.json; only runtimeMs/evaluatedAt volatile",
+   "dataset": "OBSERVED MARKET DATA — por001-snapshot.json"
+  },
+  "validationDate": "2026-10-31",
+  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
  }
 ]
