@@ -5,7 +5,7 @@ import { validationStatusFor, planFor } from '@/lib/validation';
 describe('quantitative project matrix integrity', () => {
   const ids = new Set(allMatrixItems.map((i) => i.id));
   it('has unique ids', () => expect(ids.size).toBe(allMatrixItems.length));
-  it('has 40 core items', () => expect(quantitativeProjectMatrix.length).toBe(40));
+  it('has 41 core items (FND-001 added 2026-11-03)', () => expect(quantitativeProjectMatrix.length).toBe(41));
   it('all dependencies resolve', () => {
     for (const i of allMatrixItems) for (const d of i.dependencies) expect(ids.has(d), `${i.id} → ${d}`).toBe(true);
   });
