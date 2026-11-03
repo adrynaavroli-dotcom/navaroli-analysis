@@ -90,7 +90,7 @@ export const quantitativeProjectMatrix: MatrixItem[] = [
     validation: ['Unit tests', 'Benchmark against independent implementation', 'Historical comparison'],
     professionalUse: ['Investment Research', 'Quantitative Research'], priority: 'P0', status: 'NOT STARTED',
     layers: layers(PL, PL, NS, NS, NS, NS), dependencies: [], nextAction: 'Implement in milestones: M1 schema + pure normalizer + unit tests; M2 SEC backend function; M3 fixtures + Python reconciliation; M4 admin UI + docs + CI',
-    portfolioValue: 'HIGH', master: VERIFY('Análisis fundamental / estados financieros'), phase: 1, limitations: ['US SEC registrants only (no 20-F/IFRS)', 'Segment/dimension facts captured raw only, not normalized', 'Financial companies need a separate template'] }),
+    portfolioValue: 'HIGH', master: VERIFY('Análisis fundamental / estados financieros'), phase: 1, docPath: '/quant/fundamentals/sec-ingestion', limitations: ['US SEC registrants only (no 20-F/IFRS)', 'Segment/dimension facts captured raw only, not normalized', 'Financial companies need a separate template'] }),
   item({ id: 'STA-001', module: 'Statistics', submodule: 'Descriptive Statistics', concept: 'Moments and normality diagnostics',
     mathematicalModel: 'Mean, std (n−1), skewness, kurtosis, Jarque-Bera ~ χ²(2)', mathematicalConcepts: ['Moments', 'Hypothesis testing'], requiredData: [D.derived],
     implementation: 'src/lib/volatility/statistics.ts', validation: ['Unit tests', 'Benchmark against independent implementation', 'Statistical diagnostics'],
