@@ -17,8 +17,8 @@ Estado: FND-001 **NOT STARTED**. M1.1 **NOT APPROVED**. Este documento sustituye
 | `app_role` | `admin,user` | psql |
 | Default privileges | `postgres`/`supabase_admin` conceden `arwdDxtm` (tablas), `rwU` (secuencias) y `X` (funciones) a anon/authenticated/service_role. **Es obligatorio un REVOKE explícito en cada objeto nuevo** | psql `pg_default_acl` |
 | `fact_hash` v1 | 20 vectores (V01–V20: los 19 pedidos más el borde de exponente V20) y 8 casos de dominio de lexema; Python y TypeScript independientes producen salida idéntica (D.5) | ejecución en memoria, este turno |
-| `raw_json_sha256` | 13 vectores (R01–R13) y 3 rechazos (X01–X03, incluida la colisión de claves tras NFC); salida idéntica en Python y TypeScript (D.5). Diff conjunto vacío, 44 líneas | ejecución en memoria, este turno |
-| Defecto de precisión anterior | `Decimal.normalize()` con el contexto por defecto convertía un valor de 61 dígitos en `1.234567890123456789012345679E+39`. El nuevo algoritmo no usa operaciones dependientes del contexto | ejecución, este turno |
+| `raw_json_sha256` | 13 vectores (R01–R13) con el separador `navaroli.sec.raw_json.v1\0` y 4 rechazos de JSON (X01–X04: colisión tras NFC, clave duplicada, `NaN` y surrogate no emparejado); salida idéntica en Python y TypeScript (D.5). Diff conjunto vacío, 45 líneas | ejecución en memoria, este turno |
+| Defecto de precisión anterior (histórico) | La versión previa del script usaba `Decimal.normalize()`, que con el contexto por defecto convertía un valor de 61 dígitos en `1.234567890123456789012345679E+39`. El nuevo algoritmo no usa operaciones dependientes del contexto | ejecución, este turno |
 
 ### A.2 NOT VERIFIED
 - Prueba real con JWT de `sec_is_admin()` (T20).
@@ -27,7 +27,7 @@ Estado: FND-001 **NOT STARTED**. M1.1 **NOT APPROVED**. Este documento sustituye
 
 ### A.3 Defectos de la versión anterior corregidos aquí
 1. `taxonomy_ns` (una URI que companyfacts no entrega) se sustituye por `taxonomy_key`. Desaparece `taxonomy_prefix` y se añade `taxonomy_uri` nullable, solo como procedencia.
-2. Canonicalización decimal en Python basada en `as_tuple()`, sin contexto. En TypeScript, el exponente se valida (`Number.isSafeInteger` y un límite).
+2. Canonicalización decimal idéntica en Python y TypeScript: regex de lexema + manipulación de cadenas, sin `Decimal`, sin `normalize()` y sin float. Límite de exponente con `coefficient_digit_count` definido igual en ambos (D.2). En TypeScript, el exponente se valida además con `Number.isSafeInteger`.
 3. La unicidad de observaciones pasa a ser por contenido canónico, `(run_id, raw_fact_hash, raw_json_sha256)`.
 4. Contadores y finalización separados por `resource_kind`.
 5. `status`/`finished_at` solo cambian mediante RPC SECURITY DEFINER; service_role pierde el UPDATE sobre las corridas.
@@ -139,7 +139,7 @@ CREATE TABLE public.sec_ingestion_runs (
   payload_filing_count    integer CHECK (payload_filing_count >= 0),     -- [C] filings ELEGIBLES (4 formularios) del payload
   filings_skipped_form    integer CHECK (filings_skipped_form >= 0),     -- [C] filas de otros formularios, excluidas por filtro
   filings_inserted        integer CHECK (filings_inserted >= 0),         -- [DB] count(first_run_id = run)
-  filings_existing        integer CHECK (filings_existing >= 0),         -- [DB] = payload_filing_count - filings_inserted
+  filings_not_inserted        integer CHECK (filings_not_inserted >= 0),         -- [DB] = payload_filing_count - filings_inserted
   filing_conflicts        integer CHECK (filing_conflicts >= 0),         -- [C] debe coincidir con las muestras (≤100)
   -- contadores de companyfacts (solo vía sec_finalize_run)
   payload_fact_count      integer CHECK (payload_fact_count >= 0),       -- [C] objetos elegibles (us-gaap/dei y formulario elegible)
@@ -169,9 +169,9 @@ CREATE TABLE public.sec_ingestion_runs (
   -- Cada contador requerido se exige NOT NULL de forma explícita: un CHECK que evalúa NULL se considera superado
   CHECK (status <> 'completed' OR resource_kind = 'companyfacts' OR (
            payload_filing_count IS NOT NULL AND filings_skipped_form IS NOT NULL
-           AND filings_inserted IS NOT NULL AND filings_existing IS NOT NULL AND filing_conflicts IS NOT NULL
+           AND filings_inserted IS NOT NULL AND filings_not_inserted IS NOT NULL AND filing_conflicts IS NOT NULL
            AND filing_conflicts = 0
-           AND filings_inserted + filings_existing = payload_filing_count
+           AND filings_inserted + filings_not_inserted = payload_filing_count
            AND payload_fact_count IS NULL AND observations_written IS NULL)),
   CHECK (status <> 'completed' OR resource_kind <> 'companyfacts' OR (
            payload_fact_count IS NOT NULL AND facts_skipped_scope IS NOT NULL AND payload_duplicate_count IS NOT NULL
@@ -344,7 +344,7 @@ BEGIN
     IF NEW.status <> 'running' OR num_nonnulls(
          NEW.finished_at, NEW.http_status, NEW.content_type, NEW.payload_bytes, NEW.payload_sha256,
          NEW.storage_bucket, NEW.storage_path,
-         NEW.payload_filing_count, NEW.filings_skipped_form, NEW.filings_inserted, NEW.filings_existing, NEW.filing_conflicts,
+         NEW.payload_filing_count, NEW.filings_skipped_form, NEW.filings_inserted, NEW.filings_not_inserted, NEW.filing_conflicts,
          NEW.payload_fact_count, NEW.facts_skipped_scope, NEW.payload_duplicate_count, NEW.facts_inserted, NEW.facts_existing,
          NEW.facts_rejected, NEW.observations_written, NEW.metadata_conflicts, NEW.frame_changes,
          NEW.conflict_samples, NEW.error_message) > 0 THEN
@@ -502,7 +502,7 @@ BEGIN
     why := format('filings: eligible(client)=%s inserted(db)=%s conflicts(client)=%s', c_payload, n_fil_ins, c_conf);
     UPDATE public.sec_ingestion_runs SET
       payload_filing_count = c_payload, filings_skipped_form = c_skip, filings_inserted = n_fil_ins,
-      filings_existing = GREATEST(c_payload - n_fil_ins, 0), filing_conflicts = c_conf,
+      filings_not_inserted = GREATEST(c_payload - n_fil_ins, 0), filing_conflicts = c_conf,
       conflict_samples = _conflict_samples
     WHERE run_id = _run_id;
   ELSE
@@ -623,7 +623,7 @@ CREATE POLICY sec_sources_admin ON public.sec_normalized_fact_sources FOR SELECT
    - Por cada filing elegible: `INSERT ... ON CONFLICT (cik, accession_number) DO NOTHING RETURNING`.
    - Si no se insertó, se lee el existente y se comparan `form`, `filed_date`, `accepted_at` y `report_date`. Si difieren, `filing_conflicts++` y se guarda una muestra en `conflict_samples` (máximo 100; la RPC exige que haya exactamente `min(conflicts, 100)` muestras).
    - Nunca se ignora una diferencia en silencio: la finalización falla con cualquier conflicto.
-   - La BD recuenta `filings_inserted` (`first_run_id = run`) y deriva `filings_existing = payload_filing_count − filings_inserted`. `payload_filing_count` y `filing_conflicts` son valores del cliente: se validan en presencia y coherencia, pero no se verifican contra el payload.
+   - La BD recuenta `filings_inserted` (`first_run_id = run`) y deriva `filings_not_inserted = payload_filing_count − filings_inserted`. `payload_filing_count` y `filing_conflicts` son valores del cliente: se validan en presencia y coherencia, pero no se verifican contra el payload.
 6. **companyfacts**, en lotes idempotentes:
    - Filtro de alcance: una taxonomía distinta de `us-gaap`/`dei` o un `form` no elegible implica `facts_skipped_scope++`, sin hash.
    - Validación por allowlist de claves: `start, end, val, accn, fy, fp, form, filed, frame`. Cualquier otra clave o estructura no reconocida implica `facts_rejected++`, sin hash ni inserción.
@@ -854,7 +854,7 @@ P=$(python3 -c "$PY"); T=$(bun -e "$TS")
 echo "$P"; echo "--- $(python3 --version) / bun $(bun --version)"
 [ "$P" = "$T" ] && echo "DIFF: empty (identical, $(echo "$P"|wc -l) lines)" || diff <(echo "$P") <(echo "$T")
 ```
-- Contraprueba del defecto: con el método anterior, `Decimal(BIG).normalize()` daba `1.234567890123456789012345679E+39`, con `as_tuple()` de 61 dígitos. El algoritmo nuevo conserva todos los dígitos.
+- Contraprueba histórica del defecto corregido (el algoritmo actual ya no usa `Decimal`): con el método anterior, `Decimal(BIG).normalize()` daba `1.234567890123456789012345679E+39`, con `as_tuple()` de 61 dígitos. El algoritmo nuevo conserva todos los dígitos.
 - Esta evidencia valida que **dos implementaciones del algoritmo coinciden**. No ejecuta ni sustituye ningún test T1–T31.
 
 Cada vector `fact_hash` es `{**BASE, **override}`.
@@ -916,7 +916,7 @@ Aislamiento: cada suite SQL se ejecuta dentro de `BEGIN ... ROLLBACK` en una bas
 | T19 | Hecho con una clave fuera de la allowlist o con `accn` desconocido | rechazado, sin hash, `finalize` devuelve `failed` |
 | T20 | `sec_is_admin()`: anon false; no-admin false; admin true; sin UID false | según caso |
 | T21 | RLS: anon y no-admin ven solo lo publicado y 0 filas privadas, y su DML → 42501; admin lee todo y su DML → 42501; service_role: INSERT OK, DELETE → 42501 | según caso |
-| T22 | `payload_sha256` = `sha256sum` del fixture binario (bytes HTTP exactos). En integración, la función de backend produce para R01–R13 los mismos `raw_json_sha256` que D.5 y rechaza X01–X03; un mismo `fact_hash` con JSON canónico distinto genera dos observaciones (`sec_obs_content_uq`) | igualdad |
+| T22 | `payload_sha256` = `sha256sum` del fixture binario (bytes HTTP exactos). En integración, la función de backend produce para R01–R13 los mismos `raw_json_sha256` que D.5 y rechaza X01–X04; un mismo `fact_hash` con JSON canónico distinto genera dos observaciones (`sec_obs_content_uq`) | igualdad |
 | T23 | Finalización de submissions: payload de 3 filings (2 nuevos, 1 existente idéntico) → `completed`, `filings_inserted=2` (BD); conteo incoherente → `failed`; `observations_written` no interviene | según caso |
 | T24 | Finalización de companyfacts y reingesta: payload de N hechos con 1 duplicado → `completed`; reingesta → `facts_inserted=0`, `facts_existing=N-1`, N-1 observaciones nuevas, `completed` | según caso |
 | T25 | Como service_role, `UPDATE sec_ingestion_runs SET status='completed'` → 42501 (sin privilegio); `sec_finalize_run` → OK; `sec_fail_stale_runs('1 hour')` marca huérfanas; `sec_fail_stale_runs(NULL)` y `('5 minutes')` → excepción | según caso |
@@ -925,11 +925,13 @@ Aislamiento: cada suite SQL se ejecuta dentro de `BEGIN ... ROLLBACK` en una bas
 | T28 | Taxonomía fuera de alcance: INSERT de un raw fact con `taxonomy_key='srt'` → 23514; payload con hechos `srt`/`ifrs-full` → excluidos en `facts_skipped_scope`, sin hash, sin afectar a `completed` | según caso |
 | T29 | Formularios: filings 8-K y 20-F excluidos (`filings_skipped_form`, no contados en `payload_filing_count`); 10-K/A y 10-Q/A incluidos; INSERT directo con `form='8-K'` → 23514; hecho de companyfacts con `form='8-K'` → `facts_skipped_scope`, no `facts_rejected` | según caso |
 | T30 | Contadores NULL: para cada contador requerido de submissions y de companyfacts, forzar NULL o ausente impide `completed` (CHECK 23514 en UPDATE directo como owner; `sec_finalize_run` devuelve `failed` si falta en `_counts`); contadores de la otra rama no NULL → 23514 | según caso |
-| T31 | Contadores existing derivados: reingesta de submissions con 3 elegibles ya existentes → `filings_existing=3` (BD); reingesta de companyfacts → `facts_existing = distinct(raw_fact_hash de la corrida) − facts_inserted`; muestras de conflicto que no cuadran con `filing_conflicts` → `failed`; `conflict_samples` con 101 elementos → 23514 | según caso |
+| T31 | Contadores existing derivados: reingesta de submissions con 3 elegibles ya existentes → `filings_not_inserted=3` (BD); reingesta de companyfacts → `facts_existing = distinct(raw_fact_hash de la corrida) − facts_inserted`; muestras de conflicto que no cuadran con `filing_conflicts` → `failed`; `conflict_samples` con 101 elementos → 23514 | según caso |
 | TH-F | `fact_hash`: V01–V20 y dominio de lexema idénticos en Python y TypeScript | diff vacío |
-| TH-J | `raw_json_sha256`: R01–R13 y rechazos X01–X03 idénticos en Python y TypeScript | diff vacío |
+| TH-J | `raw_json_sha256` (con separador de dominio): R01–R13 y rechazos X01–X04 idénticos en Python y TypeScript | diff vacío |
+| T32 | Extracción jerárquica de companyfacts: fixture con `facts.us-gaap.Revenues.units.USD[...]` y `facts.us-gaap.Revenues.units.EUR[...]` (mismo tag, dos unidades), más `facts.dei.<tag>.units.<unit>[...]` con `val` textual y otro con `val` null. Cada observación hereda `taxonomy_key`, `tag` y `unit` de sus claves padre; los `fact_hash` difieren por unidad; el objeto hoja nunca aporta esos tres campos y, si los trajera, se rechaza por la allowlist | según caso |
+| T33 | Duplicados de filings en el payload: payload con 3 entradas elegibles, una de ellas repetida de forma idéntica → `filings_inserted=2`, `filings_not_inserted=1` (repetida, no preexistente); la misma repetición con metadata distinta → `filing_conflicts=1`, `failed` | según caso |
 
-**TH-F y TH-J:** ejecutados como bloque en memoria (D.5); guardados como tests del proyecto, NOT RUN. **T1–T31 (base de datos, acceso e integración):** NOT RUN. Ejecutar hashes en memoria **no** valida la base de datos ni el RLS.
+**TH-F y TH-J:** ejecutados como bloque en memoria (D.5); guardados como tests del proyecto, NOT RUN. **T1–T33 (base de datos, acceso e integración):** NOT RUN. Ejecutar hashes en memoria **no** valida la base de datos ni el RLS.
 
 Comandos previstos (NOT RUN):
 ```bash
@@ -1013,7 +1015,7 @@ Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constra
 
 ## G. Riesgos residuales
 1. El payload no es recuperable hasta M1.3 (B11).
-2. `filings_existing` y `facts_existing` se derivan en la BD. Siguen siendo valores del cliente, validados solo en presencia, signo y coherencia: `payload_filing_count`, `filings_skipped_form`, `filing_conflicts`, `payload_fact_count`, `facts_skipped_scope`, `payload_duplicate_count` y `facts_rejected`. No pueden verificarse contra el payload hasta que sea recuperable (M1.3). Además, `filings_existing` depende de `payload_filing_count`, que aporta el cliente.
+2. `filings_not_inserted` y `facts_existing` se derivan en la BD. Siguen siendo valores del cliente, validados solo en presencia, signo y coherencia: `payload_filing_count`, `filings_skipped_form`, `filing_conflicts`, `payload_fact_count`, `facts_skipped_scope`, `payload_duplicate_count` y `facts_rejected`. No pueden verificarse contra el payload hasta que sea recuperable (M1.3). Además, `filings_not_inserted` depende de `payload_filing_count`, que aporta el cliente.
 3. Las corridas huérfanas dependen de que se ejecute `sec_fail_stale_runs`. Si no se llama, quedan en `running` (aunque nunca `completed`).
 4. Hace falta un parser JSON sin pérdida en el entorno de la función de backend; la dependencia se elige en Build.
 5. Los hechos de texto o nil en companyfacts y el patrón real de `submissions_page` no se han observado en payloads reales.
