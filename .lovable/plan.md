@@ -685,7 +685,7 @@ Rechazos de lexema comprobados en ambas implementaciones: `NaN`, `Infinity`, `' 
 - Python 3.13.15 y Bun 1.4.4, ejecutados en memoria mediante el bloque bash autocontenido de abajo (`BASE`, `VJSON`, `PY`, `TS` y la comparación, todo en el mismo bloque).
 - Resultado: **`DIFF: empty (identical, 24 lines)`**: 19 hashes y 5 rechazos de lexema.
 - Contraprueba del defecto: con el método anterior, `Decimal(BIG).normalize()` daba `1.234567890123456789012345679E+39`, con `as_tuple()` de 61 dígitos. El algoritmo nuevo conserva todos los dígitos.
-- Esta evidencia valida que **dos implementaciones del algoritmo coinciden**. No ejecuta ni sustituye ningún test T1–T27.
+- Esta evidencia valida que **dos implementaciones del algoritmo coinciden**. No ejecuta ni sustituye ningún test T1–T31.
 
 Bloque completo ejecutado (autocontenido):
 ```bash
