@@ -679,7 +679,9 @@ V      N -> 0x03 + canon_decimal(lexeme) ; T -> S(text) ; X -> 0x00
 
 ### D.3 raw_json_sha256 (JSON canónico semántico)
 SHA-256 de una serialización determinista del objeto del hecho tal como se parseó:
+- `raw_json_sha256 = SHA-256( ASCII "navaroli.sec.raw_json.v1" || 0x00 || UTF-8(JSON canónico) )`. El separador propio aísla su dominio criptográfico del de `fact_hash` (`navaroli.sec.fact_hash.v1\0`);
 - entrada parseada sin pérdida: números como lexema; `NaN`, `Infinity` y constantes no JSON se rechazan;
+- cualquier string o clave con un surrogate UTF-16 no emparejado (p. ej. `\ud800` suelto) se **rechaza** antes de codificar en UTF-8; ambos runtimes lo rechazan igual (X04);
 - claves normalizadas a NFC; dos claves que coinciden tras NFC, o una clave duplicada, implican **rechazo** (el hecho cuenta en `facts_rejected`);
 - objetos con claves ordenadas por bytes UTF-8 (NFC);
 - strings en NFC, con escapes JSON mínimos (`"`, `\`, controles U+0000–U+001F como `\u00XX`);
@@ -718,12 +720,12 @@ Base: `cik=0000320193`, `accn=0000320193-24-000123`, `taxonomy_key=us-gaap`, `ta
 Dominio de lexema comprobado en ambas implementaciones: se rechazan `NaN`, `Infinity`, `' 1'`, `1e1234567`, `''`, `0000000001e-1002` y `+.5e`; se acepta `1.`.
 
 ### D.5 Evidencia de ejecución (scripts en memoria; NO son tests de base de datos)
-- Ejecutado en este turno con Python 3.13.15 y Bun 1.4.4. El bloque bash de abajo es **literalmente** el que se ejecutó: autocontenido, sin placeholders, con heredocs `PYCODE`/`TSCODE`, y puede copiarse (requiere `python3` y `bun`). SHA-256 del bloque tal como se ejecutó: `4c1f74bd9ad7a1e053929f6c5b992007c78a22562402e9eb7ff0d5f219aea848`.
-- Resultado: **`DIFF: empty (identical, 44 lines)`**:
+- Ejecutado en este turno con Python 3.13.15 y Bun 1.4.4. El bloque bash de abajo es **literalmente** el que se ejecutó: autocontenido, sin placeholders, con heredocs `PYCODE`/`TSCODE`, y puede copiarse (requiere `python3` y `bun`). SHA-256 del bloque tal como se ejecutó (117 líneas): `7151d07271923471d6660372ae68cb024a2b05f09c5bfb9a1513bf105e360820`.
+- Resultado: **`DIFF: empty (identical, 45 lines)`**:
   - 20 líneas `fact_hash` (V01–V20);
   - 8 líneas de dominio de lexema;
-  - 13 líneas `raw_json_sha256` (R01–R13);
-  - 3 rechazos de JSON (X01–X03).
+  - 13 líneas `raw_json_sha256` (R01–R13, con el separador de dominio `navaroli.sec.raw_json.v1\0`);
+  - 4 rechazos de JSON (X01–X04).
 - **Regla única de límite de exponente:** `coefficient_digit_count` = número de dígitos del coeficiente (parte entera + fraccionaria del lexema) **después de quitar los ceros iniciales**. Rechazo si `|exp_lexema − len(frac)| > 1000 + coefficient_digit_count`. Python y TypeScript lo calculan a partir de los grupos de la misma regex; Python ya no usa `Decimal`.
   - Borde: `0000000001e-1001` se acepta (V20). `0000000001e-1002` se rechaza en ambos.
   - La regla anterior de TypeScript (que contaba los ceros iniciales) lo habría aceptado.
@@ -737,7 +739,7 @@ Dominio de lexema comprobado en ambas implementaciones: se rechazan `NaN`, `Infi
 export BASE='{"cik":"0000320193","accn":"0000320193-24-000123","tax":"us-gaap","tag":"Revenues","unit":"USD","ptype":"duration","start":"2023-10-01","end":"2024-09-28","vkind":"N","val":"1"}'
 export VJSON='{"V01_int_1":{"val":"1"},"V02_dec_1.0":{"val":"1.0"},"V03_neg_zero":{"val":"-0"},"V04_zero_000":{"val":"0.000"},"V05_text_NONE":{"vkind":"T","val":"NONE"},"V06_nil":{"vkind":"X","val":null},"V07_cafe_NFC":{"vkind":"T","val":"Caf\u00e9"},"V08_cafe_NFD":{"vkind":"T","val":"Cafe\u0301"},"V09_sci_1.25E3":{"val":"1.25E3"},"V10_plain_1250.00":{"val":"1250.00"},"V11_instant":{"ptype":"instant","start":null},"V12_dei_text_unit_null":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"Apple Inc.","unit":null},"V13_dei_text_unit_pure":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"Apple Inc.","unit":"pure"},"V14_neg_frac":{"val":"-0.0500"},"V15_bigint":{"val":"391035000000"},"V16_big61sig":{"val":"1234567890123456789012345678901234567890.123456789012345678901"},"V17_big61sig_trailing0":{"val":"1234567890123456789012345678901234567890.123456789012345678901000"},"V18_big_sci":{"val":"1234567890123456789012345678901234567890123456789012345678901E-21"},"V19_text_empty":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"","unit":null},"V20_lead0_exp_edge":{"val":"0000000001e-1001"}}'
 export LEXBAD='["NaN","Infinity"," 1","1e1234567","","0000000001e-1002","1.","+.5e"]'
-export RJSON='{"R01_order_a":"{\"val\":1,\"accn\":\"x\"}","R02_order_b":"{\"accn\":\"x\",\"val\":1}","R03_scale_1.0":"{\"val\":1.0}","R04_scale_1":"{\"val\":1}","R05_nfc":"{\"s\":\"Caf\u00e9\"}","R06_nfd":"{\"s\":\"Cafe\u0301\"}","R07_arr_12":"[1,2]","R08_arr_21":"[2,1]","R09_null":"{\"v\":null}","R10_str_null":"{\"v\":\"null\"}","R11_empty_str":"{\"v\":\"\"}","R12_unicode_key":"{\"cl\u00e9\":1,\"a\":[true,false,null,-0.0]}","R13_ctrl_escape":"{\"t\":\"a\\u0001\\\"b\\\\\"}","X01_nfc_key_collision":"{\"Caf\u00e9\":1,\"Cafe\u0301\":2}","X02_dup_key":"{\"a\":1,\"a\":1}","X03_nan":"{\"a\":NaN}"}'
+export RJSON='{"R01_order_a":"{\"val\":1,\"accn\":\"x\"}","R02_order_b":"{\"accn\":\"x\",\"val\":1}","R03_scale_1.0":"{\"val\":1.0}","R04_scale_1":"{\"val\":1}","R05_nfc":"{\"s\":\"Caf\u00e9\"}","R06_nfd":"{\"s\":\"Cafe\u0301\"}","R07_arr_12":"[1,2]","R08_arr_21":"[2,1]","R09_null":"{\"v\":null}","R10_str_null":"{\"v\":\"null\"}","R11_empty_str":"{\"v\":\"\"}","R12_unicode_key":"{\"cl\u00e9\":1,\"a\":[true,false,null,-0.0]}","R13_ctrl_escape":"{\"t\":\"a\\u0001\\\"b\\\\\"}","X01_nfc_key_collision":"{\"Caf\u00e9\":1,\"Cafe\u0301\":2}","X02_dup_key":"{\"a\":1,\"a\":1}","X03_nan":"{\"a\":NaN}","X04_lone_surrogate":"{\"a\":\"\\ud800\"}"}'
 PY=$(cat <<'PYCODE'
 import hashlib,unicodedata,json,struct,os,re
 DOM=b"navaroli.sec.fact_hash.v1\x00"; EXP_LIMIT=1000
@@ -770,7 +772,7 @@ def pairs(ps):
     return out
 def bad_const(c): raise ValueError("non-JSON constant")
 def esc(t):
-    t=unicodedata.normalize("NFC",t); o=['"']
+    t.encode("utf-8"); t=unicodedata.normalize("NFC",t); o=['"']   # encode() rechaza surrogates no emparejados
     for ch in t:
         if ch=='"': o.append('\\"')
         elif ch=="\\": o.append("\\\\")
@@ -788,7 +790,7 @@ def canon_json(v):
     return "{"+",".join(esc(k)+":"+canon_json(v[k]) for k in ks)+"}"
 def raw_json_sha256(text):
     v=json.loads(text,parse_float=Num,parse_int=Num,parse_constant=bad_const,object_pairs_hook=pairs)
-    return hashlib.sha256(canon_json(v).encode("utf-8")).hexdigest()
+    return hashlib.sha256(b"navaroli.sec.raw_json.v1\x00"+canon_json(v).encode("utf-8")).hexdigest()
 B=json.loads(os.environ["BASE"])
 for k,o in json.loads(os.environ["VJSON"]).items(): print(k,fact_hash({**B,**o}))
 for x in json.loads(os.environ["LEXBAD"]):
@@ -832,14 +834,16 @@ function parseLossless(t){let i=0;const ws=()=>{while(i<t.length&&" \t\n\r".incl
   for(const [w,r] of [["true",true],["false",false],["null",null]])if(t.startsWith(w,i)){i+=w.length;return r;}
   const m=/^-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/.exec(t.slice(i));if(!m)throw Error("token");i+=m[0].length;return {num:m[0]};};
  const r=v();ws();if(i!==t.length)throw Error("trailing");return r;}
-const esc=x=>{let o='"';for(const ch of x.normalize("NFC")){const cp=ch.codePointAt(0);
+const LONE=/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+const esc=x=>{if(LONE.test(x))throw Error("lone surrogate");let o='"';for(const ch of x.normalize("NFC")){const cp=ch.codePointAt(0);
  o+=ch==='"'?'\\"':ch==="\\"?"\\\\":cp<0x20?"\\u"+cp.toString(16).padStart(4,"0"):ch;}return o+'"';};
 const cmp=(a,b)=>Buffer.compare(Buffer.from(a,"utf8"),Buffer.from(b,"utf8"));
 function canonJson(v){if(v===null)return "null";if(v===true)return "true";if(v===false)return "false";
  if(typeof v==="string")return esc(v);if(Array.isArray(v))return "["+v.map(canonJson).join(",")+"]";
  if(v instanceof Map)return "{"+[...v.keys()].sort(cmp).map(k=>esc(k)+":"+canonJson(v.get(k))).join(",")+"}";
  return canonDec(v.num);}
-const rawJsonSha256=t=>createHash("sha256").update(Buffer.from(canonJson(parseLossless(t)),"utf8")).digest("hex");
+const RDOM=Buffer.from("navaroli.sec.raw_json.v1\0");
+const rawJsonSha256=t=>createHash("sha256").update(Buffer.concat([RDOM,Buffer.from(canonJson(parseLossless(t)),"utf8")])).digest("hex");
 const B=JSON.parse(process.env.BASE);
 for(const [k,o] of Object.entries(JSON.parse(process.env.VJSON)))console.log(k,factHash({...B,...o}));
 for(const x of JSON.parse(process.env.LEXBAD)){try{canonDec(x);console.log("LEX accepted",JSON.stringify(x));}catch{console.log("LEX rejected",JSON.stringify(x));}}
@@ -861,27 +865,28 @@ LEX rejected "NaN" | LEX rejected "Infinity" | LEX rejected " 1" | LEX rejected 
 LEX rejected "0000000001e-1002" | LEX accepted "1." | LEX rejected "+.5e"
 ```
 
-**Vectores `raw_json_sha256`** (R01–R13 con hash; X01–X03 deben rechazarse):
+**Vectores `raw_json_sha256`** (R01–R13 con hash, todos con el separador de dominio; X01–X04 deben rechazarse). Reemplazan los digests anteriores, calculados sin separador:
 | ID | Entrada JSON | SHA-256 | Relación |
 |---|---|---|---|
-| R01 | `{"val":1,"accn":"x"}` | `93da652073efd402194a7769a53dbc42b254772e666004f9927769fc0c61ad40` | = R02 (orden de claves) |
-| R02 | `{"accn":"x","val":1}` | `93da652073efd402194a7769a53dbc42b254772e666004f9927769fc0c61ad40` | = R01 |
-| R03 | `{"val":1.0}` | `0fad9b1ee80feeacd36fcceb3ce9538cfa66faef5e4b46d045600c0dad487431` | = R04 (escala) |
-| R04 | `{"val":1}` | `0fad9b1ee80feeacd36fcceb3ce9538cfa66faef5e4b46d045600c0dad487431` | = R03 |
-| R05 | `{"s":"Café"}` NFC | `d4f21edc957c8d5f5c6ba620f820dabb8b4afc2398a7603cf49e875cf2a36269` | = R06 (NFC) |
-| R06 | `{"s":"Cafe\u0301"}` NFD | `d4f21edc957c8d5f5c6ba620f820dabb8b4afc2398a7603cf49e875cf2a36269` | = R05 |
-| R07 | `[1,2]` | `49a64717d5d4cb19952e6eac2946415cf6879adacf9908e7d872332d32c6e684` | ≠ R08 (orden de array) |
-| R08 | `[2,1]` | `af1a1fc110b6094c48582b0ef83553cb7908d7a4365424eef28e76ef6c88d630` | ≠ R07 |
-| R09 | `{"v":null}` | `aae9e223dcdc02dfd8149da8c25b9536533a7232b0c9137ee6b2cd5c2a2629eb` | ≠ R10 |
-| R10 | `{"v":"null"}` | `2fc275b67c5ed5ce1d4dcb929bfd8f8fe13c97b30ec5297ea65072ecca9e3027` | ≠ R09 |
-| R11 | `{"v":""}` | `b69993cbe4796eb1cf04f32d2371ef7768b1bcce280683febc20081988a7a00c` | cadena vacía |
-| R12 | `{"clé":1,"a":[true,false,null,-0.0]}` | `57ffa0319f42851ffa518c96cc3413c77c357e7b377b669431387900560eebff` | clave Unicode, literales, `-0.0`→`0` |
-| R13 | `{"t":"a\u0001\"b\\"}` | `c52e9fdd7d682bfb9f0661ec47569288abf7b49308b96c47fb841fcf8c6e78e4` | escapes de control |
+| R01 | `{"val":1,"accn":"x"}` | `54db7ede36f81a9e709cb2c6b8d77c868c8d06c4ca9982cf2c2ee85d2b5fd824` | = R02 (orden de claves) |
+| R02 | `{"accn":"x","val":1}` | `54db7ede36f81a9e709cb2c6b8d77c868c8d06c4ca9982cf2c2ee85d2b5fd824` | = R01 |
+| R03 | `{"val":1.0}` | `f9db225d73c91a5308bef289650d9406fb2f8e5bf138113a9181621823b5f4fe` | = R04 (escala) |
+| R04 | `{"val":1}` | `f9db225d73c91a5308bef289650d9406fb2f8e5bf138113a9181621823b5f4fe` | = R03 |
+| R05 | `{"s":"Café"}` NFC | `d6658508503f6353aeb85ded6fa38b631479c353b11c51804d024b568bbd34a0` | = R06 (NFC) |
+| R06 | `{"s":"Cafe\u0301"}` NFD | `d6658508503f6353aeb85ded6fa38b631479c353b11c51804d024b568bbd34a0` | = R05 |
+| R07 | `[1,2]` | `86cf310a5a9d951e165ca28f7ceff2338c1b7fd897ef118ef3e10cd248a07072` | ≠ R08 (orden de array) |
+| R08 | `[2,1]` | `db8696f82dede8809b5284d17384a471ed8a5c2b1cd74b3ed9a76b2928f155d6` | ≠ R07 |
+| R09 | `{"v":null}` | `28b9e597633d743d8dea48af11c548373cfb80cc4b268efd288cce4202b9281c` | ≠ R10 |
+| R10 | `{"v":"null"}` | `ffbb943d389a077d2ae45e88dc07dc930dfa74c19e47dc3debae4a4c94fef6fa` | ≠ R09 |
+| R11 | `{"v":""}` | `1af2a70b18db527cf5853b4fa5f23fd4bb398c0dffd3afcf48930c3e995c8db6` | cadena vacía |
+| R12 | `{"clé":1,"a":[true,false,null,-0.0]}` | `a9bf4d1aa296ad595981c207bcffb0922b83e2ac6510411002d35f68a06f48c5` | clave Unicode, literales, `-0.0`→`0` |
+| R13 | `{"t":"a\u0001\"b\\"}` | `15830eab676c7136f705c40b8488a35db3a810de2153e2194de78fdafd1a4b93` | escapes de control |
 | X01 | `{"Café":1,"Cafe\u0301":2}` | REJECTED | colisión de claves tras NFC |
 | X02 | `{"a":1,"a":1}` | REJECTED | clave duplicada |
 | X03 | `{"a":NaN}` | REJECTED | constante no JSON |
+| X04 | `{"a":"\ud800"}` | REJECTED | surrogate UTF-16 no emparejado |
 
-En Build, estos scripts se guardarán en `validation/fnd001/` (`fact_hash.py`, `factHash.ts`, `vectors.json` con V01–V20, R01–R13, X01–X03 y el dominio de lexema). Ese guardado y su ejecución como test del proyecto siguen **NOT RUN**.
+En Build, estos scripts se guardarán en `validation/fnd001/` (`fact_hash.py`, `factHash.ts`, `vectors.json` con V01–V20, R01–R13, X01–X04 y el dominio de lexema). Ese guardado y su ejecución como test del proyecto siguen **NOT RUN**.
 
 ---
 
