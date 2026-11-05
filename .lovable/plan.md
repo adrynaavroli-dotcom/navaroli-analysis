@@ -698,61 +698,33 @@ echo "$P"
 ```
 Cada vector es `{**BASE, **override}`. Los dos scripts se pasaron literalmente como `PY` y `TS`.
 
-Python (ejecutado; valida el lexema con la regex de D.2 antes de construir `Decimal`):
-```python
-import hashlib,unicodedata,json,struct,os,re
-from decimal import Decimal
-DOM=b"navaroli.sec.fact_hash.v1\x00"; EXP_LIMIT=1000
-LEX=re.compile(r"^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d{1,6}))?$")
-def tlv(t,b): return bytes([t])+struct.pack(">I",len(b))+b
-def s(x): return tlv(0,b"") if x is None else tlv(1,unicodedata.normalize("NFC",x).encode())
-def d(x): return tlv(0,b"") if x is None else tlv(2,x.encode())
-def canon_dec(x):
-    m=LEX.fullmatch(x)
-    if not m or not (m.group(2) or m.group(3)): raise ValueError("bad decimal lexeme")
-    sign,digits,exp=Decimal(x).as_tuple()   # construcción exacta desde str; sin operaciones de contexto
-    if abs(exp)>EXP_LIMIT+len(digits): raise ValueError("exponent out of range")
-    g="".join(map(str,digits)).lstrip("0")
-    if not g: return "0"
-    while g.endswith("0"): g=g[:-1]; exp+=1
-    if exp>=0: c=g+"0"*exp
-    else:
-        n=len(g)+exp; c=(g[:n] if n>0 else "0")+"."+("0"*(-n) if n<0 else "")+g[max(n,0):]
-    return ("-" if sign else "")+c
-def val(f):
-    k=f["vkind"]; return tlv(4,k.encode())+(tlv(3,canon_dec(f["val"]).encode()) if k=="N" else s(f["val"]) if k=="T" else tlv(0,b""))
-def h(f): return hashlib.sha256(DOM+s(f["cik"])+s(f["accn"])+s(f["tax"])+s(f["tag"])+s(f["unit"])+s(f["ptype"])+d(f["start"])+d(f["end"])+val(f)).hexdigest()
-B=json.loads(os.environ["BASE"])
-for k,o in json.loads(os.environ["VJSON"]).items(): print(k,h({**B,**o}))
-for bad in ["NaN","Infinity"," 1","1e1234567",""]:
-    try: canon_dec(bad); print("ACCEPTED",repr(bad))
-    except Exception: print("rejected",repr(bad))
+Salida registrada, idéntica en ambos runtimes (los `fact_hash` V01–V20 están en D.4):
+```text
+LEX rejected "NaN" | LEX rejected "Infinity" | LEX rejected " 1" | LEX rejected "1e1234567" | LEX rejected ""
+LEX rejected "0000000001e-1002" | LEX accepted "1." | LEX rejected "+.5e"
 ```
 
-TypeScript/Bun (ejecutado):
-```ts
-const {createHash}=require("crypto");
-const E=Buffer.alloc(0),DOM=Buffer.from("navaroli.sec.fact_hash.v1\0"),EXP_LIMIT=1000;
-const tlv=(t,b)=>{const h=Buffer.alloc(5);h[0]=t;h.writeUInt32BE(b.length,1);return Buffer.concat([h,b]);};
-const s=x=>x===null?tlv(0,E):tlv(1,Buffer.from(x.normalize("NFC"),"utf8"));
-const d=x=>x===null?tlv(0,E):tlv(2,Buffer.from(x));
-function canonDec(x){const m=/^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d{1,6}))?$/.exec(x);
- if(!m||!(m[2]||m[3]))throw Error("bad decimal lexeme");
- const frac=m[3]||"";let g=(m[2]||"")+frac;
- const ex=m[4]?Number(m[4]):0; if(!Number.isSafeInteger(ex))throw Error("exponent not safe");
- let e=ex-frac.length; if(Math.abs(e)>EXP_LIMIT+g.length)throw Error("exponent out of range");
- g=g.replace(/^0+/,""); if(!g)return "0";
- while(g.endsWith("0")){g=g.slice(0,-1);e++;}
- let c; if(e>=0)c=g+"0".repeat(e); else{const n=g.length+e;c=(n>0?g.slice(0,n):"0")+"."+(n<0?"0".repeat(-n):"")+g.slice(Math.max(n,0));}
- return (m[1]==="-"?"-":"")+c;}
-const val=f=>Buffer.concat([tlv(4,Buffer.from(f.vkind)),f.vkind==="N"?tlv(3,Buffer.from(canonDec(f.val))):f.vkind==="T"?s(f.val):tlv(0,E)]);
-const B=JSON.parse(process.env.BASE);
-for(const [k,o] of Object.entries(JSON.parse(process.env.VJSON))){const f={...B,...o};console.log(k,createHash("sha256").update(Buffer.concat([DOM,s(f.cik),s(f.accn),s(f.tax),s(f.tag),s(f.unit),s(f.ptype),d(f.start),d(f.end),val(f)])).digest("hex"));}
-for(const bad of ["NaN","Infinity"," 1","1e1234567",""]){try{canonDec(bad);console.log("ACCEPTED",JSON.stringify(bad).replace(/"/g,"\x27"))}catch{console.log("rejected",JSON.stringify(bad).replace(/"/g,"\x27"))}}
-```
+**Vectores `raw_json_sha256`** (R01–R13 con hash; X01–X03 deben rechazarse):
+| ID | Entrada JSON | SHA-256 | Relación |
+|---|---|---|---|
+| R01 | `{"val":1,"accn":"x"}` | `93da652073efd402194a7769a53dbc42b254772e666004f9927769fc0c61ad40` | = R02 (orden de claves) |
+| R02 | `{"accn":"x","val":1}` | `93da652073efd402194a7769a53dbc42b254772e666004f9927769fc0c61ad40` | = R01 |
+| R03 | `{"val":1.0}` | `0fad9b1ee80feeacd36fcceb3ce9538cfa66faef5e4b46d045600c0dad487431` | = R04 (escala) |
+| R04 | `{"val":1}` | `0fad9b1ee80feeacd36fcceb3ce9538cfa66faef5e4b46d045600c0dad487431` | = R03 |
+| R05 | `{"s":"Café"}` NFC | `d4f21edc957c8d5f5c6ba620f820dabb8b4afc2398a7603cf49e875cf2a36269` | = R06 (NFC) |
+| R06 | `{"s":"Cafe\u0301"}` NFD | `d4f21edc957c8d5f5c6ba620f820dabb8b4afc2398a7603cf49e875cf2a36269` | = R05 |
+| R07 | `[1,2]` | `49a64717d5d4cb19952e6eac2946415cf6879adacf9908e7d872332d32c6e684` | ≠ R08 (orden de array) |
+| R08 | `[2,1]` | `af1a1fc110b6094c48582b0ef83553cb7908d7a4365424eef28e76ef6c88d630` | ≠ R07 |
+| R09 | `{"v":null}` | `aae9e223dcdc02dfd8149da8c25b9536533a7232b0c9137ee6b2cd5c2a2629eb` | ≠ R10 |
+| R10 | `{"v":"null"}` | `2fc275b67c5ed5ce1d4dcb929bfd8f8fe13c97b30ec5297ea65072ecca9e3027` | ≠ R09 |
+| R11 | `{"v":""}` | `b69993cbe4796eb1cf04f32d2371ef7768b1bcce280683febc20081988a7a00c` | cadena vacía |
+| R12 | `{"clé":1,"a":[true,false,null,-0.0]}` | `57ffa0319f42851ffa518c96cc3413c77c357e7b377b669431387900560eebff` | clave Unicode, literales, `-0.0`→`0` |
+| R13 | `{"t":"a\u0001\"b\\"}` | `c52e9fdd7d682bfb9f0661ec47569288abf7b49308b96c47fb841fcf8c6e78e4` | escapes de control |
+| X01 | `{"Café":1,"Cafe\u0301":2}` | REJECTED | colisión de claves tras NFC |
+| X02 | `{"a":1,"a":1}` | REJECTED | clave duplicada |
+| X03 | `{"a":NaN}` | REJECTED | constante no JSON |
 
-Salida (idéntica en ambas implementaciones): los 19 hashes de D.4, seguidos de `rejected 'NaN'`, `rejected 'Infinity'`, `rejected ' 1'`, `rejected '1e1234567'` y `rejected ''`. Después, `DIFF: empty (identical, 24 lines)`.
-En Build se guardarán en `validation/fnd001/` (`fact_hash.py`, `factHash.ts`, `vectors.json` con los esperados de D.4) y se añadirán vectores de `raw_json_sha256`.
+En Build, estos scripts se guardarán en `validation/fnd001/` (`fact_hash.py`, `factHash.ts`, `vectors.json` con V01–V20, R01–R13, X01–X03 y el dominio de lexema). Ese guardado y su ejecución como test del proyecto siguen **NOT RUN**.
 
 ---
 
