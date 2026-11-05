@@ -73,7 +73,12 @@ Estado: FND-001 **NOT STARTED**. M1.1 **NOT APPROVED**. Este documento sustituye
 DO $$ BEGIN
   IF current_setting('server_version_num')::int < 150000 THEN RAISE EXCEPTION 'PG >= 15 required'; END IF;
   IF to_regprocedure('public.has_role(uuid,public.app_role)') IS NULL THEN RAISE EXCEPTION 'has_role missing'; END IF;
-  IF to_regclass('public.sec_companies') IS NOT NULL THEN RAISE EXCEPTION 'sec_* present: run F.1 diff first'; END IF;
+  IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND relname LIKE 'sec\_%')
+     OR EXISTS (SELECT 1 FROM pg_proc WHERE pronamespace='public'::regnamespace AND proname LIKE 'sec\_%')
+     OR EXISTS (SELECT 1 FROM pg_trigger WHERE NOT tgisinternal AND tgname LIKE 'sec\_%')
+     OR EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND policyname LIKE 'sec\_%')
+     OR EXISTS (SELECT 1 FROM pg_type WHERE typnamespace='public'::regnamespace AND typname LIKE 'sec\_%' AND typtype <> 'c')
+  THEN RAISE EXCEPTION 'sec_* objects present: run F.1 compatibility diff first'; END IF;
 END $$;
 
 -- ===== C.1 sec_is_admin =====
@@ -626,7 +631,8 @@ Dt(x)  NULL -> 0x00 ; else 0x02 + "YYYY-MM-DD"
 K      0x04 + "N"|"T"|"X"
 V      N -> 0x03 + canon_decimal(lexeme) ; T -> S(text) ; X -> 0x00
 ```
-- `taxonomy_key`: la clave exacta de companyfacts (`us-gaap`, `dei`, ...). `taxonomy_uri` no forma parte del hash v1.
+- `taxonomy_key`: la clave exacta de companyfacts, limitada en M1.1 a `us-gaap` o `dei`. `taxonomy_uri` es NULL en M1.1, sirve solo como procedencia futura y no forma parte del hash v1.
+- `logical_key` (normalized facts): `canonical_concept` (ASCII validado por CHECK) `|` `unit` (NFC, sin espacios en los extremos, no vacía, sin `|`) `|` `period_type` `|` `period_start` en `YYYY-MM-DD`, o vacío si es instant, `|` `period_end` en `YYYY-MM-DD`. Lo calcula `sec_insert_guard` con `to_char`.
 - Excluidos: `frame`, `fy`, `fp`, `form`, `filed`, `taxonomy_uri`.
 
 ### D.2 Canonicalización decimal (sin contexto ni float)
@@ -676,23 +682,35 @@ Base: `cik=0000320193`, `accn=0000320193-24-000123`, `taxonomy_key=us-gaap`, `ta
 Rechazos de lexema comprobados en ambas implementaciones: `NaN`, `Infinity`, `' 1'`, `1e1234567` y `''`.
 
 ### D.5 Evidencia (scripts, no tests de base de datos)
-- Python 3.13.15 y Bun 1.4.4, ejecutados en memoria con los vectores en la variable de entorno `VJSON`.
-- Resultado: **`DIFF: empty (identical, 18 lines)`**.
+- Python 3.13.15 y Bun 1.4.4, ejecutados en memoria mediante el bloque bash autocontenido de abajo (`BASE`, `VJSON`, `PY`, `TS` y la comparación, todo en el mismo bloque).
+- Resultado: **`DIFF: empty (identical, 24 lines)`**: 19 hashes y 5 rechazos de lexema.
 - Contraprueba del defecto: con el método anterior, `Decimal(BIG).normalize()` daba `1.234567890123456789012345679E+39`, con `as_tuple()` de 61 dígitos. El algoritmo nuevo conserva todos los dígitos.
 - Esta evidencia valida que **dos implementaciones del algoritmo coinciden**. No ejecuta ni sustituye ningún test T1–T27.
 
-Python (ejecutado):
+Bloque completo ejecutado (autocontenido):
+```bash
+export BASE='{"cik":"0000320193","accn":"0000320193-24-000123","tax":"us-gaap","tag":"Revenues","unit":"USD","ptype":"duration","start":"2023-10-01","end":"2024-09-28","vkind":"N","val":"1"}'
+export VJSON='{"V01_int_1":{"val":"1"},"V02_dec_1.0":{"val":"1.0"},"V03_neg_zero":{"val":"-0"},"V04_zero_000":{"val":"0.000"},"V05_text_NONE":{"vkind":"T","val":"NONE"},"V06_nil":{"vkind":"X","val":null},"V07_cafe_NFC":{"vkind":"T","val":"Caf\u00e9"},"V08_cafe_NFD":{"vkind":"T","val":"Cafe\u0301"},"V09_sci_1.25E3":{"val":"1.25E3"},"V10_plain_1250.00":{"val":"1250.00"},"V11_instant":{"ptype":"instant","start":null},"V12_dei_text_unit_null":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"Apple Inc.","unit":null},"V13_dei_text_unit_pure":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"Apple Inc.","unit":"pure"},"V14_neg_frac":{"val":"-0.0500"},"V15_bigint":{"val":"391035000000"},"V16_big61sig":{"val":"1234567890123456789012345678901234567890.123456789012345678901"},"V17_big61sig_trailing0":{"val":"1234567890123456789012345678901234567890.123456789012345678901000"},"V18_big_sci":{"val":"1234567890123456789012345678901234567890123456789012345678901E-21"},"V19_text_empty":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"","unit":null}}'
+PY='<script Python de abajo>'; TS='<script TypeScript de abajo>'
+P=$(python3 -c "$PY"); T=$(bun -e "$TS")
+echo "$P"
+[ "$P" = "$T" ] && echo "DIFF: empty (identical, $(echo "$P"|wc -l) lines)" || diff <(echo "$P") <(echo "$T")
+```
+Cada vector es `{**BASE, **override}`. Los dos scripts se pasaron literalmente como `PY` y `TS`.
+
+Python (ejecutado; valida el lexema con la regex de D.2 antes de construir `Decimal`):
 ```python
-import hashlib,unicodedata,json,struct,os
+import hashlib,unicodedata,json,struct,os,re
 from decimal import Decimal
 DOM=b"navaroli.sec.fact_hash.v1\x00"; EXP_LIMIT=1000
+LEX=re.compile(r"^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d{1,6}))?$")
 def tlv(t,b): return bytes([t])+struct.pack(">I",len(b))+b
 def s(x): return tlv(0,b"") if x is None else tlv(1,unicodedata.normalize("NFC",x).encode())
 def d(x): return tlv(0,b"") if x is None else tlv(2,x.encode())
 def canon_dec(x):
-    v=Decimal(x)                      # construcción desde str: exacta, no depende del contexto
-    sign,digits,exp=v.as_tuple()
-    if not isinstance(exp,int): raise ValueError("NaN/Infinity rejected")
+    m=LEX.fullmatch(x)
+    if not m or not (m.group(2) or m.group(3)): raise ValueError("bad decimal lexeme")
+    sign,digits,exp=Decimal(x).as_tuple()   # construcción exacta desde str; sin operaciones de contexto
     if abs(exp)>EXP_LIMIT+len(digits): raise ValueError("exponent out of range")
     g="".join(map(str,digits)).lstrip("0")
     if not g: return "0"
@@ -704,9 +722,12 @@ def canon_dec(x):
 def val(f):
     k=f["vkind"]; return tlv(4,k.encode())+(tlv(3,canon_dec(f["val"]).encode()) if k=="N" else s(f["val"]) if k=="T" else tlv(0,b""))
 def h(f): return hashlib.sha256(DOM+s(f["cik"])+s(f["accn"])+s(f["tax"])+s(f["tag"])+s(f["unit"])+s(f["ptype"])+d(f["start"])+d(f["end"])+val(f)).hexdigest()
-for k,f in json.loads(os.environ["VJSON"]).items(): print(k,h(f))
+B=json.loads(os.environ["BASE"])
+for k,o in json.loads(os.environ["VJSON"]).items(): print(k,h({**B,**o}))
+for bad in ["NaN","Infinity"," 1","1e1234567",""]:
+    try: canon_dec(bad); print("ACCEPTED",repr(bad))
+    except Exception: print("rejected",repr(bad))
 ```
-Nota: `Decimal(str)` acepta además `"NaN"`, `"Infinity"` y espacios. La versión de Build validará antes con la regex de D.2, igual que TypeScript.
 
 TypeScript/Bun (ejecutado):
 ```ts
@@ -716,7 +737,7 @@ const tlv=(t,b)=>{const h=Buffer.alloc(5);h[0]=t;h.writeUInt32BE(b.length,1);ret
 const s=x=>x===null?tlv(0,E):tlv(1,Buffer.from(x.normalize("NFC"),"utf8"));
 const d=x=>x===null?tlv(0,E):tlv(2,Buffer.from(x));
 function canonDec(x){const m=/^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d{1,6}))?$/.exec(x);
- if(!m||!(m[2]||m[3]))throw Error("bad decimal (NaN/Infinity rejected)");
+ if(!m||!(m[2]||m[3]))throw Error("bad decimal lexeme");
  const frac=m[3]||"";let g=(m[2]||"")+frac;
  const ex=m[4]?Number(m[4]):0; if(!Number.isSafeInteger(ex))throw Error("exponent not safe");
  let e=ex-frac.length; if(Math.abs(e)>EXP_LIMIT+g.length)throw Error("exponent out of range");
@@ -725,14 +746,12 @@ function canonDec(x){const m=/^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d{1,6}))?$/
  let c; if(e>=0)c=g+"0".repeat(e); else{const n=g.length+e;c=(n>0?g.slice(0,n):"0")+"."+(n<0?"0".repeat(-n):"")+g.slice(Math.max(n,0));}
  return (m[1]==="-"?"-":"")+c;}
 const val=f=>Buffer.concat([tlv(4,Buffer.from(f.vkind)),f.vkind==="N"?tlv(3,Buffer.from(canonDec(f.val))):f.vkind==="T"?s(f.val):tlv(0,E)]);
-for(const [k,f] of Object.entries(JSON.parse(process.env.VJSON)))console.log(k,createHash("sha256").update(Buffer.concat([DOM,s(f.cik),s(f.accn),s(f.tax),s(f.tag),s(f.unit),s(f.ptype),d(f.start),d(f.end),val(f)])).digest("hex"));
+const B=JSON.parse(process.env.BASE);
+for(const [k,o] of Object.entries(JSON.parse(process.env.VJSON))){const f={...B,...o};console.log(k,createHash("sha256").update(Buffer.concat([DOM,s(f.cik),s(f.accn),s(f.tax),s(f.tag),s(f.unit),s(f.ptype),d(f.start),d(f.end),val(f)])).digest("hex"));}
+for(const bad of ["NaN","Infinity"," 1","1e1234567",""]){try{canonDec(bad);console.log("ACCEPTED",JSON.stringify(bad).replace(/"/g,"\x27"))}catch{console.log("rejected",JSON.stringify(bad).replace(/"/g,"\x27"))}}
 ```
 
-Comando ejecutado (claves de `VJSON`: `cik, accn, tax, tag, unit, ptype, start, end, vkind, val`):
-```bash
-P=$(python3 -c "$PY"); T=$(bun -e "$TS")
-[ "$P" = "$T" ] && echo "DIFF: empty (identical, $(echo "$P"|wc -l) lines)" || diff <(echo "$P") <(echo "$T")
-```
+Salida (idéntica en ambas implementaciones): los 19 hashes de D.4, seguidos de `rejected 'NaN'`, `rejected 'Infinity'`, `rejected ' 1'`, `rejected '1e1234567'` y `rejected ''`. Después, `DIFF: empty (identical, 24 lines)`.
 En Build se guardarán en `validation/fnd001/` (`fact_hash.py`, `factHash.ts`, `vectors.json` con los esperados de D.4) y se añadirán vectores de `raw_json_sha256`.
 
 ---
@@ -745,7 +764,7 @@ Aislamiento: cada suite SQL se ejecuta dentro de `BEGIN ... ROLLBACK` en una bas
 | T1 | Filing de A con corrida de B | 23503 |
 | T2 | Raw fact de A con filing de B; observación de A con corrida de B | 23503 |
 | T3 | Normalized de A con filing de B; fuente (A, normalized de A, raw de B) | 23503 |
-| T4 | Tipo de valor: numeric+texto, numeric sin unit, text vacío, text+número, nil con valor → 23514; numeric+unit, **text+unit NULL** y nil → OK | según caso |
+| T4 | Tipo de valor: numeric+texto, numeric sin unit, text con `value_text` NULL, text+número, nil con valor → 23514; numeric+unit, **text+unit NULL**, **text `''`** y nil → OK | según caso |
 | T5 | instant con start; duration sin start; start > end | 23514 |
 | T6 | `NaN`, `Infinity`, `-Infinity` en `value_numeric` | 23514 |
 | T7 | `123456789012345678901234567890123456789.123456789012345678901` se relee idéntico | igualdad |
@@ -756,7 +775,7 @@ Aislamiento: cada suite SQL se ejecuta dentro de `BEGIN ... ROLLBACK` en una bas
 | T12 | Normalized: UPDATE del valor → 42501; DELETE → 42501; supersession válida → OK | según caso |
 | T13 | Supersession hacia otra empresa | 23503 |
 | T14 | Supersession hacia otro `logical_key` u otro accession | 23503 |
-| T15 | Supersession hacia una versión más antigua o con la misma versión | 23514 al COMMIT |
+| T15 | Supersession hacia una versión que ya no está vigente, o con la misma `(normalizer_version, rule_version)` | 23514 al COMMIT |
 | T16 | Corrida: INSERT ya `completed`; endpoint que no corresponde a kind/CIK; `page_name` de otro CIK | 23514 |
 | T17 | Fallo a mitad: lote 1 confirmado, excepción en el lote 2 → `sec_fail_run` deja `failed` con observaciones parciales; nuevo INSERT en esa corrida → 23514; reintento con corrida nueva → sin raw facts duplicados y `completed` | según C.15 |
 | T18 | Normalizar desde una corrida `failed`, `running` o submissions | 23514 |
@@ -769,13 +788,17 @@ Aislamiento: cada suite SQL se ejecuta dentro de `BEGIN ... ROLLBACK` en una bas
 | T25 | Como service_role, `UPDATE sec_ingestion_runs SET status='completed'` → 42501 (sin privilegio); `sec_finalize_run` → OK; `sec_fail_stale_runs` marca huérfanas | según caso |
 | T26 | Discordancia de kind: filing con corrida companyfacts; raw fact u observación con corrida submissions | 23514 |
 | T27 | (a) Normalized sin fuentes → 23514 al COMMIT. (b) Mismo accession con `form`, `filed_date`, `accepted_at` o `report_date` distintos → `filing_conflicts=1`, muestra guardada, `finalize` devuelve `failed` | según caso |
-| TH | Fact hash: `vectors.json` (V01–V18, incluidos los de 61 dígitos) idéntico en Python y TypeScript | diff vacío |
+| T28 | Taxonomía fuera de alcance: INSERT de un raw fact con `taxonomy_key='srt'` → 23514; payload con hechos `srt`/`ifrs-full` → excluidos en `facts_skipped_scope`, sin hash, sin afectar a `completed` | según caso |
+| T29 | Formularios: filings 8-K y 20-F excluidos (`filings_skipped_form`, no contados en `payload_filing_count`); 10-K/A y 10-Q/A incluidos; INSERT directo con `form='8-K'` → 23514; hecho de companyfacts con `form='8-K'` → `facts_skipped_scope`, no `facts_rejected` | según caso |
+| T30 | Contadores NULL: para cada contador requerido de submissions y de companyfacts, forzar NULL o ausente impide `completed` (CHECK 23514 en UPDATE directo como owner; `sec_finalize_run` devuelve `failed` si falta en `_counts`); contadores de la otra rama no NULL → 23514 | según caso |
+| T31 | Contadores existing derivados: reingesta de submissions con 3 elegibles ya existentes → `filings_existing=3` (BD); reingesta de companyfacts → `facts_existing = distinct(raw_fact_hash de la corrida) − facts_inserted`; muestras de conflicto que no cuadran con `filing_conflicts` → `failed`; `conflict_samples` con 101 elementos → 23514 | según caso |
+| TH | Fact hash: `vectors.json` (V01–V19, incluidos los de 61 dígitos y el texto vacío) y rechazos de lexema idénticos en Python y TypeScript | diff vacío |
 
-**TH:** como script en memoria, ejecutado (D.5). Como test guardado en el proyecto, NOT RUN. **T1–T27:** NOT RUN.
+**TH:** como bloque en memoria, ejecutado (D.5). Como test guardado en el proyecto, NOT RUN. **T1–T31:** NOT RUN.
 
 Comandos previstos (NOT RUN):
 ```bash
-psql -v ON_ERROR_STOP=1 -f validation/fnd001/sql/t01_t27.sql      # BEGIN ... ROLLBACK
+psql -v ON_ERROR_STOP=1 -f validation/fnd001/sql/t01_t31.sql      # BEGIN ... ROLLBACK
 bunx vitest run validation/fnd001/access.test.ts                   # T20, T21 con JWT reales
 bunx vitest run validation/fnd001/ingest.test.ts validation/fnd001/payload.test.ts   # T10, T17, T19, T22-T25, T27b
 python3 validation/fnd001/fact_hash.py > /tmp/py.txt && bun validation/fnd001/factHash.ts > /tmp/ts.txt && diff /tmp/py.txt /tmp/ts.txt   # TH
@@ -788,9 +811,15 @@ python3 validation/fnd001/fact_hash.py > /tmp/py.txt && bun validation/fnd001/fa
 ### F.1 Preflight de solo lectura
 ```sql
 SELECT current_setting('server_version');                                           -- CONFIRMADO 17.6
-SELECT relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
- WHERE n.nspname='public' AND relname LIKE 'sec\_%';                                 -- CONFIRMADO 0 filas
-SELECT proname FROM pg_proc WHERE pronamespace='public'::regnamespace AND proname LIKE 'sec\_%';  -- CONFIRMADO 0 filas
+-- Colisiones de TODOS los objetos sec_* (tablas, vistas, índices, secuencias, tipos compuestos, funciones, triggers, políticas, constraints)
+SELECT 'rel:'||relkind, relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+ WHERE n.nspname='public' AND relname LIKE 'sec\_%'                                  -- r,v,m,i,S,c,p
+UNION ALL SELECT 'func', proname FROM pg_proc WHERE pronamespace='public'::regnamespace AND proname LIKE 'sec\_%'
+UNION ALL SELECT 'trigger', tgname FROM pg_trigger WHERE NOT tgisinternal AND tgname LIKE 'sec\_%'
+UNION ALL SELECT 'policy', policyname FROM pg_policies WHERE schemaname='public' AND policyname LIKE 'sec\_%'
+UNION ALL SELECT 'constraint', conname FROM pg_constraint WHERE connamespace='public'::regnamespace AND conname LIKE 'sec\_%'
+UNION ALL SELECT 'type', typname FROM pg_type WHERE typnamespace='public'::regnamespace AND typname LIKE 'sec\_%' AND typtype <> 'c';
+-- CONFIRMADO: 0 relaciones y 0 funciones sec_* (lecturas previas). Triggers, políticas, constraints y tipos: NOT VERIFIED (se ejecuta en el preflight)
 SELECT pg_get_function_result(p.oid), provolatile, prosecdef, proconfig, proowner::regrole
   FROM pg_proc p WHERE p.oid='public.has_role(uuid,public.app_role)'::regprocedure;   -- CONFIRMADO boolean,s,t,{search_path=public},postgres
 SELECT r, has_function_privilege(r,'public.has_role(uuid,public.app_role)','EXECUTE')
@@ -826,6 +855,12 @@ Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constra
 | Solo se normaliza lo completado | `sec_insert_guard` | T18 |
 | Linaje obligatorio | `sec_norm_lineage_check` | T27a |
 | Allowlist y accn desconocido | C.15.6, C.14 | T19 |
+| Alcance de taxonomías (`us-gaap`, `dei`) | CHECK `taxonomy_key`, C.14 | T28 |
+| Formularios elegibles y conteo tras filtro | CHECK `form`, C.14, C.15.5 | T29 |
+| Contadores requeridos NOT NULL | CHECKs de C.4 | T30 |
+| Existing derivados en BD y límite de muestras | `sec_finalize_run`, CHECK `conflict_samples` | T31 |
+| Texto vacío distinto de nil | CHECK de C.6, B6c | T4, V19 |
+| Supersession sin `created_at` | `sec_supersession_check` | T15 |
 | Comprobación de admin | `sec_is_admin` | T20 |
 | Mínimo privilegio y RLS | C.12, C.13 | T21 |
 | Fact hash con `taxonomy_key` y decimal exacto | D.1, D.2 | TH (evidencia D.5) |
@@ -834,19 +869,20 @@ Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constra
 
 ## G. Riesgos residuales
 1. El payload no es recuperable hasta M1.3 (B11).
-2. `filings_existing` y `facts_existing` los reporta el backend: la BD no registra por corrida las filas ya existentes. Los insertados y las observaciones sí se recuentan en la BD.
+2. `filings_existing` y `facts_existing` se derivan en la BD. Siguen siendo valores del cliente, validados solo en presencia, signo y coherencia: `payload_filing_count`, `filings_skipped_form`, `filing_conflicts`, `payload_fact_count`, `facts_skipped_scope`, `payload_duplicate_count` y `facts_rejected`. No pueden verificarse contra el payload hasta que sea recuperable (M1.3). Además, `filings_existing` depende de `payload_filing_count`, que aporta el cliente.
 3. Las corridas huérfanas dependen de que se ejecute `sec_fail_stale_runs`. Si no se llama, quedan en `running` (aunque nunca `completed`).
 4. Hace falta un parser JSON sin pérdida en el entorno de la función de backend; la dependencia se elige en Build.
 5. Los hechos de texto o nil en companyfacts y el patrón real de `submissions_page` no se han observado en payloads reales.
 6. `frame_only` conserva la evidencia pero no hace fallar la corrida (B9). Si se prefiere tratarlo como fallo, es una decisión explícita pendiente.
-7. T1–T27 no se han ejecutado.
+7. Ingerir `srt`, `ifrs-full` u otros formularios requiere una decisión de alcance explícita.
+8. T1–T31 no se han ejecutado.
 
 ---
 
 ## H. Estado final
-- **CONFIRMADO:** PostgreSQL 17.6 (admite `NULLS NOT DISTINCT`); no existen tablas ni funciones `sec_*`; definición y propietario de `has_role`; EXECUTE sobre `has_role`: anon=false, authenticated=true, postgres=true (sin cambios); `postgres` puede ejecutar `auth.uid()` y tiene USAGE en `auth`; default privileges amplios (REVOKE obligatorio); fact hash v1 con `taxonomy_key` y decimal exacto: 18 vectores, incluidos los de 61 dígitos, idénticos en Python y TypeScript.
-- **NOT VERIFIED:** prueba JWT real de `sec_is_admin()`; hechos de texto o nil y patrón de `submissions_page` en payloads reales.
-- **NOT RUN:** T1–T27 y TH como test guardado en el proyecto.
+- **CONFIRMADO:** PostgreSQL 17.6 (admite `NULLS NOT DISTINCT`); no existen tablas ni funciones `sec_*`; definición y propietario de `has_role`; EXECUTE sobre `has_role`: anon=false, authenticated=true, postgres=true (sin cambios); `postgres` puede ejecutar `auth.uid()` y tiene USAGE en `auth`; default privileges amplios (REVOKE obligatorio); fact hash v1 con `taxonomy_key` y decimal exacto: 19 vectores (61 dígitos y texto vacío incluidos) y 5 rechazos de lexema, idénticos en Python y TypeScript con el mismo validador (diff vacío, 24 líneas).
+- **NOT VERIFIED:** prueba JWT real de `sec_is_admin()`; hechos de texto, nil o vacíos y patrón de `submissions_page` en payloads reales; colisiones `sec_*` de triggers, políticas, constraints y tipos (lo cubre el preflight ampliado).
+- **NOT RUN:** T1–T31 y TH como test guardado en el proyecto.
 - FND-001 sigue **NOT STARTED**.
 
 M1.1 remains NOT APPROVED; no implementation performed.
