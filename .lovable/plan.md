@@ -17,8 +17,8 @@ Estado: FND-001 **NOT STARTED**. M1.1 **NOT APPROVED**. Este documento sustituye
 | `app_role` | `admin,user` | psql |
 | Default privileges | `postgres`/`supabase_admin` conceden `arwdDxtm` (tablas), `rwU` (secuencias) y `X` (funciones) a anon/authenticated/service_role. **Es obligatorio un REVOKE explícito en cada objeto nuevo** | psql `pg_default_acl` |
 | `fact_hash` v1 | 20 vectores (V01–V20: los 19 pedidos más el borde de exponente V20) y 8 casos de dominio de lexema; Python y TypeScript independientes producen salida idéntica (D.5) | ejecución en memoria, este turno |
-| `raw_json_sha256` | 13 vectores (R01–R13) y 3 rechazos (X01–X03, incluida la colisión de claves tras NFC); salida idéntica en Python y TypeScript (D.5). Diff conjunto vacío, 44 líneas | ejecución en memoria, este turno |
-| Defecto de precisión anterior | `Decimal.normalize()` con el contexto por defecto convertía un valor de 61 dígitos en `1.234567890123456789012345679E+39`. El nuevo algoritmo no usa operaciones dependientes del contexto | ejecución, este turno |
+| `raw_json_sha256` | 13 vectores (R01–R13) con el separador `navaroli.sec.raw_json.v1\0` y 4 rechazos de JSON (X01–X04: colisión tras NFC, clave duplicada, `NaN` y surrogate no emparejado); salida idéntica en Python y TypeScript (D.5). Diff conjunto vacío, 45 líneas | ejecución en memoria, este turno |
+| Defecto de precisión anterior (histórico) | La versión previa del script usaba `Decimal.normalize()`, que con el contexto por defecto convertía un valor de 61 dígitos en `1.234567890123456789012345679E+39`. El nuevo algoritmo no usa operaciones dependientes del contexto | ejecución, este turno |
 
 ### A.2 NOT VERIFIED
 - Prueba real con JWT de `sec_is_admin()` (T20).
@@ -27,7 +27,7 @@ Estado: FND-001 **NOT STARTED**. M1.1 **NOT APPROVED**. Este documento sustituye
 
 ### A.3 Defectos de la versión anterior corregidos aquí
 1. `taxonomy_ns` (una URI que companyfacts no entrega) se sustituye por `taxonomy_key`. Desaparece `taxonomy_prefix` y se añade `taxonomy_uri` nullable, solo como procedencia.
-2. Canonicalización decimal en Python basada en `as_tuple()`, sin contexto. En TypeScript, el exponente se valida (`Number.isSafeInteger` y un límite).
+2. Canonicalización decimal idéntica en Python y TypeScript: regex de lexema + manipulación de cadenas, sin `Decimal`, sin `normalize()` y sin float. Límite de exponente con `coefficient_digit_count` definido igual en ambos (D.2). En TypeScript, el exponente se valida además con `Number.isSafeInteger`.
 3. La unicidad de observaciones pasa a ser por contenido canónico, `(run_id, raw_fact_hash, raw_json_sha256)`.
 4. Contadores y finalización separados por `resource_kind`.
 5. `status`/`finished_at` solo cambian mediante RPC SECURITY DEFINER; service_role pierde el UPDATE sobre las corridas.
@@ -139,7 +139,7 @@ CREATE TABLE public.sec_ingestion_runs (
   payload_filing_count    integer CHECK (payload_filing_count >= 0),     -- [C] filings ELEGIBLES (4 formularios) del payload
   filings_skipped_form    integer CHECK (filings_skipped_form >= 0),     -- [C] filas de otros formularios, excluidas por filtro
   filings_inserted        integer CHECK (filings_inserted >= 0),         -- [DB] count(first_run_id = run)
-  filings_existing        integer CHECK (filings_existing >= 0),         -- [DB] = payload_filing_count - filings_inserted
+  filings_not_inserted        integer CHECK (filings_not_inserted >= 0),         -- [DB] = payload_filing_count - filings_inserted; incluye preexistentes idénticos Y repeticiones idénticas dentro del mismo payload (no significa "preexistente")
   filing_conflicts        integer CHECK (filing_conflicts >= 0),         -- [C] debe coincidir con las muestras (≤100)
   -- contadores de companyfacts (solo vía sec_finalize_run)
   payload_fact_count      integer CHECK (payload_fact_count >= 0),       -- [C] objetos elegibles (us-gaap/dei y formulario elegible)
@@ -169,9 +169,9 @@ CREATE TABLE public.sec_ingestion_runs (
   -- Cada contador requerido se exige NOT NULL de forma explícita: un CHECK que evalúa NULL se considera superado
   CHECK (status <> 'completed' OR resource_kind = 'companyfacts' OR (
            payload_filing_count IS NOT NULL AND filings_skipped_form IS NOT NULL
-           AND filings_inserted IS NOT NULL AND filings_existing IS NOT NULL AND filing_conflicts IS NOT NULL
+           AND filings_inserted IS NOT NULL AND filings_not_inserted IS NOT NULL AND filing_conflicts IS NOT NULL
            AND filing_conflicts = 0
-           AND filings_inserted + filings_existing = payload_filing_count
+           AND filings_inserted + filings_not_inserted = payload_filing_count
            AND payload_fact_count IS NULL AND observations_written IS NULL)),
   CHECK (status <> 'completed' OR resource_kind <> 'companyfacts' OR (
            payload_fact_count IS NOT NULL AND facts_skipped_scope IS NOT NULL AND payload_duplicate_count IS NOT NULL
@@ -344,7 +344,7 @@ BEGIN
     IF NEW.status <> 'running' OR num_nonnulls(
          NEW.finished_at, NEW.http_status, NEW.content_type, NEW.payload_bytes, NEW.payload_sha256,
          NEW.storage_bucket, NEW.storage_path,
-         NEW.payload_filing_count, NEW.filings_skipped_form, NEW.filings_inserted, NEW.filings_existing, NEW.filing_conflicts,
+         NEW.payload_filing_count, NEW.filings_skipped_form, NEW.filings_inserted, NEW.filings_not_inserted, NEW.filing_conflicts,
          NEW.payload_fact_count, NEW.facts_skipped_scope, NEW.payload_duplicate_count, NEW.facts_inserted, NEW.facts_existing,
          NEW.facts_rejected, NEW.observations_written, NEW.metadata_conflicts, NEW.frame_changes,
          NEW.conflict_samples, NEW.error_message) > 0 THEN
@@ -502,7 +502,7 @@ BEGIN
     why := format('filings: eligible(client)=%s inserted(db)=%s conflicts(client)=%s', c_payload, n_fil_ins, c_conf);
     UPDATE public.sec_ingestion_runs SET
       payload_filing_count = c_payload, filings_skipped_form = c_skip, filings_inserted = n_fil_ins,
-      filings_existing = GREATEST(c_payload - n_fil_ins, 0), filing_conflicts = c_conf,
+      filings_not_inserted = GREATEST(c_payload - n_fil_ins, 0), filing_conflicts = c_conf,
       conflict_samples = _conflict_samples
     WHERE run_id = _run_id;
   ELSE
@@ -623,8 +623,16 @@ CREATE POLICY sec_sources_admin ON public.sec_normalized_fact_sources FOR SELECT
    - Por cada filing elegible: `INSERT ... ON CONFLICT (cik, accession_number) DO NOTHING RETURNING`.
    - Si no se insertó, se lee el existente y se comparan `form`, `filed_date`, `accepted_at` y `report_date`. Si difieren, `filing_conflicts++` y se guarda una muestra en `conflict_samples` (máximo 100; la RPC exige que haya exactamente `min(conflicts, 100)` muestras).
    - Nunca se ignora una diferencia en silencio: la finalización falla con cualquier conflicto.
-   - La BD recuenta `filings_inserted` (`first_run_id = run`) y deriva `filings_existing = payload_filing_count − filings_inserted`. `payload_filing_count` y `filing_conflicts` son valores del cliente: se validan en presencia y coherencia, pero no se verifican contra el payload.
+   - La BD recuenta `filings_inserted` (`first_run_id = run`) y deriva `filings_not_inserted = payload_filing_count − filings_inserted`. Este valor agrupa dos casos sin distinguirlos: filings que ya existían con metadata idéntica y repeticiones idénticas del mismo accession dentro del payload. No se etiqueta como "preexistente". Una repetición con metadata distinta cuenta como conflicto. `payload_filing_count` y `filing_conflicts` son valores del cliente: se validan en presencia y coherencia, pero no se verifican contra el payload.
 6. **companyfacts**, en lotes idempotentes:
+   - **Recorrido jerárquico:** `facts[taxonomy_key][tag].units[unit]` → array de objetos de observación.
+     - `taxonomy_key` es la clave del nivel taxonomía (`us-gaap`, `dei`);
+     - `tag` es la clave del concepto;
+     - `unit` es la clave del mapa `units`;
+     - `start, end, val, accn, fy, fp, form, filed, frame` salen del objeto hoja.
+   - El parser arrastra `(taxonomy_key, tag, unit)` del contexto padre al calcular `fact_hash` y al construir el objeto canónico de `raw_json_sha256`: `{ "taxonomy_key", "tag", "unit" }` + los campos de la hoja.
+   - **No** se espera que la hoja contenga `taxonomy_key`, `tag` ni `unit`; si apareciera alguno, la allowlist lo rechaza (T32).
+   - `unit` NULL solo puede darse si un tag de texto se publica sin mapa `units`; ese caso no se ha observado y se trata como NOT VERIFIED.
    - Filtro de alcance: una taxonomía distinta de `us-gaap`/`dei` o un `form` no elegible implica `facts_skipped_scope++`, sin hash.
    - Validación por allowlist de claves: `start, end, val, accn, fy, fp, form, filed, frame`. Cualquier otra clave o estructura no reconocida implica `facts_rejected++`, sin hash ni inserción.
    - `val` de tipo string → `value_kind='text'`, incluida la cadena vacía `''`. `val` numérico → `numeric`. `val` null → `nil`.
@@ -638,7 +646,14 @@ CREATE POLICY sec_sources_admin ON public.sec_normalized_fact_sources FOR SELECT
 9. **Cierre:** `sec_finalize_run(run_id, counts)` es la única ruta hacia `completed`.
 10. **Reintento:** siempre con una corrida nueva. No se duplican raw facts ni filings; la nueva corrida escribe sus observaciones.
 11. **Normalización (M1.2):** solo desde corridas companyfacts `completed`, y cada hecho normalizado necesita al menos una fuente observada en esa corrida.
-11b. **Supersession (orden transaccional exacto, una sola transacción):**
+11b. **Supersession: prerequisito de M1.2, NO capacidad garantizada por M1.1.** Una función de backend con el cliente de datos (PostgREST) no comparte transacción entre llamadas sucesivas. Por eso la atomicidad solo es real si todo ocurre dentro de **una única RPC**: `public.sec_supersede_normalized_fact(_old_id uuid, _new jsonb, _sources jsonb)`, `SECURITY DEFINER`, propietario postgres, `search_path=''` y EXECUTE solo para service_role.
+   - Hace en una sola llamada el UPDATE de la versión vigente, el INSERT de la nueva versión y el de sus fuentes.
+   - Valida parámetros tipados, que la corrida origen esté `completed`, el linaje y la misma identidad.
+   - Cualquier error aborta la llamada completa (rollback implícito de la transacción de la RPC).
+   - Su DDL se especificará y aprobará en M1.2. Las tablas, FK y triggers de M1.1 ya hacen cumplir las invariantes que esa RPC necesita.
+   - Mientras no exista, M1.1 **no** realiza supersessions.
+
+   Orden interno que debe seguir esa RPC (una sola transacción):
    a) generar en el backend el UUID `new_id` de la nueva versión;
    b) `UPDATE` de la fila vigente: `is_current=false, superseded_by=new_id`. La FK compuesta es DEFERRABLE, así que el destino aún no existe, y el índice parcial `sec_norm_current_uq` queda libre;
    c) `INSERT` de la nueva versión con `normalized_fact_id=new_id`, `is_current=true` y su `(normalizer_version, rule_version)` distinta;
@@ -679,7 +694,9 @@ V      N -> 0x03 + canon_decimal(lexeme) ; T -> S(text) ; X -> 0x00
 
 ### D.3 raw_json_sha256 (JSON canónico semántico)
 SHA-256 de una serialización determinista del objeto del hecho tal como se parseó:
+- `raw_json_sha256 = SHA-256( ASCII "navaroli.sec.raw_json.v1" || 0x00 || UTF-8(JSON canónico) )`. El separador propio aísla su dominio criptográfico del de `fact_hash` (`navaroli.sec.fact_hash.v1\0`);
 - entrada parseada sin pérdida: números como lexema; `NaN`, `Infinity` y constantes no JSON se rechazan;
+- cualquier string o clave con un surrogate UTF-16 no emparejado (p. ej. `\ud800` suelto) se **rechaza** antes de codificar en UTF-8; ambos runtimes lo rechazan igual (X04);
 - claves normalizadas a NFC; dos claves que coinciden tras NFC, o una clave duplicada, implican **rechazo** (el hecho cuenta en `facts_rejected`);
 - objetos con claves ordenadas por bytes UTF-8 (NFC);
 - strings en NFC, con escapes JSON mínimos (`"`, `\`, controles U+0000–U+001F como `\u00XX`);
@@ -718,12 +735,12 @@ Base: `cik=0000320193`, `accn=0000320193-24-000123`, `taxonomy_key=us-gaap`, `ta
 Dominio de lexema comprobado en ambas implementaciones: se rechazan `NaN`, `Infinity`, `' 1'`, `1e1234567`, `''`, `0000000001e-1002` y `+.5e`; se acepta `1.`.
 
 ### D.5 Evidencia de ejecución (scripts en memoria; NO son tests de base de datos)
-- Ejecutado en este turno con Python 3.13.15 y Bun 1.4.4. El bloque bash de abajo es **literalmente** el que se ejecutó: autocontenido, sin placeholders, con heredocs `PYCODE`/`TSCODE`, y puede copiarse (requiere `python3` y `bun`). SHA-256 del bloque tal como se ejecutó: `4c1f74bd9ad7a1e053929f6c5b992007c78a22562402e9eb7ff0d5f219aea848`.
-- Resultado: **`DIFF: empty (identical, 44 lines)`**:
+- Ejecutado en este turno con Python 3.13.15 y Bun 1.4.4. El bloque bash de abajo es **literalmente** el que se ejecutó: autocontenido, sin placeholders, con heredocs `PYCODE`/`TSCODE`, y puede copiarse (requiere `python3` y `bun`). SHA-256 del bloque tal como se ejecutó (117 líneas): `7151d07271923471d6660372ae68cb024a2b05f09c5bfb9a1513bf105e360820`.
+- Resultado: **`DIFF: empty (identical, 45 lines)`**:
   - 20 líneas `fact_hash` (V01–V20);
   - 8 líneas de dominio de lexema;
-  - 13 líneas `raw_json_sha256` (R01–R13);
-  - 3 rechazos de JSON (X01–X03).
+  - 13 líneas `raw_json_sha256` (R01–R13, con el separador de dominio `navaroli.sec.raw_json.v1\0`);
+  - 4 rechazos de JSON (X01–X04).
 - **Regla única de límite de exponente:** `coefficient_digit_count` = número de dígitos del coeficiente (parte entera + fraccionaria del lexema) **después de quitar los ceros iniciales**. Rechazo si `|exp_lexema − len(frac)| > 1000 + coefficient_digit_count`. Python y TypeScript lo calculan a partir de los grupos de la misma regex; Python ya no usa `Decimal`.
   - Borde: `0000000001e-1001` se acepta (V20). `0000000001e-1002` se rechaza en ambos.
   - La regla anterior de TypeScript (que contaba los ceros iniciales) lo habría aceptado.
@@ -737,7 +754,7 @@ Dominio de lexema comprobado en ambas implementaciones: se rechazan `NaN`, `Infi
 export BASE='{"cik":"0000320193","accn":"0000320193-24-000123","tax":"us-gaap","tag":"Revenues","unit":"USD","ptype":"duration","start":"2023-10-01","end":"2024-09-28","vkind":"N","val":"1"}'
 export VJSON='{"V01_int_1":{"val":"1"},"V02_dec_1.0":{"val":"1.0"},"V03_neg_zero":{"val":"-0"},"V04_zero_000":{"val":"0.000"},"V05_text_NONE":{"vkind":"T","val":"NONE"},"V06_nil":{"vkind":"X","val":null},"V07_cafe_NFC":{"vkind":"T","val":"Caf\u00e9"},"V08_cafe_NFD":{"vkind":"T","val":"Cafe\u0301"},"V09_sci_1.25E3":{"val":"1.25E3"},"V10_plain_1250.00":{"val":"1250.00"},"V11_instant":{"ptype":"instant","start":null},"V12_dei_text_unit_null":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"Apple Inc.","unit":null},"V13_dei_text_unit_pure":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"Apple Inc.","unit":"pure"},"V14_neg_frac":{"val":"-0.0500"},"V15_bigint":{"val":"391035000000"},"V16_big61sig":{"val":"1234567890123456789012345678901234567890.123456789012345678901"},"V17_big61sig_trailing0":{"val":"1234567890123456789012345678901234567890.123456789012345678901000"},"V18_big_sci":{"val":"1234567890123456789012345678901234567890123456789012345678901E-21"},"V19_text_empty":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"","unit":null},"V20_lead0_exp_edge":{"val":"0000000001e-1001"}}'
 export LEXBAD='["NaN","Infinity"," 1","1e1234567","","0000000001e-1002","1.","+.5e"]'
-export RJSON='{"R01_order_a":"{\"val\":1,\"accn\":\"x\"}","R02_order_b":"{\"accn\":\"x\",\"val\":1}","R03_scale_1.0":"{\"val\":1.0}","R04_scale_1":"{\"val\":1}","R05_nfc":"{\"s\":\"Caf\u00e9\"}","R06_nfd":"{\"s\":\"Cafe\u0301\"}","R07_arr_12":"[1,2]","R08_arr_21":"[2,1]","R09_null":"{\"v\":null}","R10_str_null":"{\"v\":\"null\"}","R11_empty_str":"{\"v\":\"\"}","R12_unicode_key":"{\"cl\u00e9\":1,\"a\":[true,false,null,-0.0]}","R13_ctrl_escape":"{\"t\":\"a\\u0001\\\"b\\\\\"}","X01_nfc_key_collision":"{\"Caf\u00e9\":1,\"Cafe\u0301\":2}","X02_dup_key":"{\"a\":1,\"a\":1}","X03_nan":"{\"a\":NaN}"}'
+export RJSON='{"R01_order_a":"{\"val\":1,\"accn\":\"x\"}","R02_order_b":"{\"accn\":\"x\",\"val\":1}","R03_scale_1.0":"{\"val\":1.0}","R04_scale_1":"{\"val\":1}","R05_nfc":"{\"s\":\"Caf\u00e9\"}","R06_nfd":"{\"s\":\"Cafe\u0301\"}","R07_arr_12":"[1,2]","R08_arr_21":"[2,1]","R09_null":"{\"v\":null}","R10_str_null":"{\"v\":\"null\"}","R11_empty_str":"{\"v\":\"\"}","R12_unicode_key":"{\"cl\u00e9\":1,\"a\":[true,false,null,-0.0]}","R13_ctrl_escape":"{\"t\":\"a\\u0001\\\"b\\\\\"}","X01_nfc_key_collision":"{\"Caf\u00e9\":1,\"Cafe\u0301\":2}","X02_dup_key":"{\"a\":1,\"a\":1}","X03_nan":"{\"a\":NaN}","X04_lone_surrogate":"{\"a\":\"\\ud800\"}"}'
 PY=$(cat <<'PYCODE'
 import hashlib,unicodedata,json,struct,os,re
 DOM=b"navaroli.sec.fact_hash.v1\x00"; EXP_LIMIT=1000
@@ -770,7 +787,7 @@ def pairs(ps):
     return out
 def bad_const(c): raise ValueError("non-JSON constant")
 def esc(t):
-    t=unicodedata.normalize("NFC",t); o=['"']
+    t.encode("utf-8"); t=unicodedata.normalize("NFC",t); o=['"']   # encode() rechaza surrogates no emparejados
     for ch in t:
         if ch=='"': o.append('\\"')
         elif ch=="\\": o.append("\\\\")
@@ -788,7 +805,7 @@ def canon_json(v):
     return "{"+",".join(esc(k)+":"+canon_json(v[k]) for k in ks)+"}"
 def raw_json_sha256(text):
     v=json.loads(text,parse_float=Num,parse_int=Num,parse_constant=bad_const,object_pairs_hook=pairs)
-    return hashlib.sha256(canon_json(v).encode("utf-8")).hexdigest()
+    return hashlib.sha256(b"navaroli.sec.raw_json.v1\x00"+canon_json(v).encode("utf-8")).hexdigest()
 B=json.loads(os.environ["BASE"])
 for k,o in json.loads(os.environ["VJSON"]).items(): print(k,fact_hash({**B,**o}))
 for x in json.loads(os.environ["LEXBAD"]):
@@ -832,14 +849,16 @@ function parseLossless(t){let i=0;const ws=()=>{while(i<t.length&&" \t\n\r".incl
   for(const [w,r] of [["true",true],["false",false],["null",null]])if(t.startsWith(w,i)){i+=w.length;return r;}
   const m=/^-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/.exec(t.slice(i));if(!m)throw Error("token");i+=m[0].length;return {num:m[0]};};
  const r=v();ws();if(i!==t.length)throw Error("trailing");return r;}
-const esc=x=>{let o='"';for(const ch of x.normalize("NFC")){const cp=ch.codePointAt(0);
+const LONE=/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+const esc=x=>{if(LONE.test(x))throw Error("lone surrogate");let o='"';for(const ch of x.normalize("NFC")){const cp=ch.codePointAt(0);
  o+=ch==='"'?'\\"':ch==="\\"?"\\\\":cp<0x20?"\\u"+cp.toString(16).padStart(4,"0"):ch;}return o+'"';};
 const cmp=(a,b)=>Buffer.compare(Buffer.from(a,"utf8"),Buffer.from(b,"utf8"));
 function canonJson(v){if(v===null)return "null";if(v===true)return "true";if(v===false)return "false";
  if(typeof v==="string")return esc(v);if(Array.isArray(v))return "["+v.map(canonJson).join(",")+"]";
  if(v instanceof Map)return "{"+[...v.keys()].sort(cmp).map(k=>esc(k)+":"+canonJson(v.get(k))).join(",")+"}";
  return canonDec(v.num);}
-const rawJsonSha256=t=>createHash("sha256").update(Buffer.from(canonJson(parseLossless(t)),"utf8")).digest("hex");
+const RDOM=Buffer.from("navaroli.sec.raw_json.v1\0");
+const rawJsonSha256=t=>createHash("sha256").update(Buffer.concat([RDOM,Buffer.from(canonJson(parseLossless(t)),"utf8")])).digest("hex");
 const B=JSON.parse(process.env.BASE);
 for(const [k,o] of Object.entries(JSON.parse(process.env.VJSON)))console.log(k,factHash({...B,...o}));
 for(const x of JSON.parse(process.env.LEXBAD)){try{canonDec(x);console.log("LEX accepted",JSON.stringify(x));}catch{console.log("LEX rejected",JSON.stringify(x));}}
@@ -850,8 +869,8 @@ P=$(python3 -c "$PY"); T=$(bun -e "$TS")
 echo "$P"; echo "--- $(python3 --version) / bun $(bun --version)"
 [ "$P" = "$T" ] && echo "DIFF: empty (identical, $(echo "$P"|wc -l) lines)" || diff <(echo "$P") <(echo "$T")
 ```
-- Contraprueba del defecto: con el método anterior, `Decimal(BIG).normalize()` daba `1.234567890123456789012345679E+39`, con `as_tuple()` de 61 dígitos. El algoritmo nuevo conserva todos los dígitos.
-- Esta evidencia valida que **dos implementaciones del algoritmo coinciden**. No ejecuta ni sustituye ningún test T1–T31.
+- Contraprueba histórica del defecto corregido (el algoritmo actual ya no usa `Decimal`): con el método anterior, `Decimal(BIG).normalize()` daba `1.234567890123456789012345679E+39`, con `as_tuple()` de 61 dígitos. El algoritmo nuevo conserva todos los dígitos.
+- Esta evidencia valida que **dos implementaciones del algoritmo coinciden**. No ejecuta ni sustituye ningún test T1–T33.
 
 Cada vector `fact_hash` es `{**BASE, **override}`.
 
@@ -861,27 +880,28 @@ LEX rejected "NaN" | LEX rejected "Infinity" | LEX rejected " 1" | LEX rejected 
 LEX rejected "0000000001e-1002" | LEX accepted "1." | LEX rejected "+.5e"
 ```
 
-**Vectores `raw_json_sha256`** (R01–R13 con hash; X01–X03 deben rechazarse):
+**Vectores `raw_json_sha256`** (R01–R13 con hash, todos con el separador de dominio; X01–X04 deben rechazarse). Reemplazan los digests anteriores, calculados sin separador:
 | ID | Entrada JSON | SHA-256 | Relación |
 |---|---|---|---|
-| R01 | `{"val":1,"accn":"x"}` | `93da652073efd402194a7769a53dbc42b254772e666004f9927769fc0c61ad40` | = R02 (orden de claves) |
-| R02 | `{"accn":"x","val":1}` | `93da652073efd402194a7769a53dbc42b254772e666004f9927769fc0c61ad40` | = R01 |
-| R03 | `{"val":1.0}` | `0fad9b1ee80feeacd36fcceb3ce9538cfa66faef5e4b46d045600c0dad487431` | = R04 (escala) |
-| R04 | `{"val":1}` | `0fad9b1ee80feeacd36fcceb3ce9538cfa66faef5e4b46d045600c0dad487431` | = R03 |
-| R05 | `{"s":"Café"}` NFC | `d4f21edc957c8d5f5c6ba620f820dabb8b4afc2398a7603cf49e875cf2a36269` | = R06 (NFC) |
-| R06 | `{"s":"Cafe\u0301"}` NFD | `d4f21edc957c8d5f5c6ba620f820dabb8b4afc2398a7603cf49e875cf2a36269` | = R05 |
-| R07 | `[1,2]` | `49a64717d5d4cb19952e6eac2946415cf6879adacf9908e7d872332d32c6e684` | ≠ R08 (orden de array) |
-| R08 | `[2,1]` | `af1a1fc110b6094c48582b0ef83553cb7908d7a4365424eef28e76ef6c88d630` | ≠ R07 |
-| R09 | `{"v":null}` | `aae9e223dcdc02dfd8149da8c25b9536533a7232b0c9137ee6b2cd5c2a2629eb` | ≠ R10 |
-| R10 | `{"v":"null"}` | `2fc275b67c5ed5ce1d4dcb929bfd8f8fe13c97b30ec5297ea65072ecca9e3027` | ≠ R09 |
-| R11 | `{"v":""}` | `b69993cbe4796eb1cf04f32d2371ef7768b1bcce280683febc20081988a7a00c` | cadena vacía |
-| R12 | `{"clé":1,"a":[true,false,null,-0.0]}` | `57ffa0319f42851ffa518c96cc3413c77c357e7b377b669431387900560eebff` | clave Unicode, literales, `-0.0`→`0` |
-| R13 | `{"t":"a\u0001\"b\\"}` | `c52e9fdd7d682bfb9f0661ec47569288abf7b49308b96c47fb841fcf8c6e78e4` | escapes de control |
+| R01 | `{"val":1,"accn":"x"}` | `54db7ede36f81a9e709cb2c6b8d77c868c8d06c4ca9982cf2c2ee85d2b5fd824` | = R02 (orden de claves) |
+| R02 | `{"accn":"x","val":1}` | `54db7ede36f81a9e709cb2c6b8d77c868c8d06c4ca9982cf2c2ee85d2b5fd824` | = R01 |
+| R03 | `{"val":1.0}` | `f9db225d73c91a5308bef289650d9406fb2f8e5bf138113a9181621823b5f4fe` | = R04 (escala) |
+| R04 | `{"val":1}` | `f9db225d73c91a5308bef289650d9406fb2f8e5bf138113a9181621823b5f4fe` | = R03 |
+| R05 | `{"s":"Café"}` NFC | `d6658508503f6353aeb85ded6fa38b631479c353b11c51804d024b568bbd34a0` | = R06 (NFC) |
+| R06 | `{"s":"Cafe\u0301"}` NFD | `d6658508503f6353aeb85ded6fa38b631479c353b11c51804d024b568bbd34a0` | = R05 |
+| R07 | `[1,2]` | `86cf310a5a9d951e165ca28f7ceff2338c1b7fd897ef118ef3e10cd248a07072` | ≠ R08 (orden de array) |
+| R08 | `[2,1]` | `db8696f82dede8809b5284d17384a471ed8a5c2b1cd74b3ed9a76b2928f155d6` | ≠ R07 |
+| R09 | `{"v":null}` | `28b9e597633d743d8dea48af11c548373cfb80cc4b268efd288cce4202b9281c` | ≠ R10 |
+| R10 | `{"v":"null"}` | `ffbb943d389a077d2ae45e88dc07dc930dfa74c19e47dc3debae4a4c94fef6fa` | ≠ R09 |
+| R11 | `{"v":""}` | `1af2a70b18db527cf5853b4fa5f23fd4bb398c0dffd3afcf48930c3e995c8db6` | cadena vacía |
+| R12 | `{"clé":1,"a":[true,false,null,-0.0]}` | `a9bf4d1aa296ad595981c207bcffb0922b83e2ac6510411002d35f68a06f48c5` | clave Unicode, literales, `-0.0`→`0` |
+| R13 | `{"t":"a\u0001\"b\\"}` | `15830eab676c7136f705c40b8488a35db3a810de2153e2194de78fdafd1a4b93` | escapes de control |
 | X01 | `{"Café":1,"Cafe\u0301":2}` | REJECTED | colisión de claves tras NFC |
 | X02 | `{"a":1,"a":1}` | REJECTED | clave duplicada |
 | X03 | `{"a":NaN}` | REJECTED | constante no JSON |
+| X04 | `{"a":"\ud800"}` | REJECTED | surrogate UTF-16 no emparejado |
 
-En Build, estos scripts se guardarán en `validation/fnd001/` (`fact_hash.py`, `factHash.ts`, `vectors.json` con V01–V20, R01–R13, X01–X03 y el dominio de lexema). Ese guardado y su ejecución como test del proyecto siguen **NOT RUN**.
+En Build, estos scripts se guardarán en `validation/fnd001/` (`fact_hash.py`, `factHash.ts`, `vectors.json` con V01–V20, R01–R13, X01–X04 y el dominio de lexema). Ese guardado y su ejecución como test del proyecto siguen **NOT RUN**.
 
 ---
 
@@ -911,7 +931,7 @@ Aislamiento: cada suite SQL se ejecuta dentro de `BEGIN ... ROLLBACK` en una bas
 | T19 | Hecho con una clave fuera de la allowlist o con `accn` desconocido | rechazado, sin hash, `finalize` devuelve `failed` |
 | T20 | `sec_is_admin()`: anon false; no-admin false; admin true; sin UID false | según caso |
 | T21 | RLS: anon y no-admin ven solo lo publicado y 0 filas privadas, y su DML → 42501; admin lee todo y su DML → 42501; service_role: INSERT OK, DELETE → 42501 | según caso |
-| T22 | `payload_sha256` = `sha256sum` del fixture binario (bytes HTTP exactos). En integración, la función de backend produce para R01–R13 los mismos `raw_json_sha256` que D.5 y rechaza X01–X03; un mismo `fact_hash` con JSON canónico distinto genera dos observaciones (`sec_obs_content_uq`) | igualdad |
+| T22 | `payload_sha256` = `sha256sum` del fixture binario (bytes HTTP exactos). En integración, la función de backend produce para R01–R13 los mismos `raw_json_sha256` que D.5 y rechaza X01–X04; un mismo `fact_hash` con JSON canónico distinto genera dos observaciones (`sec_obs_content_uq`) | igualdad |
 | T23 | Finalización de submissions: payload de 3 filings (2 nuevos, 1 existente idéntico) → `completed`, `filings_inserted=2` (BD); conteo incoherente → `failed`; `observations_written` no interviene | según caso |
 | T24 | Finalización de companyfacts y reingesta: payload de N hechos con 1 duplicado → `completed`; reingesta → `facts_inserted=0`, `facts_existing=N-1`, N-1 observaciones nuevas, `completed` | según caso |
 | T25 | Como service_role, `UPDATE sec_ingestion_runs SET status='completed'` → 42501 (sin privilegio); `sec_finalize_run` → OK; `sec_fail_stale_runs('1 hour')` marca huérfanas; `sec_fail_stale_runs(NULL)` y `('5 minutes')` → excepción | según caso |
@@ -920,11 +940,13 @@ Aislamiento: cada suite SQL se ejecuta dentro de `BEGIN ... ROLLBACK` en una bas
 | T28 | Taxonomía fuera de alcance: INSERT de un raw fact con `taxonomy_key='srt'` → 23514; payload con hechos `srt`/`ifrs-full` → excluidos en `facts_skipped_scope`, sin hash, sin afectar a `completed` | según caso |
 | T29 | Formularios: filings 8-K y 20-F excluidos (`filings_skipped_form`, no contados en `payload_filing_count`); 10-K/A y 10-Q/A incluidos; INSERT directo con `form='8-K'` → 23514; hecho de companyfacts con `form='8-K'` → `facts_skipped_scope`, no `facts_rejected` | según caso |
 | T30 | Contadores NULL: para cada contador requerido de submissions y de companyfacts, forzar NULL o ausente impide `completed` (CHECK 23514 en UPDATE directo como owner; `sec_finalize_run` devuelve `failed` si falta en `_counts`); contadores de la otra rama no NULL → 23514 | según caso |
-| T31 | Contadores existing derivados: reingesta de submissions con 3 elegibles ya existentes → `filings_existing=3` (BD); reingesta de companyfacts → `facts_existing = distinct(raw_fact_hash de la corrida) − facts_inserted`; muestras de conflicto que no cuadran con `filing_conflicts` → `failed`; `conflict_samples` con 101 elementos → 23514 | según caso |
+| T31 | Contadores existing derivados: reingesta de submissions con 3 elegibles ya existentes → `filings_not_inserted=3` (BD); reingesta de companyfacts → `facts_existing = distinct(raw_fact_hash de la corrida) − facts_inserted`; muestras de conflicto que no cuadran con `filing_conflicts` → `failed`; `conflict_samples` con 101 elementos → 23514 | según caso |
 | TH-F | `fact_hash`: V01–V20 y dominio de lexema idénticos en Python y TypeScript | diff vacío |
-| TH-J | `raw_json_sha256`: R01–R13 y rechazos X01–X03 idénticos en Python y TypeScript | diff vacío |
+| TH-J | `raw_json_sha256` (con separador de dominio): R01–R13 y rechazos X01–X04 idénticos en Python y TypeScript | diff vacío |
+| T32 | Extracción jerárquica de companyfacts: fixture con `facts.us-gaap.Revenues.units.USD[...]` y `facts.us-gaap.Revenues.units.EUR[...]` (mismo tag, dos unidades), más `facts.dei.<tag>.units.<unit>[...]` con `val` textual y otro con `val` null. Cada observación hereda `taxonomy_key`, `tag` y `unit` de sus claves padre; los `fact_hash` difieren por unidad; el objeto hoja nunca aporta esos tres campos y, si los trajera, se rechaza por la allowlist | según caso |
+| T33 | Duplicados de filings en el payload: payload con 3 entradas elegibles, una de ellas repetida de forma idéntica → `filings_inserted=2`, `filings_not_inserted=1` (repetida, no preexistente); la misma repetición con metadata distinta → `filing_conflicts=1`, `failed` | según caso |
 
-**TH-F y TH-J:** ejecutados como bloque en memoria (D.5); guardados como tests del proyecto, NOT RUN. **T1–T31 (base de datos, acceso e integración):** NOT RUN. Ejecutar hashes en memoria **no** valida la base de datos ni el RLS.
+**TH-F y TH-J:** ejecutados como bloque en memoria (D.5); guardados como tests del proyecto, NOT RUN. **T1–T33 (base de datos, acceso e integración):** NOT RUN. Ejecutar hashes en memoria **no** valida la base de datos ni el RLS.
 
 Comandos previstos (NOT RUN):
 ```bash
@@ -939,6 +961,7 @@ python3 validation/fnd001/fact_hash.py > /tmp/py.txt && bun validation/fnd001/fa
 ## F. Preflight y trazabilidad
 
 ### F.1 Preflight de solo lectura
+Se ejecuta **inmediatamente antes del CREATE, con la misma sesión y el mismo rol que ejecutará la migración**, para que los resultados reflejen sus permisos reales. Solo hace SELECT. Comprueba la existencia y las colisiones de relaciones (tablas, índices, secuencias, vistas, tipos compuestos), funciones, triggers, políticas, constraints y tipos con prefijo `sec_`. Cualquier coincidencia detiene el proceso para analizar la compatibilidad. El rol migrador real sigue **NOT VERIFIED** hasta ejecutarlo.
 ```sql
 SELECT current_setting('server_version');                                           -- CONFIRMADO 17.6
 -- Colisiones de TODOS los objetos sec_* (tablas, vistas, índices, secuencias, tipos compuestos, funciones, triggers, políticas, constraints)
@@ -998,6 +1021,10 @@ Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constra
 | Formularios elegibles y conteo tras filtro | CHECK `form`, C.14, C.15.5 | T29 |
 | Contadores requeridos NOT NULL | CHECKs de C.4 | T30 |
 | Existing derivados en BD y límite de muestras | `sec_finalize_run`, CHECK `conflict_samples` | T31 |
+| Contexto jerárquico de companyfacts | C.15.6 | T32 |
+| Filings no insertados (preexistentes + repetidos) | `filings_not_inserted`, C.15.5 | T33 |
+| `raw_json_sha256` con dominio propio y rechazo de surrogates | D.3 | TH-J, T22 |
+| Supersession atómica | RPC de M1.2 (prerequisito) | M1.2 |
 | Texto vacío distinto de nil | CHECK de C.6, B6c | T4, V19 |
 | Supersession sin `created_at` | `sec_supersession_check` | T15 |
 | Comprobación de admin | `sec_is_admin` | T20 |
@@ -1008,21 +1035,23 @@ Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constra
 
 ## G. Riesgos residuales
 1. El payload no es recuperable hasta M1.3 (B11).
-2. `filings_existing` y `facts_existing` se derivan en la BD. Siguen siendo valores del cliente, validados solo en presencia, signo y coherencia: `payload_filing_count`, `filings_skipped_form`, `filing_conflicts`, `payload_fact_count`, `facts_skipped_scope`, `payload_duplicate_count` y `facts_rejected`. No pueden verificarse contra el payload hasta que sea recuperable (M1.3). Además, `filings_existing` depende de `payload_filing_count`, que aporta el cliente.
+2. `filings_not_inserted` y `facts_existing` se derivan en la BD. Siguen siendo valores del cliente, validados solo en presencia, signo y coherencia: `payload_filing_count`, `filings_skipped_form`, `filing_conflicts`, `payload_fact_count`, `facts_skipped_scope`, `payload_duplicate_count` y `facts_rejected`. No pueden verificarse contra el payload hasta que sea recuperable (M1.3). Además, `filings_not_inserted` depende de `payload_filing_count`, que aporta el cliente.
 3. Las corridas huérfanas dependen de que se ejecute `sec_fail_stale_runs`. Si no se llama, quedan en `running` (aunque nunca `completed`).
 4. Hace falta un parser JSON sin pérdida en el entorno de la función de backend; la dependencia se elige en Build.
 5. Los hechos de texto o nil en companyfacts y el patrón real de `submissions_page` no se han observado en payloads reales.
 6. El parser JSON sin pérdida de la función de backend debe reproducir exactamente el comportamiento de D.5 (TH-J); hasta Build solo está verificado el de los scripts de referencia.
 7. Ingerir `srt`, `ifrs-full` u otros formularios requiere una decisión de alcance explícita.
-8. T1–T31 no se han ejecutado.
+8. La RPC atómica de supersession es un prerequisito de M1.2 (C.15.11b).
+9. T1–T33 no se han ejecutado.
 
 ---
 
 ## H. Estado final
-- **CONFIRMADO:** PostgreSQL 17.6 (admite `NULLS NOT DISTINCT`); no existen tablas ni funciones `sec_*`; definición y propietario de `has_role`; EXECUTE sobre `has_role`: anon=false, authenticated=true, postgres=true (sin cambios); `postgres` puede ejecutar `auth.uid()` y tiene USAGE en `auth`; default privileges amplios (REVOKE obligatorio); `fact_hash` v1 con `taxonomy_key` y decimal exacto: 20 vectores (V01–V20: los 19 previstos más el borde de exponente) y 8 casos de dominio de lexema, idénticos en dos runtimes; `raw_json_sha256`: 13 vectores y 3 rechazos, idénticos en dos runtimes. Diff conjunto vacío, 44 líneas, con el bloque autocontenido de D.5.
+- **CONFIRMADO:** PostgreSQL 17.6 (admite `NULLS NOT DISTINCT`); no existen tablas ni funciones `sec_*`; definición y propietario de `has_role`; EXECUTE sobre `has_role`: anon=false, authenticated=true, postgres=true (sin cambios); `postgres` puede ejecutar `auth.uid()` y tiene USAGE en `auth`; default privileges amplios (REVOKE obligatorio); `fact_hash` v1 con `taxonomy_key` y decimal exacto: 20 vectores (V01–V20: los 19 previstos más el borde de exponente) y 8 casos de dominio de lexema, idénticos en dos runtimes; `raw_json_sha256` con separador de dominio propio: 13 vectores y 4 rechazos de JSON (incluido el surrogate no emparejado), idénticos en dos runtimes. Diff conjunto vacío, 45 líneas, con el bloque autocontenido de D.5. El bloque guardado en el documento tiene el mismo SHA-256 que el ejecutado (`7151d072…0820`).
 - **NOT VERIFIED:** prueba JWT real de `sec_is_admin()`; hechos de texto, nil o vacíos y patrón de `submissions_page` en payloads reales; colisiones `sec_*` de triggers, políticas, constraints y tipos (lo cubre el preflight ampliado).
 - **NOT VERIFIED (propiedad):** rol migrador y su capacidad de transferir la propiedad a postgres (preflight F.1).
-- **NOT RUN:** T1–T31 y TH-F/TH-J como tests guardados en el proyecto.
+- **NOT RUN:** T1–T33 y TH-F/TH-J como tests guardados en el proyecto.
+- **Recuentos de la evidencia en memoria:** `fact_hash`, 20 vectores; dominio de lexema, 8 casos; `raw_json_sha256`, 13 vectores; rechazos de JSON, 4. Total: 45 líneas idénticas en dos runtimes.
 - Este documento es el único archivo modificado: sin cambios de aplicación, base de datos ni migraciones.
 - FND-001 sigue **NOT STARTED**.
 
