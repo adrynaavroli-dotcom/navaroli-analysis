@@ -78,8 +78,9 @@ DO $$ BEGIN
      OR EXISTS (SELECT 1 FROM pg_proc WHERE pronamespace='public'::regnamespace AND proname LIKE 'sec\_%')
      OR EXISTS (SELECT 1 FROM pg_trigger WHERE NOT tgisinternal AND tgname LIKE 'sec\_%')
      OR EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND policyname LIKE 'sec\_%')
-     OR EXISTS (SELECT 1 FROM pg_type WHERE typnamespace='public'::regnamespace AND typname LIKE 'sec\_%' AND typtype <> 'c')
-  THEN RAISE EXCEPTION 'sec_* objects present: run F.1 compatibility diff first'; END IF;
+     OR EXISTS (SELECT 1 FROM pg_constraint WHERE connamespace='public'::regnamespace AND conname LIKE 'sec\_%')
+     OR EXISTS (SELECT 1 FROM pg_type WHERE typnamespace='public'::regnamespace AND typname LIKE 'sec\_%')   -- todos los tipos, incluidos los compuestos
+  THEN RAISE EXCEPTION 'sec_* objects present: manual compatibility review (F.1) required before Build'; END IF;
 END $$;
 
 -- ===== C.1 sec_is_admin =====
@@ -239,7 +240,7 @@ CREATE TABLE public.sec_raw_fact_observations (
   filed_date       date,
   fiscal_year      integer,
   fiscal_period    text,
-  raw_json         jsonb NOT NULL,    -- forma semántica; NO son los bytes originales
+  raw_json         jsonb NOT NULL,    -- objeto semántico COMPLETO: {taxonomy_key, tag, unit} heredados + campos hoja; NO son los bytes originales
   raw_json_sha256  bytea NOT NULL CHECK (octet_length(raw_json_sha256) = 32),  -- JSON canónico (D.3)
   conflict         boolean NOT NULL DEFAULT false,
   conflict_kind    text CHECK (conflict_kind IN ('metadata','frame_only')),
@@ -630,7 +631,7 @@ CREATE POLICY sec_sources_admin ON public.sec_normalized_fact_sources FOR SELECT
      - `tag` es la clave del concepto;
      - `unit` es la clave del mapa `units`;
      - `start, end, val, accn, fy, fp, form, filed, frame` salen del objeto hoja.
-   - El parser arrastra `(taxonomy_key, tag, unit)` del contexto padre al calcular `fact_hash` y al construir el objeto canónico de `raw_json_sha256`: `{ "taxonomy_key", "tag", "unit" }` + los campos de la hoja.
+   - El parser arrastra `(taxonomy_key, tag, unit)` del contexto padre y construye **un único objeto semántico** `O = { "taxonomy_key", "tag", "unit" }` + los campos de la hoja. Con `O` se calcula `fact_hash`, `raw_json` almacena exactamente `O` y `raw_json_sha256` = SHA-256(`navaroli.sec.raw_json.v1\0` + canonicalización de `O`). Nunca se guarda solo la hoja ni se hashea una estructura distinta de la almacenada.
    - **No** se espera que la hoja contenga `taxonomy_key`, `tag` ni `unit`; si apareciera alguno, la allowlist lo rechaza (T32).
    - `unit` NULL solo puede darse si un tag de texto se publica sin mapa `units`; ese caso no se ha observado y se trata como NOT VERIFIED.
    - Filtro de alcance: una taxonomía distinta de `us-gaap`/`dei` o un `form` no elegible implica `facts_skipped_scope++`, sin hash.
@@ -694,7 +695,8 @@ V      N -> 0x03 + canon_decimal(lexeme) ; T -> S(text) ; X -> 0x00
 
 ### D.3 raw_json_sha256 (JSON canónico semántico)
 SHA-256 de una serialización determinista del objeto del hecho tal como se parseó:
-- `raw_json_sha256 = SHA-256( ASCII "navaroli.sec.raw_json.v1" || 0x00 || UTF-8(JSON canónico) )`. El separador propio aísla su dominio criptográfico del de `fact_hash` (`navaroli.sec.fact_hash.v1\0`);
+- Objeto de entrada: el objeto semántico completo `O` de C.15.6 (`taxonomy_key`, `tag` y `unit` heredados + campos hoja), el mismo que se guarda en `raw_json`.
+- `raw_json_sha256 = SHA-256( ASCII "navaroli.sec.raw_json.v1" || 0x00 || UTF-8(JSON canónico de O) )`. El separador propio aísla su dominio criptográfico del de `fact_hash` (`navaroli.sec.fact_hash.v1\0`);
 - entrada parseada sin pérdida: números como lexema; `NaN`, `Infinity` y constantes no JSON se rechazan;
 - cualquier string o clave con un surrogate UTF-16 no emparejado (p. ej. `\ud800` suelto) se **rechaza** antes de codificar en UTF-8; ambos runtimes lo rechazan igual (X04);
 - claves normalizadas a NFC; dos claves que coinciden tras NFC, o una clave duplicada, implican **rechazo** (el hecho cuenta en `facts_rejected`);
@@ -931,7 +933,7 @@ Aislamiento: cada suite SQL se ejecuta dentro de `BEGIN ... ROLLBACK` en una bas
 | T19 | Hecho con una clave fuera de la allowlist o con `accn` desconocido | rechazado, sin hash, `finalize` devuelve `failed` |
 | T20 | `sec_is_admin()`: anon false; no-admin false; admin true; sin UID false | según caso |
 | T21 | RLS: anon y no-admin ven solo lo publicado y 0 filas privadas, y su DML → 42501; admin lee todo y su DML → 42501; service_role: INSERT OK, DELETE → 42501 | según caso |
-| T22 | `payload_sha256` = `sha256sum` del fixture binario (bytes HTTP exactos). En integración, la función de backend produce para R01–R13 los mismos `raw_json_sha256` que D.5 y rechaza X01–X04; un mismo `fact_hash` con JSON canónico distinto genera dos observaciones (`sec_obs_content_uq`) | igualdad |
+| T22 | `payload_sha256` = `sha256sum` del fixture binario (bytes HTTP exactos). En integración, la función de backend produce para R01–R13 los mismos `raw_json_sha256` que D.5 y rechaza X01–X04; un mismo `fact_hash` con JSON canónico distinto genera dos observaciones (`sec_obs_content_uq`). Para cada observación insertada, recalcular `raw_json_sha256` desde el `raw_json` almacenado (incluidos `taxonomy_key`, `tag` y `unit`) coincide con el valor guardado | igualdad |
 | T23 | Finalización de submissions: payload de 3 filings (2 nuevos, 1 existente idéntico) → `completed`, `filings_inserted=2` (BD); conteo incoherente → `failed`; `observations_written` no interviene | según caso |
 | T24 | Finalización de companyfacts y reingesta: payload de N hechos con 1 duplicado → `completed`; reingesta → `facts_inserted=0`, `facts_existing=N-1`, N-1 observaciones nuevas, `completed` | según caso |
 | T25 | Como service_role, `UPDATE sec_ingestion_runs SET status='completed'` → 42501 (sin privilegio); `sec_finalize_run` → OK; `sec_fail_stale_runs('1 hour')` marca huérfanas; `sec_fail_stale_runs(NULL)` y `('5 minutes')` → excepción | según caso |
@@ -971,7 +973,7 @@ UNION ALL SELECT 'func', proname FROM pg_proc WHERE pronamespace='public'::regna
 UNION ALL SELECT 'trigger', tgname FROM pg_trigger WHERE NOT tgisinternal AND tgname LIKE 'sec\_%'
 UNION ALL SELECT 'policy', policyname FROM pg_policies WHERE schemaname='public' AND policyname LIKE 'sec\_%'
 UNION ALL SELECT 'constraint', conname FROM pg_constraint WHERE connamespace='public'::regnamespace AND conname LIKE 'sec\_%'
-UNION ALL SELECT 'type', typname FROM pg_type WHERE typnamespace='public'::regnamespace AND typname LIKE 'sec\_%' AND typtype <> 'c';
+UNION ALL SELECT 'type:'||typtype, typname FROM pg_type WHERE typnamespace='public'::regnamespace AND typname LIKE 'sec\_%';   -- incluye compuestos
 -- CONFIRMADO: 0 relaciones y 0 funciones sec_* (lecturas previas). Triggers, políticas, constraints y tipos: NOT VERIFIED (se ejecuta en el preflight)
 SELECT pg_get_function_result(p.oid), provolatile, prosecdef, proconfig, proowner::regrole
   FROM pg_proc p WHERE p.oid='public.has_role(uuid,public.app_role)'::regprocedure;   -- CONFIRMADO boolean,s,t,{search_path=public},postgres
@@ -1047,7 +1049,7 @@ Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constra
 ---
 
 ## H. Estado final
-- **CONFIRMADO:** PostgreSQL 17.6 (admite `NULLS NOT DISTINCT`); no existen tablas ni funciones `sec_*`; definición y propietario de `has_role`; EXECUTE sobre `has_role`: anon=false, authenticated=true, postgres=true (sin cambios); `postgres` puede ejecutar `auth.uid()` y tiene USAGE en `auth`; default privileges amplios (REVOKE obligatorio); `fact_hash` v1 con `taxonomy_key` y decimal exacto: 20 vectores (V01–V20: los 19 previstos más el borde de exponente) y 8 casos de dominio de lexema, idénticos en dos runtimes; `raw_json_sha256` con separador de dominio propio: 13 vectores y 4 rechazos de JSON (incluido el surrogate no emparejado), idénticos en dos runtimes. Diff conjunto vacío, 45 líneas, con el bloque autocontenido de D.5. El bloque guardado en el documento tiene el mismo SHA-256 que el ejecutado (`7151d072…0820`).
+- **CONFIRMADO:** PostgreSQL 17.6 (admite `NULLS NOT DISTINCT`); no existen tablas ni funciones `sec_*`; definición y propietario de `has_role`; EXECUTE sobre `has_role`: anon=false, authenticated=true, postgres=true (sin cambios); `postgres` puede ejecutar `auth.uid()` y tiene USAGE en `auth`; default privileges amplios (REVOKE obligatorio); `fact_hash` v1 con `taxonomy_key` y decimal exacto: 20 vectores (V01–V20: los 19 previstos más el borde de exponente) y 8 casos de dominio de lexema, idénticos en dos runtimes; `raw_json_sha256` con separador de dominio propio: 13 vectores y 4 rechazos de JSON (incluido el surrogate no emparejado), idénticos en dos runtimes. Diff conjunto vacío, 45 líneas, con el bloque autocontenido de D.5. Reverificado al cerrar esta revisión: el bloque bash se extrajo del propio documento, su SHA-256 es `7151d072…0820` y, al volver a ejecutarlo, produjo los mismos R01–R13 (con separador de dominio), los rechazos X01–X04 y `DIFF: empty (identical, 45 lines)`.
 - **NOT VERIFIED:** prueba JWT real de `sec_is_admin()`; hechos de texto, nil o vacíos y patrón de `submissions_page` en payloads reales; colisiones `sec_*` de triggers, políticas, constraints y tipos (lo cubre el preflight ampliado).
 - **NOT VERIFIED (propiedad):** rol migrador y su capacidad de transferir la propiedad a postgres (preflight F.1).
 - **NOT RUN:** T1–T33 y TH-F/TH-J como tests guardados en el proyecto.
