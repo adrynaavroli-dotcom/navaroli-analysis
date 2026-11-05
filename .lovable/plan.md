@@ -16,7 +16,8 @@ Estado: FND-001 **NOT STARTED**. M1.1 **NOT APPROVED**. Este documento sustituye
 | `postgres` sobre `auth` | `has_function_privilege('postgres','auth.uid()','EXECUTE')=true`; `has_schema_privilege('postgres','auth','USAGE')=true` | consulta read-only del usuario |
 | `app_role` | `admin,user` | psql |
 | Default privileges | `postgres`/`supabase_admin` conceden `arwdDxtm` (tablas), `rwU` (secuencias) y `X` (funciones) a anon/authenticated/service_role. **Es obligatorio un REVOKE explícito en cada objeto nuevo** | psql `pg_default_acl` |
-| Fact hash v1 | 18 vectores; Python y TypeScript independientes producen salidas idénticas (D.5) | ejecución en memoria, este turno |
+| `fact_hash` v1 | 20 vectores (V01–V20: los 19 pedidos más el borde de exponente V20) y 8 casos de dominio de lexema; Python y TypeScript independientes producen salida idéntica (D.5) | ejecución en memoria, este turno |
+| `raw_json_sha256` | 13 vectores (R01–R13) y 3 rechazos (X01–X03, incluida la colisión de claves tras NFC); salida idéntica en Python y TypeScript (D.5). Diff conjunto vacío, 44 líneas | ejecución en memoria, este turno |
 | Defecto de precisión anterior | `Decimal.normalize()` con el contexto por defecto convertía un valor de 61 dígitos en `1.234567890123456789012345679E+39`. El nuevo algoritmo no usa operaciones dependientes del contexto | ejecución, este turno |
 
 ### A.2 NOT VERIFIED
@@ -339,8 +340,14 @@ LANGUAGE plpgsql SET search_path = '' AS $$
 DECLARE r record;
 BEGIN
   IF TG_TABLE_NAME = 'sec_ingestion_runs' THEN
-    IF NEW.status <> 'running' OR NEW.finished_at IS NOT NULL OR NEW.http_status IS NOT NULL
-       OR NEW.payload_sha256 IS NOT NULL OR NEW.payload_filing_count IS NOT NULL OR NEW.payload_fact_count IS NOT NULL THEN
+    -- Estado inicial limpio: todos los campos de descarga, contadores, muestras, error y almacenamiento a NULL
+    IF NEW.status <> 'running' OR num_nonnulls(
+         NEW.finished_at, NEW.http_status, NEW.content_type, NEW.payload_bytes, NEW.payload_sha256,
+         NEW.storage_bucket, NEW.storage_path,
+         NEW.payload_filing_count, NEW.filings_skipped_form, NEW.filings_inserted, NEW.filings_existing, NEW.filing_conflicts,
+         NEW.payload_fact_count, NEW.facts_skipped_scope, NEW.payload_duplicate_count, NEW.facts_inserted, NEW.facts_existing,
+         NEW.facts_rejected, NEW.observations_written, NEW.metadata_conflicts, NEW.frame_changes,
+         NEW.conflict_samples, NEW.error_message) > 0 THEN
       RAISE EXCEPTION 'runs must be created empty and running' USING ERRCODE = '23514'; END IF;
   ELSIF TG_TABLE_NAME = 'sec_filings' THEN
     SELECT status, resource_kind INTO r FROM public.sec_ingestion_runs WHERE run_id = NEW.first_run_id;
@@ -458,7 +465,8 @@ CREATE FUNCTION public.sec_fail_stale_runs(_older_than interval) RETURNS integer
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE n integer;
 BEGIN
-  IF _older_than < interval '15 minutes' THEN RAISE EXCEPTION 'threshold too small'; END IF;
+  IF _older_than IS NULL OR _older_than < interval '15 minutes' THEN
+    RAISE EXCEPTION 'threshold must be non-null and >= 15 minutes'; END IF;
   UPDATE public.sec_ingestion_runs
      SET status = 'failed', finished_at = now(), error_message = 'orphaned: no finalisation before ' || _older_than
    WHERE status = 'running' AND started_at < now() - _older_than;
@@ -540,6 +548,23 @@ REVOKE ALL ON FUNCTION public.sec_record_download(uuid,integer,text,bigint,bytea
 GRANT EXECUTE ON FUNCTION public.sec_record_download(uuid,integer,text,bigint,bytea), public.sec_fail_run(uuid,text,jsonb),
   public.sec_fail_stale_runs(interval), public.sec_finalize_run(uuid,jsonb,jsonb) TO service_role;
 
+-- ===== C.11b Propiedad explícita: no se depende del rol que ejecute la migración =====
+-- Las RPC SECURITY DEFINER (propietario postgres) escriben en estas tablas; postgres debe ser su propietario.
+ALTER TABLE public.sec_companies               OWNER TO postgres;
+ALTER TABLE public.sec_ticker_mappings         OWNER TO postgres;
+ALTER TABLE public.sec_ingestion_runs          OWNER TO postgres;
+ALTER TABLE public.sec_filings                 OWNER TO postgres;
+ALTER TABLE public.sec_raw_facts               OWNER TO postgres;
+ALTER TABLE public.sec_raw_fact_observations   OWNER TO postgres;
+ALTER TABLE public.sec_normalized_facts        OWNER TO postgres;
+ALTER TABLE public.sec_normalized_fact_sources OWNER TO postgres;
+ALTER FUNCTION public.sec_guard()              OWNER TO postgres;
+ALTER FUNCTION public.sec_insert_guard()       OWNER TO postgres;
+ALTER FUNCTION public.sec_norm_lineage_check() OWNER TO postgres;
+ALTER FUNCTION public.sec_supersession_check() OWNER TO postgres;
+-- Si el rol migrador no puede transferir la propiedad a postgres (requiere ser postgres, superusuario
+-- o miembro de postgres), la migración debe abortar: el preflight F.1 lo comprueba antes.
+
 -- ===== C.12 GRANT (capa 1). Primero REVOKE por los default privileges =====
 REVOKE ALL ON public.sec_companies, public.sec_ticker_mappings, public.sec_ingestion_runs, public.sec_filings,
   public.sec_raw_facts, public.sec_raw_fact_observations, public.sec_normalized_facts, public.sec_normalized_fact_sources
@@ -613,6 +638,15 @@ CREATE POLICY sec_sources_admin ON public.sec_normalized_fact_sources FOR SELECT
 9. **Cierre:** `sec_finalize_run(run_id, counts)` es la única ruta hacia `completed`.
 10. **Reintento:** siempre con una corrida nueva. No se duplican raw facts ni filings; la nueva corrida escribe sus observaciones.
 11. **Normalización (M1.2):** solo desde corridas companyfacts `completed`, y cada hecho normalizado necesita al menos una fuente observada en esa corrida.
+11b. **Supersession (orden transaccional exacto, una sola transacción):**
+   a) generar en el backend el UUID `new_id` de la nueva versión;
+   b) `UPDATE` de la fila vigente: `is_current=false, superseded_by=new_id`. La FK compuesta es DEFERRABLE, así que el destino aún no existe, y el índice parcial `sec_norm_current_uq` queda libre;
+   c) `INSERT` de la nueva versión con `normalized_fact_id=new_id`, `is_current=true` y su `(normalizer_version, rule_version)` distinta;
+   d) `INSERT` de sus fuentes en `sec_normalized_fact_sources`;
+   e) `COMMIT`. En ese momento se comprueban la FK compuesta (misma empresa, `logical_key` y accession), `sec_supersession_check` (destino distinto y vigente) y `sec_norm_lineage_check` (al menos una fuente observada en la corrida origen).
+   - Al ser una única transacción, ningún lector ve un estado intermedio sin versión vigente.
+   - No existe orden temporal basado en `created_at`.
+   - service_role solo necesita INSERT en ambas tablas y UPDATE en `sec_normalized_facts`. `sec_guard` limita ese UPDATE a `is_current true→false` más `superseded_by`; cualquier otra columna se rechaza.
 12. **Significado de `completed`:** descargado, hasheado, procesado y validado. **No** archivado: el payload no es recuperable hasta M1.3.
 
 ---
@@ -637,15 +671,16 @@ V      N -> 0x03 + canon_decimal(lexeme) ; T -> S(text) ; X -> 0x00
 
 ### D.2 Canonicalización decimal (sin contexto ni float)
 1. Lexema: `^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d{1,6}))?$`, con al menos un dígito en la parte entera o la fraccionaria. Se rechazan `NaN`, `Infinity`, espacios, cadena vacía y cualquier otra cosa. Python y TypeScript aplican esta misma regex **antes** de construir el decimal.
-2. Coeficiente = todos los dígitos como cadena; exponente = exponente del lexema − número de dígitos fraccionarios. Si el exponente no es un entero seguro, o si |exp| > 1000 + longitud del coeficiente, se rechaza.
+2. Coeficiente = dígitos enteros + fraccionarios del lexema, **sin ceros iniciales**. `coefficient_digit_count` = su longitud (0 si el valor es cero). Exponente = exponente del lexema − número de dígitos fraccionarios. Se rechaza si el exponente del lexema no es un entero seguro (máximo 6 dígitos), o si |exponente| > 1000 + `coefficient_digit_count`. Ambos runtimes usan esta misma definición (borde: V20 se acepta y `0000000001e-1002` se rechaza).
 3. Se quitan los ceros a la izquierda. Si no queda nada, el valor es `0` y se descarta el signo (`-0` → `0`).
 4. Se quitan los ceros finales, incrementando el exponente.
 5. Se expande sin exponente: entero si exp ≥ 0; si no, se inserta el punto, con `0.` y ceros si hace falta. Se antepone `-` si es negativo.
-- Python: `Decimal(str)` (construcción exacta, sin contexto) + `as_tuple()` + manipulación de cadenas. **No** se usa `normalize()`.
-- TypeScript: regex + manipulación de cadenas; el exponente se convierte con `Number` solo tras validar `\d{1,6}` y `Number.isSafeInteger`.
+- Python y TypeScript: regex + manipulación de cadenas, sin `Decimal`, sin `normalize()` y sin float. El exponente se convierte a entero solo tras validar `\d{1,6}`, y en TypeScript además `Number.isSafeInteger`.
 
 ### D.3 raw_json_sha256 (JSON canónico semántico)
 SHA-256 de una serialización determinista del objeto del hecho tal como se parseó:
+- entrada parseada sin pérdida: números como lexema; `NaN`, `Infinity` y constantes no JSON se rechazan;
+- claves normalizadas a NFC; dos claves que coinciden tras NFC, o una clave duplicada, implican **rechazo** (el hecho cuenta en `facts_rejected`);
 - objetos con claves ordenadas por bytes UTF-8 (NFC);
 - strings en NFC, con escapes JSON mínimos (`"`, `\`, controles U+0000–U+001F como `\u00XX`);
 - números con `canon_decimal` (D.2) y sin comillas;
@@ -678,8 +713,9 @@ Base: `cik=0000320193`, `accn=0000320193-24-000123`, `taxonomy_key=us-gaap`, `ta
 | V17 | N `BIG` + `000` | `8d694bf30cf356597111e66235ee47d00ec585345d6e09f6d682e65d71890517` | = V16 |
 | V18 | N `1234567890123456789012345678901234567890123456789012345678901E-21` | `8d694bf30cf356597111e66235ee47d00ec585345d6e09f6d682e65d71890517` | = V16 |
 | V19 | `dei` / `EntityRegistrantName`, T `''` (vacío), unit NULL | `1b1f125c8db75b8e21b23d7940068f6490e9c593dd8c504224e1144d39e52eca` | ≠ V06 (nil), ≠ V12 |
+| V20 | N `0000000001e-1001` (ceros iniciales, exponente en el límite) | `565fc05b49c9f0742a4c9e1a281446653dc09dfc09dc1fe5acb0c0a0d8c83c67` | aceptado; `…e-1002` se rechaza |
 
-Rechazos de lexema comprobados en ambas implementaciones: `NaN`, `Infinity`, `' 1'`, `1e1234567` y `''`.
+Dominio de lexema comprobado en ambas implementaciones: se rechazan `NaN`, `Infinity`, `' 1'`, `1e1234567`, `''`, `0000000001e-1002` y `+.5e`; se acepta `1.`.
 
 ### D.5 Evidencia de ejecución (scripts en memoria; NO son tests de base de datos)
 - Ejecutado en este turno con Python 3.13.15 y Bun 1.4.4. El bloque bash de abajo es **literalmente** el que se ejecutó: autocontenido, sin placeholders, con heredocs `PYCODE`/`TSCODE`, y puede copiarse (requiere `python3` y `bun`). SHA-256 del bloque tal como se ejecutó: `4c1f74bd9ad7a1e053929f6c5b992007c78a22562402e9eb7ff0d5f219aea848`.
@@ -869,25 +905,26 @@ Aislamiento: cada suite SQL se ejecuta dentro de `BEGIN ... ROLLBACK` en una bas
 | T13 | Supersession hacia otra empresa | 23503 |
 | T14 | Supersession hacia otro `logical_key` u otro accession | 23503 |
 | T15 | Supersession hacia una versión que ya no está vigente, o con la misma `(normalizer_version, rule_version)` | 23514 al COMMIT |
-| T16 | Corrida: INSERT ya `completed`; endpoint que no corresponde a kind/CIK; `page_name` de otro CIK | 23514 |
+| T16 | Corrida: INSERT ya `completed`; INSERT con cualquiera de los campos de descarga, contadores, `conflict_samples`, `error_message`, `storage_*` o `finished_at` no nulo (un caso por campo); endpoint que no corresponde a kind/CIK; `page_name` de otro CIK | 23514 |
 | T17 | Fallo a mitad: lote 1 confirmado, excepción en el lote 2 → `sec_fail_run` deja `failed` con observaciones parciales; nuevo INSERT en esa corrida → 23514; reintento con corrida nueva → sin raw facts duplicados y `completed` | según C.15 |
 | T18 | Normalizar desde una corrida `failed`, `running` o submissions | 23514 |
 | T19 | Hecho con una clave fuera de la allowlist o con `accn` desconocido | rechazado, sin hash, `finalize` devuelve `failed` |
 | T20 | `sec_is_admin()`: anon false; no-admin false; admin true; sin UID false | según caso |
 | T21 | RLS: anon y no-admin ven solo lo publicado y 0 filas privadas, y su DML → 42501; admin lee todo y su DML → 42501; service_role: INSERT OK, DELETE → 42501 | según caso |
-| T22 | `payload_sha256` = `sha256sum` del fixture; `raw_json_sha256` estable aunque cambie el orden de claves o la escala de los números | igualdad |
+| T22 | `payload_sha256` = `sha256sum` del fixture binario (bytes HTTP exactos). En integración, la función de backend produce para R01–R13 los mismos `raw_json_sha256` que D.5 y rechaza X01–X03; un mismo `fact_hash` con JSON canónico distinto genera dos observaciones (`sec_obs_content_uq`) | igualdad |
 | T23 | Finalización de submissions: payload de 3 filings (2 nuevos, 1 existente idéntico) → `completed`, `filings_inserted=2` (BD); conteo incoherente → `failed`; `observations_written` no interviene | según caso |
 | T24 | Finalización de companyfacts y reingesta: payload de N hechos con 1 duplicado → `completed`; reingesta → `facts_inserted=0`, `facts_existing=N-1`, N-1 observaciones nuevas, `completed` | según caso |
-| T25 | Como service_role, `UPDATE sec_ingestion_runs SET status='completed'` → 42501 (sin privilegio); `sec_finalize_run` → OK; `sec_fail_stale_runs` marca huérfanas | según caso |
+| T25 | Como service_role, `UPDATE sec_ingestion_runs SET status='completed'` → 42501 (sin privilegio); `sec_finalize_run` → OK; `sec_fail_stale_runs('1 hour')` marca huérfanas; `sec_fail_stale_runs(NULL)` y `('5 minutes')` → excepción | según caso |
 | T26 | Discordancia de kind: filing con corrida companyfacts; raw fact u observación con corrida submissions | 23514 |
 | T27 | (a) Normalized sin fuentes → 23514 al COMMIT. (b) Mismo accession con `form`, `filed_date`, `accepted_at` o `report_date` distintos → `filing_conflicts=1`, muestra guardada, `finalize` devuelve `failed` | según caso |
 | T28 | Taxonomía fuera de alcance: INSERT de un raw fact con `taxonomy_key='srt'` → 23514; payload con hechos `srt`/`ifrs-full` → excluidos en `facts_skipped_scope`, sin hash, sin afectar a `completed` | según caso |
 | T29 | Formularios: filings 8-K y 20-F excluidos (`filings_skipped_form`, no contados en `payload_filing_count`); 10-K/A y 10-Q/A incluidos; INSERT directo con `form='8-K'` → 23514; hecho de companyfacts con `form='8-K'` → `facts_skipped_scope`, no `facts_rejected` | según caso |
 | T30 | Contadores NULL: para cada contador requerido de submissions y de companyfacts, forzar NULL o ausente impide `completed` (CHECK 23514 en UPDATE directo como owner; `sec_finalize_run` devuelve `failed` si falta en `_counts`); contadores de la otra rama no NULL → 23514 | según caso |
 | T31 | Contadores existing derivados: reingesta de submissions con 3 elegibles ya existentes → `filings_existing=3` (BD); reingesta de companyfacts → `facts_existing = distinct(raw_fact_hash de la corrida) − facts_inserted`; muestras de conflicto que no cuadran con `filing_conflicts` → `failed`; `conflict_samples` con 101 elementos → 23514 | según caso |
-| TH | Fact hash: `vectors.json` (V01–V19, incluidos los de 61 dígitos y el texto vacío) y rechazos de lexema idénticos en Python y TypeScript | diff vacío |
+| TH-F | `fact_hash`: V01–V20 y dominio de lexema idénticos en Python y TypeScript | diff vacío |
+| TH-J | `raw_json_sha256`: R01–R13 y rechazos X01–X03 idénticos en Python y TypeScript | diff vacío |
 
-**TH:** como bloque en memoria, ejecutado (D.5). Como test guardado en el proyecto, NOT RUN. **T1–T31:** NOT RUN.
+**TH-F y TH-J:** ejecutados como bloque en memoria (D.5); guardados como tests del proyecto, NOT RUN. **T1–T31 (base de datos, acceso e integración):** NOT RUN. Ejecutar hashes en memoria **no** valida la base de datos ni el RLS.
 
 Comandos previstos (NOT RUN):
 ```bash
@@ -917,6 +954,10 @@ SELECT pg_get_function_result(p.oid), provolatile, prosecdef, proconfig, proowne
   FROM pg_proc p WHERE p.oid='public.has_role(uuid,public.app_role)'::regprocedure;   -- CONFIRMADO boolean,s,t,{search_path=public},postgres
 SELECT r, has_function_privilege(r,'public.has_role(uuid,public.app_role)','EXECUTE')
   FROM unnest(ARRAY['anon','authenticated','postgres']) r;                           -- CONFIRMADO f,t,t
+-- Propiedad y privilegios del rol migrador (antes de migrar)
+SELECT current_user, session_user;                                                  -- NOT VERIFIED (se ejecuta en el preflight)
+SELECT pg_has_role(current_user, 'postgres', 'MEMBER') OR current_user = 'postgres';  -- debe ser true para C.11b; NOT VERIFIED
+SELECT has_schema_privilege('postgres','public','CREATE');                          -- esperado true; NOT VERIFIED
 SELECT has_function_privilege('postgres','auth.uid()','EXECUTE');                   -- CONFIRMADO true
 SELECT has_schema_privilege('postgres','auth','USAGE');                             -- CONFIRMADO true
 SELECT enumlabel FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid WHERE typname='app_role';   -- CONFIRMADO admin,user
@@ -927,6 +968,11 @@ SELECT proname, proowner::regrole, prosecdef, proconfig, proacl FROM pg_proc
 --  sec_is_admin: postgres, t, {search_path=""}, X solo para anon/authenticated
 --  sec_record_download/sec_fail_run/sec_fail_stale_runs/sec_finalize_run: postgres, t, {search_path=""}, X solo para service_role
 SELECT has_table_privilege('service_role','public.sec_ingestion_runs','UPDATE');    -- esperado false
+SELECT c.relname, c.relowner::regrole, c.relacl FROM pg_class c
+ WHERE c.relnamespace='public'::regnamespace AND c.relname LIKE 'sec\_%' AND c.relkind='r';   -- esperado: propietario postgres en las 8
+SELECT t, p, has_table_privilege('postgres', 'public.'||t, p)
+  FROM unnest(ARRAY['sec_ingestion_runs','sec_filings','sec_raw_facts','sec_raw_fact_observations',
+                    'sec_normalized_facts','sec_normalized_fact_sources']) t, unnest(ARRAY['INSERT','UPDATE','SELECT']) p;  -- esperado true
 ```
 Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constraint`, `pg_policies` y `pg_trigger` con la sección C y se informa de las diferencias antes de decidir. No se aborta sin análisis.
 
@@ -966,16 +1012,18 @@ Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constra
 3. Las corridas huérfanas dependen de que se ejecute `sec_fail_stale_runs`. Si no se llama, quedan en `running` (aunque nunca `completed`).
 4. Hace falta un parser JSON sin pérdida en el entorno de la función de backend; la dependencia se elige en Build.
 5. Los hechos de texto o nil en companyfacts y el patrón real de `submissions_page` no se han observado en payloads reales.
-6. `frame_only` conserva la evidencia pero no hace fallar la corrida (B9). Si se prefiere tratarlo como fallo, es una decisión explícita pendiente.
+6. El parser JSON sin pérdida de la función de backend debe reproducir exactamente el comportamiento de D.5 (TH-J); hasta Build solo está verificado el de los scripts de referencia.
 7. Ingerir `srt`, `ifrs-full` u otros formularios requiere una decisión de alcance explícita.
 8. T1–T31 no se han ejecutado.
 
 ---
 
 ## H. Estado final
-- **CONFIRMADO:** PostgreSQL 17.6 (admite `NULLS NOT DISTINCT`); no existen tablas ni funciones `sec_*`; definición y propietario de `has_role`; EXECUTE sobre `has_role`: anon=false, authenticated=true, postgres=true (sin cambios); `postgres` puede ejecutar `auth.uid()` y tiene USAGE en `auth`; default privileges amplios (REVOKE obligatorio); fact hash v1 con `taxonomy_key` y decimal exacto: 19 vectores (61 dígitos y texto vacío incluidos) y 5 rechazos de lexema, idénticos en Python y TypeScript con el mismo validador (diff vacío, 24 líneas).
+- **CONFIRMADO:** PostgreSQL 17.6 (admite `NULLS NOT DISTINCT`); no existen tablas ni funciones `sec_*`; definición y propietario de `has_role`; EXECUTE sobre `has_role`: anon=false, authenticated=true, postgres=true (sin cambios); `postgres` puede ejecutar `auth.uid()` y tiene USAGE en `auth`; default privileges amplios (REVOKE obligatorio); `fact_hash` v1 con `taxonomy_key` y decimal exacto: 20 vectores (V01–V20: los 19 previstos más el borde de exponente) y 8 casos de dominio de lexema, idénticos en dos runtimes; `raw_json_sha256`: 13 vectores y 3 rechazos, idénticos en dos runtimes. Diff conjunto vacío, 44 líneas, con el bloque autocontenido de D.5.
 - **NOT VERIFIED:** prueba JWT real de `sec_is_admin()`; hechos de texto, nil o vacíos y patrón de `submissions_page` en payloads reales; colisiones `sec_*` de triggers, políticas, constraints y tipos (lo cubre el preflight ampliado).
-- **NOT RUN:** T1–T31 y TH como test guardado en el proyecto.
+- **NOT VERIFIED (propiedad):** rol migrador y su capacidad de transferir la propiedad a postgres (preflight F.1).
+- **NOT RUN:** T1–T31 y TH-F/TH-J como tests guardados en el proyecto.
+- Este documento es el único archivo modificado: sin cambios de aplicación, base de datos ni migraciones.
 - FND-001 sigue **NOT STARTED**.
 
 M1.1 remains NOT APPROVED; no implementation performed.
