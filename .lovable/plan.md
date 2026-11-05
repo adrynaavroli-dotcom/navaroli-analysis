@@ -35,6 +35,14 @@ Estado: FND-001 **NOT STARTED**. M1.1 **NOT APPROVED**. Este documento sustituye
 8. `logical_key` queda definido en M1.1 sin accession; la versión incluye accession.
 9. Las colisiones de metadata de filings se detectan y hacen fallar la corrida.
 10. Las páginas antiguas de submissions se registran como `submissions_page`. Antes ningún recurso registrable cubría los accession antiguos que referencia companyfacts.
+11. Alcance de taxonomías limitado a lo aprobado (D1): `taxonomy_key IN ('us-gaap','dei')`, con CHECK y allowlist.
+12. Formularios limitados a `10-K`, `10-K/A`, `10-Q` y `10-Q/A`, con CHECK y filtro antes de contar.
+13. Todos los CHECK de finalización exigen `IS NOT NULL` en cada contador requerido (un NULL ya no puede pasar).
+14. Los contadores `*_existing` se derivan en la BD siempre que es posible; los que aporta el cliente se declaran como tales.
+15. La cadena vacía es un valor textual válido, distinto de nil (vector V19).
+16. La supersession ya no usa `created_at` como secuencia.
+17. Python valida el lexema con la misma regex que TypeScript. El bloque de evidencia es autocontenido.
+18. Correcciones menores: el trigger real del `logical_key`, CHECK de `conflict_samples` y preflight de colisiones para todos los objetos `sec_*`.
 
 ---
 
@@ -45,12 +53,14 @@ Estado: FND-001 **NOT STARTED**. M1.1 **NOT APPROVED**. Este documento sustituye
 | B2 | Toda la ingesta pasa por la función de backend `sec-ingest` (JWT + `sec_is_admin()`) con service role en servidor | Cero DML desde el navegador |
 | B3 | El admin humano solo tiene SELECT | El histórico no se altera por acceso ordinario |
 | B4 | `sec_is_admin()` sin argumentos, `search_path=''`, propietario postgres | No permite consultar UUID arbitrarios; anon no ejecuta `has_role` |
-| B5 | La identidad del hecho usa `taxonomy_key` tal como lo entrega companyfacts (`us-gaap`, `dei`, `srt`, `ifrs-full`, ...) | Es el único identificador de taxonomía presente en la respuesta; no se inventan URI ni versiones |
-| B6 | M1.1 cubre solo las taxonomías que entrega companyfacts. **No se afirma que capture namespaces custom de cada emisor** | companyfacts agrega las taxonomías estándar |
+| B5 | La identidad del hecho usa `taxonomy_key` tal como lo entrega companyfacts | Es el único identificador de taxonomía presente en la respuesta; no se inventan URI ni versiones |
+| B6 | M1.1 ingiere **solo** `us-gaap` y `dei` (decisión D1). companyfacts ofrece otras taxonomías no custom (p. ej. `srt`, `ifrs-full`), pero ingerirlas requiere una decisión de alcance posterior. Tampoco se capturan namespaces custom | Lo que ofrece el endpoint no equivale a lo aprobado |
+| B6b | Filings limitados a `10-K`, `10-K/A`, `10-Q` y `10-Q/A`. Los demás formularios se excluyen por filtro previsto, no se rechazan como error | Objetivo de FND-001 |
+| B6c | La cadena vacía en un hecho de texto se conserva como valor (`value_kind='text'`, `value_text=''`), distinto de nil | No se descarta un valor de fuente por suponer que vacío equivale a nulo |
 | B7 | Si se obtiene `taxonomy_uri` del instance XBRL (M1.3), se guarda como procedencia; incluirla en el hash exige `fact_hash` v2 | Estabilidad de la identidad v1 |
 | B8 | Sin dimensiones en M1.1. Un objeto con claves fuera de la allowlist se rechaza y **nunca se hashea** como si no tuviera dimensiones | companyfacts no expone dimensiones XBRL |
 | B9 | Conflictos con dos clases. `metadata`: difiere `fy`, `fp`, `form` o `filed`; se marca `conflict=true` y la corrida falla. `frame_only`: solo difiere `frame`; también `conflict=true` y se conserva, pero no hace fallar la corrida | SEC reasigna `frame` entre descargas; si eso hiciera fallar la corrida, toda reingesta posterior fallaría. Ningún caso se pierde |
-| B10 | `logical_key` = concepto canónico, unidad, tipo y fechas de periodo, **sin accession**. Versión = `(cik, logical_key, accession_number, normalizer_version, rule_version)`. `is_current` = cálculo vigente para ese accession con esas reglas, **no** el filing más reciente del periodo | Conserva filings y enmiendas como fuentes separadas para análisis point-in-time futuros |
+| B10 | `logical_key` = concepto canónico, unidad, tipo y fechas de periodo, **sin accession**. Versión = `(cik, logical_key, accession_number, normalizer_version, rule_version)`. `is_current` = cálculo vigente para ese accession con esas reglas, **no** el filing más reciente del periodo. La supersession apunta a otra versión que queda vigente para el mismo `(cik, logical_key, accession)`; **no** se afirma ningún orden cronológico basado en `created_at` | Conserva filings y enmiendas como fuentes separadas para análisis point-in-time futuros; solución mínima, sin número de revisión |
 | B11 | Archivado del payload en M1.3. `completed` significa procesado y validado, no recuperable | No existe bucket y no se inventa |
 | B12 | Publicación condicionada a `sec_companies.is_published` | Decisión D2 |
 
@@ -119,20 +129,24 @@ CREATE TABLE public.sec_ingestion_runs (
   storage_bucket          text,     -- siempre NULL en M1.1 (B11)
   storage_path            text,     -- siempre NULL en M1.1 (B11)
   -- contadores de submissions / submissions_page (solo vía sec_finalize_run)
-  payload_filing_count    integer CHECK (payload_filing_count >= 0),
-  filings_inserted        integer CHECK (filings_inserted >= 0),
-  filings_existing        integer CHECK (filings_existing >= 0),   -- ya existían con metadata idéntica
-  filing_conflicts        integer CHECK (filing_conflicts >= 0),
+  -- [C] = aportado por el cliente (backend), no verificable en la BD; [DB] = recontado o derivado en la BD
+  payload_filing_count    integer CHECK (payload_filing_count >= 0),     -- [C] filings ELEGIBLES (4 formularios) del payload
+  filings_skipped_form    integer CHECK (filings_skipped_form >= 0),     -- [C] filas de otros formularios, excluidas por filtro
+  filings_inserted        integer CHECK (filings_inserted >= 0),         -- [DB] count(first_run_id = run)
+  filings_existing        integer CHECK (filings_existing >= 0),         -- [DB] = payload_filing_count - filings_inserted
+  filing_conflicts        integer CHECK (filing_conflicts >= 0),         -- [C] debe coincidir con las muestras (≤100)
   -- contadores de companyfacts (solo vía sec_finalize_run)
-  payload_fact_count      integer CHECK (payload_fact_count >= 0),       -- objetos de hecho parseados
-  payload_duplicate_count integer CHECK (payload_duplicate_count >= 0),  -- objetos con contenido canónico repetido dentro del payload
-  facts_inserted          integer CHECK (facts_inserted >= 0),
-  facts_existing          integer CHECK (facts_existing >= 0),
-  facts_rejected          integer CHECK (facts_rejected >= 0),
-  observations_written    integer CHECK (observations_written >= 0),
-  metadata_conflicts      integer CHECK (metadata_conflicts >= 0),
-  frame_changes           integer CHECK (frame_changes >= 0),
-  conflict_samples        jsonb,    -- hasta 100 ejemplos de conflictos (filings o hechos)
+  payload_fact_count      integer CHECK (payload_fact_count >= 0),       -- [C] objetos elegibles (us-gaap/dei y formulario elegible)
+  facts_skipped_scope     integer CHECK (facts_skipped_scope >= 0),      -- [C] fuera de alcance (otra taxonomía u otro formulario)
+  payload_duplicate_count integer CHECK (payload_duplicate_count >= 0),  -- [C] contenido canónico repetido dentro del payload
+  facts_inserted          integer CHECK (facts_inserted >= 0),           -- [DB] count(first_run_id = run)
+  facts_existing          integer CHECK (facts_existing >= 0),           -- [DB] count(distinct raw_fact_hash de las observaciones de la corrida) - facts_inserted
+  facts_rejected          integer CHECK (facts_rejected >= 0),           -- [C] estructura no reconocida o accn elegible ausente
+  observations_written    integer CHECK (observations_written >= 0),     -- [DB]
+  metadata_conflicts      integer CHECK (metadata_conflicts >= 0),       -- [DB]
+  frame_changes           integer CHECK (frame_changes >= 0),            -- [DB]
+  conflict_samples        jsonb CHECK (conflict_samples IS NULL OR
+                            (jsonb_typeof(conflict_samples) = 'array' AND jsonb_array_length(conflict_samples) <= 100)),
   error_message           text,
   UNIQUE (cik, run_id),
   UNIQUE (cik, run_id, resource_kind),
@@ -146,19 +160,27 @@ CREATE TABLE public.sec_ingestion_runs (
   CHECK ((status = 'running') = (finished_at IS NULL)),
   CHECK (status <> 'failed' OR error_message IS NOT NULL),
   CHECK (status <> 'completed' OR (http_status = 200 AND payload_sha256 IS NOT NULL AND payload_bytes IS NOT NULL)),
+  -- Cada contador requerido se exige NOT NULL de forma explícita: un CHECK que evalúa NULL se considera superado
   CHECK (status <> 'completed' OR resource_kind = 'companyfacts' OR (
-           payload_filing_count IS NOT NULL AND filing_conflicts = 0
-           AND filings_inserted + filings_existing = payload_filing_count)),
+           payload_filing_count IS NOT NULL AND filings_skipped_form IS NOT NULL
+           AND filings_inserted IS NOT NULL AND filings_existing IS NOT NULL AND filing_conflicts IS NOT NULL
+           AND filing_conflicts = 0
+           AND filings_inserted + filings_existing = payload_filing_count
+           AND payload_fact_count IS NULL AND observations_written IS NULL)),
   CHECK (status <> 'completed' OR resource_kind <> 'companyfacts' OR (
-           payload_fact_count IS NOT NULL AND facts_rejected = 0 AND metadata_conflicts = 0
-           AND observations_written + payload_duplicate_count = payload_fact_count))
+           payload_fact_count IS NOT NULL AND facts_skipped_scope IS NOT NULL AND payload_duplicate_count IS NOT NULL
+           AND facts_inserted IS NOT NULL AND facts_existing IS NOT NULL AND facts_rejected IS NOT NULL
+           AND observations_written IS NOT NULL AND metadata_conflicts IS NOT NULL AND frame_changes IS NOT NULL
+           AND facts_rejected = 0 AND metadata_conflicts = 0
+           AND observations_written + payload_duplicate_count = payload_fact_count
+           AND payload_filing_count IS NULL AND filings_inserted IS NULL))
 );
 
 -- ===== C.5 Filings (solo desde corridas submissions / submissions_page) =====
 CREATE TABLE public.sec_filings (
   cik               text NOT NULL REFERENCES public.sec_companies(cik) ON DELETE RESTRICT,
   accession_number  text NOT NULL CHECK (accession_number ~ '^[0-9]{10}-[0-9]{2}-[0-9]{6}$'),
-  form              text NOT NULL,
+  form              text NOT NULL CHECK (form IN ('10-K','10-K/A','10-Q','10-Q/A')),
   filed_date        date NOT NULL,
   accepted_at       timestamptz,
   report_date       date,
@@ -174,7 +196,7 @@ CREATE TABLE public.sec_raw_facts (
   fact_hash_version  smallint NOT NULL DEFAULT 1 CHECK (fact_hash_version = 1),
   cik                text NOT NULL,
   accession_number   text NOT NULL,
-  taxonomy_key       text NOT NULL CHECK (taxonomy_key ~ '^[a-z][a-z0-9-]*$'),  -- clave de companyfacts, exacta
+  taxonomy_key       text NOT NULL CHECK (taxonomy_key IN ('us-gaap','dei')),  -- alcance aprobado (B6); clave exacta de companyfacts
   taxonomy_uri       text,            -- solo procedencia; NULL en M1.1; fuera del hash v1
   tag                text NOT NULL,
   unit               text,            -- nullable (texto sin unidad)
@@ -230,12 +252,12 @@ CREATE TABLE public.sec_raw_fact_observations (
 CREATE TABLE public.sec_normalized_facts (
   normalized_fact_id      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   cik                     text NOT NULL REFERENCES public.sec_companies(cik) ON DELETE RESTRICT,
-  canonical_concept       text NOT NULL CHECK (canonical_concept !~ '[|]'),
-  unit                    text NOT NULL CHECK (unit !~ '[|]'),
+  canonical_concept       text NOT NULL CHECK (canonical_concept ~ '^[A-Za-z][A-Za-z0-9_.:-]*$'),   -- ASCII, sin '|'
+  unit                    text NOT NULL CHECK (unit !~ '[|]' AND unit IS NFC NORMALIZED AND unit = btrim(unit) AND unit <> ''),
   period_type             text NOT NULL CHECK (period_type IN ('instant','duration')),
   period_start            date,
   period_end              date NOT NULL,
-  logical_key             text NOT NULL,   -- lo fija el trigger sec_norm_key (C.10); no lo escribe el cliente
+  logical_key             text NOT NULL,   -- lo calcula sec_insert_guard (rama sec_normalized_facts); el valor del cliente se sobrescribe
   accession_number        text NOT NULL,   -- procedencia / versión de filing
   value_numeric           numeric NOT NULL
                           CHECK (value_numeric NOT IN ('NaN'::numeric,'Infinity'::numeric,'-Infinity'::numeric)),
@@ -364,16 +386,19 @@ BEGIN
   RETURN NULL;
 END $$;
 
--- Al COMMIT: la supersession apunta a una versión más nueva y vigente del mismo (cik, logical_key, accession)
+-- Al COMMIT: la supersession apunta a una versión DISTINTA que queda VIGENTE para el mismo (cik, logical_key, accession).
+-- No se usa created_at: now() es estable dentro de una transacción y no define una secuencia.
+-- La cadena es acíclica porque solo se retira una fila vigente, el destino debe seguir vigente al COMMIT
+-- y sec_norm_current_uq admite una sola vigente por identidad.
 CREATE FUNCTION public.sec_supersession_check() RETURNS trigger
 LANGUAGE plpgsql SET search_path = '' AS $$
 DECLARE t public.sec_normalized_facts%ROWTYPE;
 BEGIN
   IF NEW.superseded_by IS NULL THEN RETURN NULL; END IF;
   SELECT * INTO t FROM public.sec_normalized_facts WHERE normalized_fact_id = NEW.superseded_by;
-  IF NOT t.is_current OR t.created_at < NEW.created_at
+  IF NOT t.is_current
      OR (t.normalizer_version, t.rule_version) = (NEW.normalizer_version, NEW.rule_version) THEN
-    RAISE EXCEPTION 'supersession must target a newer current version' USING ERRCODE = '23514'; END IF;
+    RAISE EXCEPTION 'supersession must target a distinct, current version' USING ERRCODE = '23514'; END IF;
   RETURN NULL;   -- misma empresa, logical_key y accession: lo garantiza la FK compuesta
 END $$;
 
@@ -435,46 +460,59 @@ BEGIN
   GET DIAGNOSTICS n = ROW_COUNT; RETURN n;
 END $$;
 
--- Finalización con ramas por resource_kind; recuenta en la BD todo lo que es contable por corrida
+-- Finalización con ramas por resource_kind. Recuenta en la BD lo que es contable por corrida ([DB]);
+-- los valores del cliente ([C]) se validan en presencia, signo y coherencia, pero NO se verifican contra el payload
+-- (no es recuperable hasta M1.3). Un cast inválido de _counts lanza un error y la corrida sigue en running
+-- hasta sec_fail_run o sec_fail_stale_runs.
 CREATE FUNCTION public.sec_finalize_run(_run_id uuid, _counts jsonb, _conflict_samples jsonb DEFAULT NULL)
 RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE r public.sec_ingestion_runs%ROWTYPE; ok boolean; why text;
-        n_fil_ins integer; n_obs integer; n_meta integer; n_frame integer; n_raw_ins integer;
+        c_payload integer; c_skip integer; c_conf integer; c_dup integer; c_rej integer;
+        n_fil_ins integer; n_obs integer; n_distinct integer; n_meta integer; n_frame integer; n_raw_ins integer;
 BEGIN
   SELECT * INTO r FROM public.sec_ingestion_runs WHERE run_id = _run_id FOR UPDATE;
   IF r.status IS DISTINCT FROM 'running' THEN RAISE EXCEPTION 'run not running'; END IF;
   IF r.http_status IS DISTINCT FROM 200 OR r.payload_sha256 IS NULL THEN
     PERFORM public.sec_fail_run(_run_id, 'finalize without successful download'); RETURN 'failed'; END IF;
 
+  -- Validación de los valores aportados por el cliente: presentes, enteros y >= 0; si no, la corrida falla
   IF r.resource_kind IN ('submissions','submissions_page') THEN
+    c_payload := (_counts->>'payload_filing_count')::int;
+    c_skip    := (_counts->>'filings_skipped_form')::int;
+    c_conf    := (_counts->>'filing_conflicts')::int;
+    IF c_payload IS NULL OR c_skip IS NULL OR c_conf IS NULL OR LEAST(c_payload, c_skip, c_conf) < 0
+       OR COALESCE(jsonb_array_length(_conflict_samples), 0) <> LEAST(c_conf, 100) THEN
+      PERFORM public.sec_fail_run(_run_id, 'finalize: invalid or missing client counters'); RETURN 'failed'; END IF;
     SELECT count(*) INTO n_fil_ins FROM public.sec_filings WHERE cik = r.cik AND first_run_id = _run_id;
-    ok := (_counts->>'filings_inserted')::int = n_fil_ins
-          AND n_fil_ins + (_counts->>'filings_existing')::int = (_counts->>'payload_filing_count')::int
-          AND (_counts->>'filing_conflicts')::int = 0;
-    why := format('filings: payload=%s inserted(db)=%s existing=%s conflicts=%s',
-                  _counts->>'payload_filing_count', n_fil_ins, _counts->>'filings_existing', _counts->>'filing_conflicts');
+    -- existing derivado en la BD: solo es coherente si no es negativo y no hay conflictos
+    ok := c_conf = 0 AND c_payload - n_fil_ins >= 0;
+    why := format('filings: eligible(client)=%s inserted(db)=%s conflicts(client)=%s', c_payload, n_fil_ins, c_conf);
     UPDATE public.sec_ingestion_runs SET
-      payload_filing_count = (_counts->>'payload_filing_count')::int, filings_inserted = n_fil_ins,
-      filings_existing = (_counts->>'filings_existing')::int, filing_conflicts = (_counts->>'filing_conflicts')::int,
+      payload_filing_count = c_payload, filings_skipped_form = c_skip, filings_inserted = n_fil_ins,
+      filings_existing = GREATEST(c_payload - n_fil_ins, 0), filing_conflicts = c_conf,
       conflict_samples = _conflict_samples
     WHERE run_id = _run_id;
   ELSE
-    SELECT count(*), count(*) FILTER (WHERE conflict_kind = 'metadata'), count(*) FILTER (WHERE conflict_kind = 'frame_only')
-      INTO n_obs, n_meta, n_frame
+    c_payload := (_counts->>'payload_fact_count')::int;
+    c_skip    := (_counts->>'facts_skipped_scope')::int;
+    c_dup     := (_counts->>'payload_duplicate_count')::int;
+    c_rej     := (_counts->>'facts_rejected')::int;
+    IF c_payload IS NULL OR c_skip IS NULL OR c_dup IS NULL OR c_rej IS NULL
+       OR LEAST(c_payload, c_skip, c_dup, c_rej) < 0 OR c_dup > c_payload THEN
+      PERFORM public.sec_fail_run(_run_id, 'finalize: invalid or missing client counters'); RETURN 'failed'; END IF;
+    SELECT count(*), count(DISTINCT raw_fact_hash),
+           count(*) FILTER (WHERE conflict_kind = 'metadata'), count(*) FILTER (WHERE conflict_kind = 'frame_only')
+      INTO n_obs, n_distinct, n_meta, n_frame
       FROM public.sec_raw_fact_observations WHERE cik = r.cik AND run_id = _run_id;
     SELECT count(*) INTO n_raw_ins FROM public.sec_raw_facts WHERE cik = r.cik AND first_run_id = _run_id;
-    ok := n_obs + (_counts->>'payload_duplicate_count')::int = (_counts->>'payload_fact_count')::int
-          AND (_counts->>'facts_rejected')::int = 0 AND n_meta = 0
-          AND (_counts->>'facts_inserted')::int = n_raw_ins;
-    why := format('facts: payload=%s dup=%s obs(db)=%s rejected=%s meta_conflicts(db)=%s raw_inserted(db)=%s',
-                  _counts->>'payload_fact_count', _counts->>'payload_duplicate_count', n_obs,
-                  _counts->>'facts_rejected', n_meta, n_raw_ins);
+    ok := n_obs + c_dup = c_payload AND c_rej = 0 AND n_meta = 0 AND n_distinct >= n_raw_ins;
+    why := format('facts: eligible(client)=%s dup(client)=%s obs(db)=%s rejected(client)=%s meta(db)=%s raw_ins(db)=%s',
+                  c_payload, c_dup, n_obs, c_rej, n_meta, n_raw_ins);
     UPDATE public.sec_ingestion_runs SET
-      payload_fact_count = (_counts->>'payload_fact_count')::int,
-      payload_duplicate_count = (_counts->>'payload_duplicate_count')::int,
-      facts_inserted = n_raw_ins, facts_existing = (_counts->>'facts_existing')::int,
-      facts_rejected = (_counts->>'facts_rejected')::int, observations_written = n_obs,
-      metadata_conflicts = n_meta, frame_changes = n_frame, conflict_samples = _conflict_samples
+      payload_fact_count = c_payload, facts_skipped_scope = c_skip, payload_duplicate_count = c_dup,
+      facts_inserted = n_raw_ins, facts_existing = n_distinct - n_raw_ins, facts_rejected = c_rej,
+      observations_written = n_obs, metadata_conflicts = n_meta, frame_changes = n_frame,
+      conflict_samples = _conflict_samples
     WHERE run_id = _run_id;
   END IF;
 
@@ -540,8 +578,10 @@ CREATE POLICY sec_sources_admin ON public.sec_normalized_fact_sources FOR SELECT
 ### C.14 Alcance de fuentes
 - **Registrados en `sec_ingestion_runs`:** `submissions` (`CIK##########.json`), `submissions_page` (ficheros listados en `filings.files`) y `companyfacts`. Ningún otro recurso SEC queda auditado.
 - **Fuera del registro:** `company_tickers.json`, que alimenta `sec_ticker_mappings`.
-- companyfacts **no expone dimensiones XBRL** ni namespaces custom. M1.1 almacena solo lo que entrega, con `taxonomy_key` tal cual.
-- Un hecho de companyfacts cuyo `accn` no exista en `sec_filings` se rechaza (`facts_rejected`). Antes de companyfacts hay que ingerir `submissions` y todas sus páginas.
+- **Taxonomías:** solo `us-gaap` y `dei`. companyfacts ofrece otras taxonomías no custom (p. ej. `srt`, `ifrs-full`); quedan **fuera** y cuentan en `facts_skipped_scope`. Ingerirlas requiere una decisión de alcance posterior. El CHECK de `taxonomy_key` rechaza cualquier otra.
+- **Formularios:** submissions y submissions_page filtran a `10-K`, `10-K/A`, `10-Q` y `10-Q/A`. `payload_filing_count` cuenta solo las entradas elegibles tras el filtro; el resto cuenta en `filings_skipped_form`.
+- **companyfacts y formularios:** un hecho cuyo `form` no es elegible se excluye y cuenta en `facts_skipped_scope`; no es un rechazo. Un hecho con `form` elegible cuyo `accn` no esté en `sec_filings` sí se rechaza (`facts_rejected`). Antes de companyfacts hay que ingerir `submissions` y todas sus páginas.
+- companyfacts **no expone dimensiones XBRL** ni namespaces custom. Cualquier estructura no reconocida se rechaza; nunca se hashea como si no tuviera dimensiones.
 
 ### C.15 Contrato de ingesta (función de backend `sec-ingest`; solo contrato)
 1. Se verifica el JWT y `sec_is_admin()` con el token del llamante. Si falla, 403 y no se crea corrida.
@@ -549,12 +589,15 @@ CREATE POLICY sec_sources_admin ON public.sec_normalized_fact_sources FOR SELECT
 3. Descarga. `payload_sha256` = SHA-256 de los **bytes exactos del cuerpo HTTP**, antes de parsear. Se registra con `sec_record_download`. Si el estado no es 200, `sec_fail_run`.
 4. Parseo con un parser JSON **sin pérdida** para los números (conserva el lexema).
 5. **submissions / submissions_page**, en lotes idempotentes:
-   - Por cada filing: `INSERT ... ON CONFLICT (cik, accession_number) DO NOTHING RETURNING`.
-   - Si no se insertó, se lee el existente y se comparan `form`, `filed_date`, `accepted_at` y `report_date`. Si coinciden, `filings_existing++`. Si difieren, `filing_conflicts++` y se guarda una muestra en `conflict_samples`.
+   - Filtro: las filas de formularios no elegibles cuentan en `filings_skipped_form` y no se insertan.
+   - Por cada filing elegible: `INSERT ... ON CONFLICT (cik, accession_number) DO NOTHING RETURNING`.
+   - Si no se insertó, se lee el existente y se comparan `form`, `filed_date`, `accepted_at` y `report_date`. Si difieren, `filing_conflicts++` y se guarda una muestra en `conflict_samples` (máximo 100; la RPC exige que haya exactamente `min(conflicts, 100)` muestras).
    - Nunca se ignora una diferencia en silencio: la finalización falla con cualquier conflicto.
-   - `filings_inserted` lo recuenta la BD (`first_run_id = run`). `filings_existing` lo reporta el backend: en la BD no hay registro por corrida de los filings ya existentes, y esta limitación queda declarada.
+   - La BD recuenta `filings_inserted` (`first_run_id = run`) y deriva `filings_existing = payload_filing_count − filings_inserted`. `payload_filing_count` y `filing_conflicts` son valores del cliente: se validan en presencia y coherencia, pero no se verifican contra el payload.
 6. **companyfacts**, en lotes idempotentes:
+   - Filtro de alcance: una taxonomía distinta de `us-gaap`/`dei` o un `form` no elegible implica `facts_skipped_scope++`, sin hash.
    - Validación por allowlist de claves: `start, end, val, accn, fy, fp, form, filed, frame`. Cualquier otra clave o estructura no reconocida implica `facts_rejected++`, sin hash ni inserción.
+   - `val` de tipo string → `value_kind='text'`, incluida la cadena vacía `''`. `val` numérico → `numeric`. `val` null → `nil`.
    - Se calculan `fact_hash` (D.1) y `raw_json_sha256` (D.3).
    - Raw fact: `INSERT ... ON CONFLICT (fact_hash) DO NOTHING RETURNING`. Si ya existía, `facts_existing++` y se compara con la fila existente y su observación de referencia.
    - Si difiere `fy`, `fp`, `form` o `filed`, la observación lleva `conflict=true, conflict_kind='metadata'`. Si solo difiere `frame`, `conflict=true, conflict_kind='frame_only'`. Si hay diferencias, se guardan en `conflict_detail`.
@@ -587,7 +630,7 @@ V      N -> 0x03 + canon_decimal(lexeme) ; T -> S(text) ; X -> 0x00
 - Excluidos: `frame`, `fy`, `fp`, `form`, `filed`, `taxonomy_uri`.
 
 ### D.2 Canonicalización decimal (sin contexto ni float)
-1. Lexema: `^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d{1,6})?$`. Se rechazan `NaN`, `Infinity` y cualquier otra cosa.
+1. Lexema: `^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d{1,6}))?$`, con al menos un dígito en la parte entera o la fraccionaria. Se rechazan `NaN`, `Infinity`, espacios, cadena vacía y cualquier otra cosa. Python y TypeScript aplican esta misma regex **antes** de construir el decimal.
 2. Coeficiente = todos los dígitos como cadena; exponente = exponente del lexema − número de dígitos fraccionarios. Si el exponente no es un entero seguro, o si |exp| > 1000 + longitud del coeficiente, se rechaza.
 3. Se quitan los ceros a la izquierda. Si no queda nada, el valor es `0` y se descarta el signo (`-0` → `0`).
 4. Se quitan los ceros finales, incrementando el exponente.
@@ -628,6 +671,9 @@ Base: `cik=0000320193`, `accn=0000320193-24-000123`, `taxonomy_key=us-gaap`, `ta
 | V16 | N `BIG` | `8d694bf30cf356597111e66235ee47d00ec585345d6e09f6d682e65d71890517` | = V17 = V18 |
 | V17 | N `BIG` + `000` | `8d694bf30cf356597111e66235ee47d00ec585345d6e09f6d682e65d71890517` | = V16 |
 | V18 | N `1234567890123456789012345678901234567890123456789012345678901E-21` | `8d694bf30cf356597111e66235ee47d00ec585345d6e09f6d682e65d71890517` | = V16 |
+| V19 | `dei` / `EntityRegistrantName`, T `''` (vacío), unit NULL | `1b1f125c8db75b8e21b23d7940068f6490e9c593dd8c504224e1144d39e52eca` | ≠ V06 (nil), ≠ V12 |
+
+Rechazos de lexema comprobados en ambas implementaciones: `NaN`, `Infinity`, `' 1'`, `1e1234567` y `''`.
 
 ### D.5 Evidencia (scripts, no tests de base de datos)
 - Python 3.13.15 y Bun 1.4.4, ejecutados en memoria con los vectores en la variable de entorno `VJSON`.
