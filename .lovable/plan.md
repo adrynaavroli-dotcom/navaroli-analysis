@@ -139,7 +139,7 @@ CREATE TABLE public.sec_ingestion_runs (
   payload_filing_count    integer CHECK (payload_filing_count >= 0),     -- [C] filings ELEGIBLES (4 formularios) del payload
   filings_skipped_form    integer CHECK (filings_skipped_form >= 0),     -- [C] filas de otros formularios, excluidas por filtro
   filings_inserted        integer CHECK (filings_inserted >= 0),         -- [DB] count(first_run_id = run)
-  filings_not_inserted        integer CHECK (filings_not_inserted >= 0),         -- [DB] = payload_filing_count - filings_inserted
+  filings_not_inserted        integer CHECK (filings_not_inserted >= 0),         -- [DB] = payload_filing_count - filings_inserted; incluye preexistentes idénticos Y repeticiones idénticas dentro del mismo payload (no significa "preexistente")
   filing_conflicts        integer CHECK (filing_conflicts >= 0),         -- [C] debe coincidir con las muestras (≤100)
   -- contadores de companyfacts (solo vía sec_finalize_run)
   payload_fact_count      integer CHECK (payload_fact_count >= 0),       -- [C] objetos elegibles (us-gaap/dei y formulario elegible)
@@ -623,8 +623,16 @@ CREATE POLICY sec_sources_admin ON public.sec_normalized_fact_sources FOR SELECT
    - Por cada filing elegible: `INSERT ... ON CONFLICT (cik, accession_number) DO NOTHING RETURNING`.
    - Si no se insertó, se lee el existente y se comparan `form`, `filed_date`, `accepted_at` y `report_date`. Si difieren, `filing_conflicts++` y se guarda una muestra en `conflict_samples` (máximo 100; la RPC exige que haya exactamente `min(conflicts, 100)` muestras).
    - Nunca se ignora una diferencia en silencio: la finalización falla con cualquier conflicto.
-   - La BD recuenta `filings_inserted` (`first_run_id = run`) y deriva `filings_not_inserted = payload_filing_count − filings_inserted`. `payload_filing_count` y `filing_conflicts` son valores del cliente: se validan en presencia y coherencia, pero no se verifican contra el payload.
+   - La BD recuenta `filings_inserted` (`first_run_id = run`) y deriva `filings_not_inserted = payload_filing_count − filings_inserted`. Este valor agrupa dos casos sin distinguirlos: filings que ya existían con metadata idéntica y repeticiones idénticas del mismo accession dentro del payload. No se etiqueta como "preexistente". Una repetición con metadata distinta cuenta como conflicto. `payload_filing_count` y `filing_conflicts` son valores del cliente: se validan en presencia y coherencia, pero no se verifican contra el payload.
 6. **companyfacts**, en lotes idempotentes:
+   - **Recorrido jerárquico:** `facts[taxonomy_key][tag].units[unit]` → array de objetos de observación.
+     - `taxonomy_key` es la clave del nivel taxonomía (`us-gaap`, `dei`);
+     - `tag` es la clave del concepto;
+     - `unit` es la clave del mapa `units`;
+     - `start, end, val, accn, fy, fp, form, filed, frame` salen del objeto hoja.
+   - El parser arrastra `(taxonomy_key, tag, unit)` del contexto padre al calcular `fact_hash` y al construir el objeto canónico de `raw_json_sha256`: `{ "taxonomy_key", "tag", "unit" }` + los campos de la hoja.
+   - **No** se espera que la hoja contenga `taxonomy_key`, `tag` ni `unit`; si apareciera alguno, la allowlist lo rechaza (T32).
+   - `unit` NULL solo puede darse si un tag de texto se publica sin mapa `units`; ese caso no se ha observado y se trata como NOT VERIFIED.
    - Filtro de alcance: una taxonomía distinta de `us-gaap`/`dei` o un `form` no elegible implica `facts_skipped_scope++`, sin hash.
    - Validación por allowlist de claves: `start, end, val, accn, fy, fp, form, filed, frame`. Cualquier otra clave o estructura no reconocida implica `facts_rejected++`, sin hash ni inserción.
    - `val` de tipo string → `value_kind='text'`, incluida la cadena vacía `''`. `val` numérico → `numeric`. `val` null → `nil`.
@@ -638,7 +646,14 @@ CREATE POLICY sec_sources_admin ON public.sec_normalized_fact_sources FOR SELECT
 9. **Cierre:** `sec_finalize_run(run_id, counts)` es la única ruta hacia `completed`.
 10. **Reintento:** siempre con una corrida nueva. No se duplican raw facts ni filings; la nueva corrida escribe sus observaciones.
 11. **Normalización (M1.2):** solo desde corridas companyfacts `completed`, y cada hecho normalizado necesita al menos una fuente observada en esa corrida.
-11b. **Supersession (orden transaccional exacto, una sola transacción):**
+11b. **Supersession: prerequisito de M1.2, NO capacidad garantizada por M1.1.** Una función de backend con el cliente de datos (PostgREST) no comparte transacción entre llamadas sucesivas. Por eso la atomicidad solo es real si todo ocurre dentro de **una única RPC**: `public.sec_supersede_normalized_fact(_old_id uuid, _new jsonb, _sources jsonb)`, `SECURITY DEFINER`, propietario postgres, `search_path=''` y EXECUTE solo para service_role.
+   - Hace en una sola llamada el UPDATE de la versión vigente, el INSERT de la nueva versión y el de sus fuentes.
+   - Valida parámetros tipados, que la corrida origen esté `completed`, el linaje y la misma identidad.
+   - Cualquier error aborta la llamada completa (rollback implícito de la transacción de la RPC).
+   - Su DDL se especificará y aprobará en M1.2. Las tablas, FK y triggers de M1.1 ya hacen cumplir las invariantes que esa RPC necesita.
+   - Mientras no exista, M1.1 **no** realiza supersessions.
+
+   Orden interno que debe seguir esa RPC (una sola transacción):
    a) generar en el backend el UUID `new_id` de la nueva versión;
    b) `UPDATE` de la fila vigente: `is_current=false, superseded_by=new_id`. La FK compuesta es DEFERRABLE, así que el destino aún no existe, y el índice parcial `sec_norm_current_uq` queda libre;
    c) `INSERT` de la nueva versión con `normalized_fact_id=new_id`, `is_current=true` y su `(normalizer_version, rule_version)` distinta;
@@ -855,7 +870,7 @@ echo "$P"; echo "--- $(python3 --version) / bun $(bun --version)"
 [ "$P" = "$T" ] && echo "DIFF: empty (identical, $(echo "$P"|wc -l) lines)" || diff <(echo "$P") <(echo "$T")
 ```
 - Contraprueba histórica del defecto corregido (el algoritmo actual ya no usa `Decimal`): con el método anterior, `Decimal(BIG).normalize()` daba `1.234567890123456789012345679E+39`, con `as_tuple()` de 61 dígitos. El algoritmo nuevo conserva todos los dígitos.
-- Esta evidencia valida que **dos implementaciones del algoritmo coinciden**. No ejecuta ni sustituye ningún test T1–T31.
+- Esta evidencia valida que **dos implementaciones del algoritmo coinciden**. No ejecuta ni sustituye ningún test T1–T33.
 
 Cada vector `fact_hash` es `{**BASE, **override}`.
 
@@ -946,6 +961,7 @@ python3 validation/fnd001/fact_hash.py > /tmp/py.txt && bun validation/fnd001/fa
 ## F. Preflight y trazabilidad
 
 ### F.1 Preflight de solo lectura
+Se ejecuta **inmediatamente antes del CREATE, con la misma sesión y el mismo rol que ejecutará la migración**, para que los resultados reflejen sus permisos reales. Solo hace SELECT. Comprueba la existencia y las colisiones de relaciones (tablas, índices, secuencias, vistas, tipos compuestos), funciones, triggers, políticas, constraints y tipos con prefijo `sec_`. Cualquier coincidencia detiene el proceso para analizar la compatibilidad. El rol migrador real sigue **NOT VERIFIED** hasta ejecutarlo.
 ```sql
 SELECT current_setting('server_version');                                           -- CONFIRMADO 17.6
 -- Colisiones de TODOS los objetos sec_* (tablas, vistas, índices, secuencias, tipos compuestos, funciones, triggers, políticas, constraints)
@@ -1005,6 +1021,10 @@ Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constra
 | Formularios elegibles y conteo tras filtro | CHECK `form`, C.14, C.15.5 | T29 |
 | Contadores requeridos NOT NULL | CHECKs de C.4 | T30 |
 | Existing derivados en BD y límite de muestras | `sec_finalize_run`, CHECK `conflict_samples` | T31 |
+| Contexto jerárquico de companyfacts | C.15.6 | T32 |
+| Filings no insertados (preexistentes + repetidos) | `filings_not_inserted`, C.15.5 | T33 |
+| `raw_json_sha256` con dominio propio y rechazo de surrogates | D.3 | TH-J, T22 |
+| Supersession atómica | RPC de M1.2 (prerequisito) | M1.2 |
 | Texto vacío distinto de nil | CHECK de C.6, B6c | T4, V19 |
 | Supersession sin `created_at` | `sec_supersession_check` | T15 |
 | Comprobación de admin | `sec_is_admin` | T20 |
@@ -1021,7 +1041,8 @@ Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constra
 5. Los hechos de texto o nil en companyfacts y el patrón real de `submissions_page` no se han observado en payloads reales.
 6. El parser JSON sin pérdida de la función de backend debe reproducir exactamente el comportamiento de D.5 (TH-J); hasta Build solo está verificado el de los scripts de referencia.
 7. Ingerir `srt`, `ifrs-full` u otros formularios requiere una decisión de alcance explícita.
-8. T1–T31 no se han ejecutado.
+8. La RPC atómica de supersession es un prerequisito de M1.2 (C.15.11b).
+9. T1–T33 no se han ejecutado.
 
 ---
 
@@ -1029,7 +1050,8 @@ Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constra
 - **CONFIRMADO:** PostgreSQL 17.6 (admite `NULLS NOT DISTINCT`); no existen tablas ni funciones `sec_*`; definición y propietario de `has_role`; EXECUTE sobre `has_role`: anon=false, authenticated=true, postgres=true (sin cambios); `postgres` puede ejecutar `auth.uid()` y tiene USAGE en `auth`; default privileges amplios (REVOKE obligatorio); `fact_hash` v1 con `taxonomy_key` y decimal exacto: 20 vectores (V01–V20: los 19 previstos más el borde de exponente) y 8 casos de dominio de lexema, idénticos en dos runtimes; `raw_json_sha256`: 13 vectores y 3 rechazos, idénticos en dos runtimes. Diff conjunto vacío, 44 líneas, con el bloque autocontenido de D.5.
 - **NOT VERIFIED:** prueba JWT real de `sec_is_admin()`; hechos de texto, nil o vacíos y patrón de `submissions_page` en payloads reales; colisiones `sec_*` de triggers, políticas, constraints y tipos (lo cubre el preflight ampliado).
 - **NOT VERIFIED (propiedad):** rol migrador y su capacidad de transferir la propiedad a postgres (preflight F.1).
-- **NOT RUN:** T1–T31 y TH-F/TH-J como tests guardados en el proyecto.
+- **NOT RUN:** T1–T33 y TH-F/TH-J como tests guardados en el proyecto.
+- **Recuentos de la evidencia en memoria:** `fact_hash`, 20 vectores; dominio de lexema, 8 casos; `raw_json_sha256`, 13 vectores; rechazos de JSON, 4. Total: 45 líneas idénticas en dos runtimes.
 - Este documento es el único archivo modificado: sin cambios de aplicación, base de datos ni migraciones.
 - FND-001 sigue **NOT STARTED**.
 
