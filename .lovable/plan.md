@@ -16,7 +16,8 @@ Estado: FND-001 **NOT STARTED**. M1.1 **NOT APPROVED**. Este documento sustituye
 | `postgres` sobre `auth` | `has_function_privilege('postgres','auth.uid()','EXECUTE')=true`; `has_schema_privilege('postgres','auth','USAGE')=true` | consulta read-only del usuario |
 | `app_role` | `admin,user` | psql |
 | Default privileges | `postgres`/`supabase_admin` conceden `arwdDxtm` (tablas), `rwU` (secuencias) y `X` (funciones) a anon/authenticated/service_role. **Es obligatorio un REVOKE explícito en cada objeto nuevo** | psql `pg_default_acl` |
-| Fact hash v1 | 18 vectores; Python y TypeScript independientes producen salidas idénticas (D.5) | ejecución en memoria, este turno |
+| `fact_hash` v1 | 20 vectores (V01–V20: los 19 pedidos más el borde de exponente V20) y 8 casos de dominio de lexema; Python y TypeScript independientes producen salida idéntica (D.5) | ejecución en memoria, este turno |
+| `raw_json_sha256` | 13 vectores (R01–R13) y 3 rechazos (X01–X03, incluida la colisión de claves tras NFC); salida idéntica en Python y TypeScript (D.5). Diff conjunto vacío, 44 líneas | ejecución en memoria, este turno |
 | Defecto de precisión anterior | `Decimal.normalize()` con el contexto por defecto convertía un valor de 61 dígitos en `1.234567890123456789012345679E+39`. El nuevo algoritmo no usa operaciones dependientes del contexto | ejecución, este turno |
 
 ### A.2 NOT VERIFIED
@@ -339,8 +340,14 @@ LANGUAGE plpgsql SET search_path = '' AS $$
 DECLARE r record;
 BEGIN
   IF TG_TABLE_NAME = 'sec_ingestion_runs' THEN
-    IF NEW.status <> 'running' OR NEW.finished_at IS NOT NULL OR NEW.http_status IS NOT NULL
-       OR NEW.payload_sha256 IS NOT NULL OR NEW.payload_filing_count IS NOT NULL OR NEW.payload_fact_count IS NOT NULL THEN
+    -- Estado inicial limpio: todos los campos de descarga, contadores, muestras, error y almacenamiento a NULL
+    IF NEW.status <> 'running' OR num_nonnulls(
+         NEW.finished_at, NEW.http_status, NEW.content_type, NEW.payload_bytes, NEW.payload_sha256,
+         NEW.storage_bucket, NEW.storage_path,
+         NEW.payload_filing_count, NEW.filings_skipped_form, NEW.filings_inserted, NEW.filings_existing, NEW.filing_conflicts,
+         NEW.payload_fact_count, NEW.facts_skipped_scope, NEW.payload_duplicate_count, NEW.facts_inserted, NEW.facts_existing,
+         NEW.facts_rejected, NEW.observations_written, NEW.metadata_conflicts, NEW.frame_changes,
+         NEW.conflict_samples, NEW.error_message) > 0 THEN
       RAISE EXCEPTION 'runs must be created empty and running' USING ERRCODE = '23514'; END IF;
   ELSIF TG_TABLE_NAME = 'sec_filings' THEN
     SELECT status, resource_kind INTO r FROM public.sec_ingestion_runs WHERE run_id = NEW.first_run_id;
@@ -458,7 +465,8 @@ CREATE FUNCTION public.sec_fail_stale_runs(_older_than interval) RETURNS integer
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE n integer;
 BEGIN
-  IF _older_than < interval '15 minutes' THEN RAISE EXCEPTION 'threshold too small'; END IF;
+  IF _older_than IS NULL OR _older_than < interval '15 minutes' THEN
+    RAISE EXCEPTION 'threshold must be non-null and >= 15 minutes'; END IF;
   UPDATE public.sec_ingestion_runs
      SET status = 'failed', finished_at = now(), error_message = 'orphaned: no finalisation before ' || _older_than
    WHERE status = 'running' AND started_at < now() - _older_than;
@@ -540,6 +548,23 @@ REVOKE ALL ON FUNCTION public.sec_record_download(uuid,integer,text,bigint,bytea
 GRANT EXECUTE ON FUNCTION public.sec_record_download(uuid,integer,text,bigint,bytea), public.sec_fail_run(uuid,text,jsonb),
   public.sec_fail_stale_runs(interval), public.sec_finalize_run(uuid,jsonb,jsonb) TO service_role;
 
+-- ===== C.11b Propiedad explícita: no se depende del rol que ejecute la migración =====
+-- Las RPC SECURITY DEFINER (propietario postgres) escriben en estas tablas; postgres debe ser su propietario.
+ALTER TABLE public.sec_companies               OWNER TO postgres;
+ALTER TABLE public.sec_ticker_mappings         OWNER TO postgres;
+ALTER TABLE public.sec_ingestion_runs          OWNER TO postgres;
+ALTER TABLE public.sec_filings                 OWNER TO postgres;
+ALTER TABLE public.sec_raw_facts               OWNER TO postgres;
+ALTER TABLE public.sec_raw_fact_observations   OWNER TO postgres;
+ALTER TABLE public.sec_normalized_facts        OWNER TO postgres;
+ALTER TABLE public.sec_normalized_fact_sources OWNER TO postgres;
+ALTER FUNCTION public.sec_guard()              OWNER TO postgres;
+ALTER FUNCTION public.sec_insert_guard()       OWNER TO postgres;
+ALTER FUNCTION public.sec_norm_lineage_check() OWNER TO postgres;
+ALTER FUNCTION public.sec_supersession_check() OWNER TO postgres;
+-- Si el rol migrador no puede transferir la propiedad a postgres (requiere ser postgres, superusuario
+-- o miembro de postgres), la migración debe abortar: el preflight F.1 lo comprueba antes.
+
 -- ===== C.12 GRANT (capa 1). Primero REVOKE por los default privileges =====
 REVOKE ALL ON public.sec_companies, public.sec_ticker_mappings, public.sec_ingestion_runs, public.sec_filings,
   public.sec_raw_facts, public.sec_raw_fact_observations, public.sec_normalized_facts, public.sec_normalized_fact_sources
@@ -613,6 +638,15 @@ CREATE POLICY sec_sources_admin ON public.sec_normalized_fact_sources FOR SELECT
 9. **Cierre:** `sec_finalize_run(run_id, counts)` es la única ruta hacia `completed`.
 10. **Reintento:** siempre con una corrida nueva. No se duplican raw facts ni filings; la nueva corrida escribe sus observaciones.
 11. **Normalización (M1.2):** solo desde corridas companyfacts `completed`, y cada hecho normalizado necesita al menos una fuente observada en esa corrida.
+11b. **Supersession (orden transaccional exacto, una sola transacción):**
+   a) generar en el backend el UUID `new_id` de la nueva versión;
+   b) `UPDATE` de la fila vigente: `is_current=false, superseded_by=new_id`. La FK compuesta es DEFERRABLE, así que el destino aún no existe, y el índice parcial `sec_norm_current_uq` queda libre;
+   c) `INSERT` de la nueva versión con `normalized_fact_id=new_id`, `is_current=true` y su `(normalizer_version, rule_version)` distinta;
+   d) `INSERT` de sus fuentes en `sec_normalized_fact_sources`;
+   e) `COMMIT`. En ese momento se comprueban la FK compuesta (misma empresa, `logical_key` y accession), `sec_supersession_check` (destino distinto y vigente) y `sec_norm_lineage_check` (al menos una fuente observada en la corrida origen).
+   - Al ser una única transacción, ningún lector ve un estado intermedio sin versión vigente.
+   - No existe orden temporal basado en `created_at`.
+   - service_role solo necesita INSERT en ambas tablas y UPDATE en `sec_normalized_facts`. `sec_guard` limita ese UPDATE a `is_current true→false` más `superseded_by`; cualquier otra columna se rechaza.
 12. **Significado de `completed`:** descargado, hasheado, procesado y validado. **No** archivado: el payload no es recuperable hasta M1.3.
 
 ---
@@ -637,15 +671,16 @@ V      N -> 0x03 + canon_decimal(lexeme) ; T -> S(text) ; X -> 0x00
 
 ### D.2 Canonicalización decimal (sin contexto ni float)
 1. Lexema: `^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d{1,6}))?$`, con al menos un dígito en la parte entera o la fraccionaria. Se rechazan `NaN`, `Infinity`, espacios, cadena vacía y cualquier otra cosa. Python y TypeScript aplican esta misma regex **antes** de construir el decimal.
-2. Coeficiente = todos los dígitos como cadena; exponente = exponente del lexema − número de dígitos fraccionarios. Si el exponente no es un entero seguro, o si |exp| > 1000 + longitud del coeficiente, se rechaza.
+2. Coeficiente = dígitos enteros + fraccionarios del lexema, **sin ceros iniciales**. `coefficient_digit_count` = su longitud (0 si el valor es cero). Exponente = exponente del lexema − número de dígitos fraccionarios. Se rechaza si el exponente del lexema no es un entero seguro (máximo 6 dígitos), o si |exponente| > 1000 + `coefficient_digit_count`. Ambos runtimes usan esta misma definición (borde: V20 se acepta y `0000000001e-1002` se rechaza).
 3. Se quitan los ceros a la izquierda. Si no queda nada, el valor es `0` y se descarta el signo (`-0` → `0`).
 4. Se quitan los ceros finales, incrementando el exponente.
 5. Se expande sin exponente: entero si exp ≥ 0; si no, se inserta el punto, con `0.` y ceros si hace falta. Se antepone `-` si es negativo.
-- Python: `Decimal(str)` (construcción exacta, sin contexto) + `as_tuple()` + manipulación de cadenas. **No** se usa `normalize()`.
-- TypeScript: regex + manipulación de cadenas; el exponente se convierte con `Number` solo tras validar `\d{1,6}` y `Number.isSafeInteger`.
+- Python y TypeScript: regex + manipulación de cadenas, sin `Decimal`, sin `normalize()` y sin float. El exponente se convierte a entero solo tras validar `\d{1,6}`, y en TypeScript además `Number.isSafeInteger`.
 
 ### D.3 raw_json_sha256 (JSON canónico semántico)
 SHA-256 de una serialización determinista del objeto del hecho tal como se parseó:
+- entrada parseada sin pérdida: números como lexema; `NaN`, `Infinity` y constantes no JSON se rechazan;
+- claves normalizadas a NFC; dos claves que coinciden tras NFC, o una clave duplicada, implican **rechazo** (el hecho cuenta en `facts_rejected`);
 - objetos con claves ordenadas por bytes UTF-8 (NFC);
 - strings en NFC, con escapes JSON mínimos (`"`, `\`, controles U+0000–U+001F como `\u00XX`);
 - números con `canon_decimal` (D.2) y sin comillas;
@@ -678,81 +713,175 @@ Base: `cik=0000320193`, `accn=0000320193-24-000123`, `taxonomy_key=us-gaap`, `ta
 | V17 | N `BIG` + `000` | `8d694bf30cf356597111e66235ee47d00ec585345d6e09f6d682e65d71890517` | = V16 |
 | V18 | N `1234567890123456789012345678901234567890123456789012345678901E-21` | `8d694bf30cf356597111e66235ee47d00ec585345d6e09f6d682e65d71890517` | = V16 |
 | V19 | `dei` / `EntityRegistrantName`, T `''` (vacío), unit NULL | `1b1f125c8db75b8e21b23d7940068f6490e9c593dd8c504224e1144d39e52eca` | ≠ V06 (nil), ≠ V12 |
+| V20 | N `0000000001e-1001` (ceros iniciales, exponente en el límite) | `565fc05b49c9f0742a4c9e1a281446653dc09dfc09dc1fe5acb0c0a0d8c83c67` | aceptado; `…e-1002` se rechaza |
 
-Rechazos de lexema comprobados en ambas implementaciones: `NaN`, `Infinity`, `' 1'`, `1e1234567` y `''`.
+Dominio de lexema comprobado en ambas implementaciones: se rechazan `NaN`, `Infinity`, `' 1'`, `1e1234567`, `''`, `0000000001e-1002` y `+.5e`; se acepta `1.`.
 
-### D.5 Evidencia (scripts, no tests de base de datos)
-- Python 3.13.15 y Bun 1.4.4, ejecutados en memoria mediante el bloque bash autocontenido de abajo (`BASE`, `VJSON`, `PY`, `TS` y la comparación, todo en el mismo bloque).
-- Resultado: **`DIFF: empty (identical, 24 lines)`**: 19 hashes y 5 rechazos de lexema.
-- Contraprueba del defecto: con el método anterior, `Decimal(BIG).normalize()` daba `1.234567890123456789012345679E+39`, con `as_tuple()` de 61 dígitos. El algoritmo nuevo conserva todos los dígitos.
-- Esta evidencia valida que **dos implementaciones del algoritmo coinciden**. No ejecuta ni sustituye ningún test T1–T31.
+### D.5 Evidencia de ejecución (scripts en memoria; NO son tests de base de datos)
+- Ejecutado en este turno con Python 3.13.15 y Bun 1.4.4. El bloque bash de abajo es **literalmente** el que se ejecutó: autocontenido, sin placeholders, con heredocs `PYCODE`/`TSCODE`, y puede copiarse (requiere `python3` y `bun`). SHA-256 del bloque tal como se ejecutó: `4c1f74bd9ad7a1e053929f6c5b992007c78a22562402e9eb7ff0d5f219aea848`.
+- Resultado: **`DIFF: empty (identical, 44 lines)`**:
+  - 20 líneas `fact_hash` (V01–V20);
+  - 8 líneas de dominio de lexema;
+  - 13 líneas `raw_json_sha256` (R01–R13);
+  - 3 rechazos de JSON (X01–X03).
+- **Regla única de límite de exponente:** `coefficient_digit_count` = número de dígitos del coeficiente (parte entera + fraccionaria del lexema) **después de quitar los ceros iniciales**. Rechazo si `|exp_lexema − len(frac)| > 1000 + coefficient_digit_count`. Python y TypeScript lo calculan a partir de los grupos de la misma regex; Python ya no usa `Decimal`.
+  - Borde: `0000000001e-1001` se acepta (V20). `0000000001e-1002` se rechaza en ambos.
+  - La regla anterior de TypeScript (que contaba los ceros iniciales) lo habría aceptado.
+- `1.` se acepta en ambos: la regex de D.2 lo admite y su valor canónico es `1`. El dominio de entrada es idéntico.
+- El JSON canónico usa un parser **sin pérdida** en ambos runtimes:
+  - Python: `json.loads` con números como lexema y `parse_constant` que rechaza `NaN`/`Infinity`.
+  - TypeScript: parser propio, sin `JSON.parse` ni float.
+  - En ambos, las claves se normalizan a NFC; una clave duplicada tras la normalización NFC implica **rechazo**.
 
-Bloque completo ejecutado (autocontenido):
 ```bash
 export BASE='{"cik":"0000320193","accn":"0000320193-24-000123","tax":"us-gaap","tag":"Revenues","unit":"USD","ptype":"duration","start":"2023-10-01","end":"2024-09-28","vkind":"N","val":"1"}'
-export VJSON='{"V01_int_1":{"val":"1"},"V02_dec_1.0":{"val":"1.0"},"V03_neg_zero":{"val":"-0"},"V04_zero_000":{"val":"0.000"},"V05_text_NONE":{"vkind":"T","val":"NONE"},"V06_nil":{"vkind":"X","val":null},"V07_cafe_NFC":{"vkind":"T","val":"Caf\u00e9"},"V08_cafe_NFD":{"vkind":"T","val":"Cafe\u0301"},"V09_sci_1.25E3":{"val":"1.25E3"},"V10_plain_1250.00":{"val":"1250.00"},"V11_instant":{"ptype":"instant","start":null},"V12_dei_text_unit_null":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"Apple Inc.","unit":null},"V13_dei_text_unit_pure":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"Apple Inc.","unit":"pure"},"V14_neg_frac":{"val":"-0.0500"},"V15_bigint":{"val":"391035000000"},"V16_big61sig":{"val":"1234567890123456789012345678901234567890.123456789012345678901"},"V17_big61sig_trailing0":{"val":"1234567890123456789012345678901234567890.123456789012345678901000"},"V18_big_sci":{"val":"1234567890123456789012345678901234567890123456789012345678901E-21"},"V19_text_empty":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"","unit":null}}'
-PY='<script Python de abajo>'; TS='<script TypeScript de abajo>'
-P=$(python3 -c "$PY"); T=$(bun -e "$TS")
-echo "$P"
-[ "$P" = "$T" ] && echo "DIFF: empty (identical, $(echo "$P"|wc -l) lines)" || diff <(echo "$P") <(echo "$T")
-```
-Cada vector es `{**BASE, **override}`. Los dos scripts se pasaron literalmente como `PY` y `TS`.
-
-Python (ejecutado; valida el lexema con la regex de D.2 antes de construir `Decimal`):
-```python
+export VJSON='{"V01_int_1":{"val":"1"},"V02_dec_1.0":{"val":"1.0"},"V03_neg_zero":{"val":"-0"},"V04_zero_000":{"val":"0.000"},"V05_text_NONE":{"vkind":"T","val":"NONE"},"V06_nil":{"vkind":"X","val":null},"V07_cafe_NFC":{"vkind":"T","val":"Caf\u00e9"},"V08_cafe_NFD":{"vkind":"T","val":"Cafe\u0301"},"V09_sci_1.25E3":{"val":"1.25E3"},"V10_plain_1250.00":{"val":"1250.00"},"V11_instant":{"ptype":"instant","start":null},"V12_dei_text_unit_null":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"Apple Inc.","unit":null},"V13_dei_text_unit_pure":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"Apple Inc.","unit":"pure"},"V14_neg_frac":{"val":"-0.0500"},"V15_bigint":{"val":"391035000000"},"V16_big61sig":{"val":"1234567890123456789012345678901234567890.123456789012345678901"},"V17_big61sig_trailing0":{"val":"1234567890123456789012345678901234567890.123456789012345678901000"},"V18_big_sci":{"val":"1234567890123456789012345678901234567890123456789012345678901E-21"},"V19_text_empty":{"tax":"dei","tag":"EntityRegistrantName","vkind":"T","val":"","unit":null},"V20_lead0_exp_edge":{"val":"0000000001e-1001"}}'
+export LEXBAD='["NaN","Infinity"," 1","1e1234567","","0000000001e-1002","1.","+.5e"]'
+export RJSON='{"R01_order_a":"{\"val\":1,\"accn\":\"x\"}","R02_order_b":"{\"accn\":\"x\",\"val\":1}","R03_scale_1.0":"{\"val\":1.0}","R04_scale_1":"{\"val\":1}","R05_nfc":"{\"s\":\"Caf\u00e9\"}","R06_nfd":"{\"s\":\"Cafe\u0301\"}","R07_arr_12":"[1,2]","R08_arr_21":"[2,1]","R09_null":"{\"v\":null}","R10_str_null":"{\"v\":\"null\"}","R11_empty_str":"{\"v\":\"\"}","R12_unicode_key":"{\"cl\u00e9\":1,\"a\":[true,false,null,-0.0]}","R13_ctrl_escape":"{\"t\":\"a\\u0001\\\"b\\\\\"}","X01_nfc_key_collision":"{\"Caf\u00e9\":1,\"Cafe\u0301\":2}","X02_dup_key":"{\"a\":1,\"a\":1}","X03_nan":"{\"a\":NaN}"}'
+PY=$(cat <<'PYCODE'
 import hashlib,unicodedata,json,struct,os,re
-from decimal import Decimal
 DOM=b"navaroli.sec.fact_hash.v1\x00"; EXP_LIMIT=1000
-LEX=re.compile(r"^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d{1,6}))?$")
-def tlv(t,b): return bytes([t])+struct.pack(">I",len(b))+b
-def s(x): return tlv(0,b"") if x is None else tlv(1,unicodedata.normalize("NFC",x).encode())
-def d(x): return tlv(0,b"") if x is None else tlv(2,x.encode())
+LEX=re.compile(r"([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d{1,6}))?")
 def canon_dec(x):
     m=LEX.fullmatch(x)
     if not m or not (m.group(2) or m.group(3)): raise ValueError("bad decimal lexeme")
-    sign,digits,exp=Decimal(x).as_tuple()   # construcción exacta desde str; sin operaciones de contexto
-    if abs(exp)>EXP_LIMIT+len(digits): raise ValueError("exponent out of range")
-    g="".join(map(str,digits)).lstrip("0")
+    frac=m.group(3) or ""; g=((m.group(2) or "")+frac).lstrip("0")   # coefficient_digit_count = len(g) tras quitar ceros iniciales
+    e=(int(m.group(4)) if m.group(4) else 0)-len(frac)
+    if abs(e)>EXP_LIMIT+len(g): raise ValueError("exponent out of range")
     if not g: return "0"
-    while g.endswith("0"): g=g[:-1]; exp+=1
-    if exp>=0: c=g+"0"*exp
+    while g.endswith("0"): g=g[:-1]; e+=1
+    if e>=0: c=g+"0"*e
     else:
-        n=len(g)+exp; c=(g[:n] if n>0 else "0")+"."+("0"*(-n) if n<0 else "")+g[max(n,0):]
-    return ("-" if sign else "")+c
+        n=len(g)+e; c=(g[:n] if n>0 else "0")+"."+("0"*(-n) if n<0 else "")+g[max(n,0):]
+    return ("-" if m.group(1)=="-" else "")+c
+def tlv(t,b): return bytes([t])+struct.pack(">I",len(b))+b
+def s(x): return tlv(0,b"") if x is None else tlv(1,unicodedata.normalize("NFC",x).encode())
+def d(x): return tlv(0,b"") if x is None else tlv(2,x.encode())
 def val(f):
     k=f["vkind"]; return tlv(4,k.encode())+(tlv(3,canon_dec(f["val"]).encode()) if k=="N" else s(f["val"]) if k=="T" else tlv(0,b""))
-def h(f): return hashlib.sha256(DOM+s(f["cik"])+s(f["accn"])+s(f["tax"])+s(f["tag"])+s(f["unit"])+s(f["ptype"])+d(f["start"])+d(f["end"])+val(f)).hexdigest()
+def fact_hash(f): return hashlib.sha256(DOM+s(f["cik"])+s(f["accn"])+s(f["tax"])+s(f["tag"])+s(f["unit"])+s(f["ptype"])+d(f["start"])+d(f["end"])+val(f)).hexdigest()
+class Num(str): pass
+def pairs(ps):
+    out={}
+    for k,v in ps:
+        nk=unicodedata.normalize("NFC",k)
+        if nk in out: raise ValueError("duplicate key after NFC")
+        out[nk]=v
+    return out
+def bad_const(c): raise ValueError("non-JSON constant")
+def esc(t):
+    t=unicodedata.normalize("NFC",t); o=['"']
+    for ch in t:
+        if ch=='"': o.append('\\"')
+        elif ch=="\\": o.append("\\\\")
+        elif ord(ch)<0x20: o.append("\\u%04x"%ord(ch))
+        else: o.append(ch)
+    return "".join(o)+'"'
+def canon_json(v):
+    if v is None: return "null"
+    if v is True: return "true"
+    if v is False: return "false"
+    if isinstance(v,Num): return canon_dec(v)
+    if isinstance(v,str): return esc(v)
+    if isinstance(v,list): return "["+",".join(canon_json(x) for x in v)+"]"
+    ks=sorted(v.keys(),key=lambda k:k.encode("utf-8"))
+    return "{"+",".join(esc(k)+":"+canon_json(v[k]) for k in ks)+"}"
+def raw_json_sha256(text):
+    v=json.loads(text,parse_float=Num,parse_int=Num,parse_constant=bad_const,object_pairs_hook=pairs)
+    return hashlib.sha256(canon_json(v).encode("utf-8")).hexdigest()
 B=json.loads(os.environ["BASE"])
-for k,o in json.loads(os.environ["VJSON"]).items(): print(k,h({**B,**o}))
-for bad in ["NaN","Infinity"," 1","1e1234567",""]:
-    try: canon_dec(bad); print("ACCEPTED",repr(bad))
-    except Exception: print("rejected",repr(bad))
-```
-
-TypeScript/Bun (ejecutado):
-```ts
+for k,o in json.loads(os.environ["VJSON"]).items(): print(k,fact_hash({**B,**o}))
+for x in json.loads(os.environ["LEXBAD"]):
+    try: canon_dec(x); print("LEX accepted",json.dumps(x))
+    except Exception: print("LEX rejected",json.dumps(x))
+for k,t in json.loads(os.environ["RJSON"]).items():
+    try: print(k,raw_json_sha256(t))
+    except Exception: print(k,"REJECTED")
+PYCODE
+)
+TS=$(cat <<'TSCODE'
 const {createHash}=require("crypto");
-const E=Buffer.alloc(0),DOM=Buffer.from("navaroli.sec.fact_hash.v1\0"),EXP_LIMIT=1000;
+const EXP_LIMIT=1000,E=Buffer.alloc(0),DOM=Buffer.from("navaroli.sec.fact_hash.v1\0");
+function canonDec(x){const m=/^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d{1,6}))?$/.exec(x);
+ if(!m||!(m[2]||m[3]))throw Error("bad decimal lexeme");
+ const frac=m[3]||"";let g=((m[2]||"")+frac).replace(/^0+/,"");   // coefficient_digit_count = g.length tras quitar ceros iniciales
+ const ex=m[4]?Number(m[4]):0;if(!Number.isSafeInteger(ex))throw Error("exponent not safe");
+ let e=ex-frac.length;if(Math.abs(e)>EXP_LIMIT+g.length)throw Error("exponent out of range");
+ if(!g)return "0";
+ while(g.endsWith("0")){g=g.slice(0,-1);e++;}
+ let c;if(e>=0)c=g+"0".repeat(e);else{const n=g.length+e;c=(n>0?g.slice(0,n):"0")+"."+(n<0?"0".repeat(-n):"")+g.slice(Math.max(n,0));}
+ return (m[1]==="-"?"-":"")+c;}
 const tlv=(t,b)=>{const h=Buffer.alloc(5);h[0]=t;h.writeUInt32BE(b.length,1);return Buffer.concat([h,b]);};
 const s=x=>x===null?tlv(0,E):tlv(1,Buffer.from(x.normalize("NFC"),"utf8"));
 const d=x=>x===null?tlv(0,E):tlv(2,Buffer.from(x));
-function canonDec(x){const m=/^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d{1,6}))?$/.exec(x);
- if(!m||!(m[2]||m[3]))throw Error("bad decimal lexeme");
- const frac=m[3]||"";let g=(m[2]||"")+frac;
- const ex=m[4]?Number(m[4]):0; if(!Number.isSafeInteger(ex))throw Error("exponent not safe");
- let e=ex-frac.length; if(Math.abs(e)>EXP_LIMIT+g.length)throw Error("exponent out of range");
- g=g.replace(/^0+/,""); if(!g)return "0";
- while(g.endsWith("0")){g=g.slice(0,-1);e++;}
- let c; if(e>=0)c=g+"0".repeat(e); else{const n=g.length+e;c=(n>0?g.slice(0,n):"0")+"."+(n<0?"0".repeat(-n):"")+g.slice(Math.max(n,0));}
- return (m[1]==="-"?"-":"")+c;}
 const val=f=>Buffer.concat([tlv(4,Buffer.from(f.vkind)),f.vkind==="N"?tlv(3,Buffer.from(canonDec(f.val))):f.vkind==="T"?s(f.val):tlv(0,E)]);
+const factHash=f=>createHash("sha256").update(Buffer.concat([DOM,s(f.cik),s(f.accn),s(f.tax),s(f.tag),s(f.unit),s(f.ptype),d(f.start),d(f.end),val(f)])).digest("hex");
+// Parser JSON propio sin pérdida: los números se conservan como lexema (sin JSON.parse ni float)
+function parseLossless(t){let i=0;const ws=()=>{while(i<t.length&&" \t\n\r".includes(t[i]))i++;};
+ const str=()=>{i++;let o="";for(;;){const c=t[i++];if(c===undefined)throw Error("eof");if(c==='"')return o;
+  if(c==="\\"){const n=t[i++];if(n==="u"){o+=String.fromCharCode(parseInt(t.slice(i,i+4),16));i+=4;}
+   else o+={'"':'"',"\\":"\\","/":"/",b:"\b",f:"\f",n:"\n",r:"\r",t:"\t"}[n]??(()=>{throw Error("esc")})();}
+  else{if(c<" ")throw Error("ctrl");o+=c;}}};
+ const v=()=>{ws();const c=t[i];
+  if(c==="{"){i++;const o=new Map();ws();if(t[i]==="}"){i++;return o;}
+   for(;;){ws();if(t[i]!=='"')throw Error("key");const k=str().normalize("NFC");if(o.has(k))throw Error("duplicate key after NFC");
+    ws();if(t[i++]!==":")throw Error(":");o.set(k,v());ws();const n=t[i++];if(n==="}")return o;if(n!==",")throw Error(",");}}
+  if(c==="["){i++;const a=[];ws();if(t[i]==="]"){i++;return a;}
+   for(;;){a.push(v());ws();const n=t[i++];if(n==="]")return a;if(n!==",")throw Error(",");}}
+  if(c==='"')return str();
+  for(const [w,r] of [["true",true],["false",false],["null",null]])if(t.startsWith(w,i)){i+=w.length;return r;}
+  const m=/^-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/.exec(t.slice(i));if(!m)throw Error("token");i+=m[0].length;return {num:m[0]};};
+ const r=v();ws();if(i!==t.length)throw Error("trailing");return r;}
+const esc=x=>{let o='"';for(const ch of x.normalize("NFC")){const cp=ch.codePointAt(0);
+ o+=ch==='"'?'\\"':ch==="\\"?"\\\\":cp<0x20?"\\u"+cp.toString(16).padStart(4,"0"):ch;}return o+'"';};
+const cmp=(a,b)=>Buffer.compare(Buffer.from(a,"utf8"),Buffer.from(b,"utf8"));
+function canonJson(v){if(v===null)return "null";if(v===true)return "true";if(v===false)return "false";
+ if(typeof v==="string")return esc(v);if(Array.isArray(v))return "["+v.map(canonJson).join(",")+"]";
+ if(v instanceof Map)return "{"+[...v.keys()].sort(cmp).map(k=>esc(k)+":"+canonJson(v.get(k))).join(",")+"}";
+ return canonDec(v.num);}
+const rawJsonSha256=t=>createHash("sha256").update(Buffer.from(canonJson(parseLossless(t)),"utf8")).digest("hex");
 const B=JSON.parse(process.env.BASE);
-for(const [k,o] of Object.entries(JSON.parse(process.env.VJSON))){const f={...B,...o};console.log(k,createHash("sha256").update(Buffer.concat([DOM,s(f.cik),s(f.accn),s(f.tax),s(f.tag),s(f.unit),s(f.ptype),d(f.start),d(f.end),val(f)])).digest("hex"));}
-for(const bad of ["NaN","Infinity"," 1","1e1234567",""]){try{canonDec(bad);console.log("ACCEPTED",JSON.stringify(bad).replace(/"/g,"\x27"))}catch{console.log("rejected",JSON.stringify(bad).replace(/"/g,"\x27"))}}
+for(const [k,o] of Object.entries(JSON.parse(process.env.VJSON)))console.log(k,factHash({...B,...o}));
+for(const x of JSON.parse(process.env.LEXBAD)){try{canonDec(x);console.log("LEX accepted",JSON.stringify(x));}catch{console.log("LEX rejected",JSON.stringify(x));}}
+for(const [k,t] of Object.entries(JSON.parse(process.env.RJSON))){try{console.log(k,rawJsonSha256(t));}catch{console.log(k,"REJECTED");}}
+TSCODE
+)
+P=$(python3 -c "$PY"); T=$(bun -e "$TS")
+echo "$P"; echo "--- $(python3 --version) / bun $(bun --version)"
+[ "$P" = "$T" ] && echo "DIFF: empty (identical, $(echo "$P"|wc -l) lines)" || diff <(echo "$P") <(echo "$T")
+```
+- Contraprueba del defecto: con el método anterior, `Decimal(BIG).normalize()` daba `1.234567890123456789012345679E+39`, con `as_tuple()` de 61 dígitos. El algoritmo nuevo conserva todos los dígitos.
+- Esta evidencia valida que **dos implementaciones del algoritmo coinciden**. No ejecuta ni sustituye ningún test T1–T31.
+
+Cada vector `fact_hash` es `{**BASE, **override}`.
+
+Salida registrada, idéntica en ambos runtimes (los `fact_hash` V01–V20 están en D.4):
+```text
+LEX rejected "NaN" | LEX rejected "Infinity" | LEX rejected " 1" | LEX rejected "1e1234567" | LEX rejected ""
+LEX rejected "0000000001e-1002" | LEX accepted "1." | LEX rejected "+.5e"
 ```
 
-Salida (idéntica en ambas implementaciones): los 19 hashes de D.4, seguidos de `rejected 'NaN'`, `rejected 'Infinity'`, `rejected ' 1'`, `rejected '1e1234567'` y `rejected ''`. Después, `DIFF: empty (identical, 24 lines)`.
-En Build se guardarán en `validation/fnd001/` (`fact_hash.py`, `factHash.ts`, `vectors.json` con los esperados de D.4) y se añadirán vectores de `raw_json_sha256`.
+**Vectores `raw_json_sha256`** (R01–R13 con hash; X01–X03 deben rechazarse):
+| ID | Entrada JSON | SHA-256 | Relación |
+|---|---|---|---|
+| R01 | `{"val":1,"accn":"x"}` | `93da652073efd402194a7769a53dbc42b254772e666004f9927769fc0c61ad40` | = R02 (orden de claves) |
+| R02 | `{"accn":"x","val":1}` | `93da652073efd402194a7769a53dbc42b254772e666004f9927769fc0c61ad40` | = R01 |
+| R03 | `{"val":1.0}` | `0fad9b1ee80feeacd36fcceb3ce9538cfa66faef5e4b46d045600c0dad487431` | = R04 (escala) |
+| R04 | `{"val":1}` | `0fad9b1ee80feeacd36fcceb3ce9538cfa66faef5e4b46d045600c0dad487431` | = R03 |
+| R05 | `{"s":"Café"}` NFC | `d4f21edc957c8d5f5c6ba620f820dabb8b4afc2398a7603cf49e875cf2a36269` | = R06 (NFC) |
+| R06 | `{"s":"Cafe\u0301"}` NFD | `d4f21edc957c8d5f5c6ba620f820dabb8b4afc2398a7603cf49e875cf2a36269` | = R05 |
+| R07 | `[1,2]` | `49a64717d5d4cb19952e6eac2946415cf6879adacf9908e7d872332d32c6e684` | ≠ R08 (orden de array) |
+| R08 | `[2,1]` | `af1a1fc110b6094c48582b0ef83553cb7908d7a4365424eef28e76ef6c88d630` | ≠ R07 |
+| R09 | `{"v":null}` | `aae9e223dcdc02dfd8149da8c25b9536533a7232b0c9137ee6b2cd5c2a2629eb` | ≠ R10 |
+| R10 | `{"v":"null"}` | `2fc275b67c5ed5ce1d4dcb929bfd8f8fe13c97b30ec5297ea65072ecca9e3027` | ≠ R09 |
+| R11 | `{"v":""}` | `b69993cbe4796eb1cf04f32d2371ef7768b1bcce280683febc20081988a7a00c` | cadena vacía |
+| R12 | `{"clé":1,"a":[true,false,null,-0.0]}` | `57ffa0319f42851ffa518c96cc3413c77c357e7b377b669431387900560eebff` | clave Unicode, literales, `-0.0`→`0` |
+| R13 | `{"t":"a\u0001\"b\\"}` | `c52e9fdd7d682bfb9f0661ec47569288abf7b49308b96c47fb841fcf8c6e78e4` | escapes de control |
+| X01 | `{"Café":1,"Cafe\u0301":2}` | REJECTED | colisión de claves tras NFC |
+| X02 | `{"a":1,"a":1}` | REJECTED | clave duplicada |
+| X03 | `{"a":NaN}` | REJECTED | constante no JSON |
+
+En Build, estos scripts se guardarán en `validation/fnd001/` (`fact_hash.py`, `factHash.ts`, `vectors.json` con V01–V20, R01–R13, X01–X03 y el dominio de lexema). Ese guardado y su ejecución como test del proyecto siguen **NOT RUN**.
 
 ---
 
@@ -776,25 +905,26 @@ Aislamiento: cada suite SQL se ejecuta dentro de `BEGIN ... ROLLBACK` en una bas
 | T13 | Supersession hacia otra empresa | 23503 |
 | T14 | Supersession hacia otro `logical_key` u otro accession | 23503 |
 | T15 | Supersession hacia una versión que ya no está vigente, o con la misma `(normalizer_version, rule_version)` | 23514 al COMMIT |
-| T16 | Corrida: INSERT ya `completed`; endpoint que no corresponde a kind/CIK; `page_name` de otro CIK | 23514 |
+| T16 | Corrida: INSERT ya `completed`; INSERT con cualquiera de los campos de descarga, contadores, `conflict_samples`, `error_message`, `storage_*` o `finished_at` no nulo (un caso por campo); endpoint que no corresponde a kind/CIK; `page_name` de otro CIK | 23514 |
 | T17 | Fallo a mitad: lote 1 confirmado, excepción en el lote 2 → `sec_fail_run` deja `failed` con observaciones parciales; nuevo INSERT en esa corrida → 23514; reintento con corrida nueva → sin raw facts duplicados y `completed` | según C.15 |
 | T18 | Normalizar desde una corrida `failed`, `running` o submissions | 23514 |
 | T19 | Hecho con una clave fuera de la allowlist o con `accn` desconocido | rechazado, sin hash, `finalize` devuelve `failed` |
 | T20 | `sec_is_admin()`: anon false; no-admin false; admin true; sin UID false | según caso |
 | T21 | RLS: anon y no-admin ven solo lo publicado y 0 filas privadas, y su DML → 42501; admin lee todo y su DML → 42501; service_role: INSERT OK, DELETE → 42501 | según caso |
-| T22 | `payload_sha256` = `sha256sum` del fixture; `raw_json_sha256` estable aunque cambie el orden de claves o la escala de los números | igualdad |
+| T22 | `payload_sha256` = `sha256sum` del fixture binario (bytes HTTP exactos). En integración, la función de backend produce para R01–R13 los mismos `raw_json_sha256` que D.5 y rechaza X01–X03; un mismo `fact_hash` con JSON canónico distinto genera dos observaciones (`sec_obs_content_uq`) | igualdad |
 | T23 | Finalización de submissions: payload de 3 filings (2 nuevos, 1 existente idéntico) → `completed`, `filings_inserted=2` (BD); conteo incoherente → `failed`; `observations_written` no interviene | según caso |
 | T24 | Finalización de companyfacts y reingesta: payload de N hechos con 1 duplicado → `completed`; reingesta → `facts_inserted=0`, `facts_existing=N-1`, N-1 observaciones nuevas, `completed` | según caso |
-| T25 | Como service_role, `UPDATE sec_ingestion_runs SET status='completed'` → 42501 (sin privilegio); `sec_finalize_run` → OK; `sec_fail_stale_runs` marca huérfanas | según caso |
+| T25 | Como service_role, `UPDATE sec_ingestion_runs SET status='completed'` → 42501 (sin privilegio); `sec_finalize_run` → OK; `sec_fail_stale_runs('1 hour')` marca huérfanas; `sec_fail_stale_runs(NULL)` y `('5 minutes')` → excepción | según caso |
 | T26 | Discordancia de kind: filing con corrida companyfacts; raw fact u observación con corrida submissions | 23514 |
 | T27 | (a) Normalized sin fuentes → 23514 al COMMIT. (b) Mismo accession con `form`, `filed_date`, `accepted_at` o `report_date` distintos → `filing_conflicts=1`, muestra guardada, `finalize` devuelve `failed` | según caso |
 | T28 | Taxonomía fuera de alcance: INSERT de un raw fact con `taxonomy_key='srt'` → 23514; payload con hechos `srt`/`ifrs-full` → excluidos en `facts_skipped_scope`, sin hash, sin afectar a `completed` | según caso |
 | T29 | Formularios: filings 8-K y 20-F excluidos (`filings_skipped_form`, no contados en `payload_filing_count`); 10-K/A y 10-Q/A incluidos; INSERT directo con `form='8-K'` → 23514; hecho de companyfacts con `form='8-K'` → `facts_skipped_scope`, no `facts_rejected` | según caso |
 | T30 | Contadores NULL: para cada contador requerido de submissions y de companyfacts, forzar NULL o ausente impide `completed` (CHECK 23514 en UPDATE directo como owner; `sec_finalize_run` devuelve `failed` si falta en `_counts`); contadores de la otra rama no NULL → 23514 | según caso |
 | T31 | Contadores existing derivados: reingesta de submissions con 3 elegibles ya existentes → `filings_existing=3` (BD); reingesta de companyfacts → `facts_existing = distinct(raw_fact_hash de la corrida) − facts_inserted`; muestras de conflicto que no cuadran con `filing_conflicts` → `failed`; `conflict_samples` con 101 elementos → 23514 | según caso |
-| TH | Fact hash: `vectors.json` (V01–V19, incluidos los de 61 dígitos y el texto vacío) y rechazos de lexema idénticos en Python y TypeScript | diff vacío |
+| TH-F | `fact_hash`: V01–V20 y dominio de lexema idénticos en Python y TypeScript | diff vacío |
+| TH-J | `raw_json_sha256`: R01–R13 y rechazos X01–X03 idénticos en Python y TypeScript | diff vacío |
 
-**TH:** como bloque en memoria, ejecutado (D.5). Como test guardado en el proyecto, NOT RUN. **T1–T31:** NOT RUN.
+**TH-F y TH-J:** ejecutados como bloque en memoria (D.5); guardados como tests del proyecto, NOT RUN. **T1–T31 (base de datos, acceso e integración):** NOT RUN. Ejecutar hashes en memoria **no** valida la base de datos ni el RLS.
 
 Comandos previstos (NOT RUN):
 ```bash
@@ -824,6 +954,10 @@ SELECT pg_get_function_result(p.oid), provolatile, prosecdef, proconfig, proowne
   FROM pg_proc p WHERE p.oid='public.has_role(uuid,public.app_role)'::regprocedure;   -- CONFIRMADO boolean,s,t,{search_path=public},postgres
 SELECT r, has_function_privilege(r,'public.has_role(uuid,public.app_role)','EXECUTE')
   FROM unnest(ARRAY['anon','authenticated','postgres']) r;                           -- CONFIRMADO f,t,t
+-- Propiedad y privilegios del rol migrador (antes de migrar)
+SELECT current_user, session_user;                                                  -- NOT VERIFIED (se ejecuta en el preflight)
+SELECT pg_has_role(current_user, 'postgres', 'MEMBER') OR current_user = 'postgres';  -- debe ser true para C.11b; NOT VERIFIED
+SELECT has_schema_privilege('postgres','public','CREATE');                          -- esperado true; NOT VERIFIED
 SELECT has_function_privilege('postgres','auth.uid()','EXECUTE');                   -- CONFIRMADO true
 SELECT has_schema_privilege('postgres','auth','USAGE');                             -- CONFIRMADO true
 SELECT enumlabel FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid WHERE typname='app_role';   -- CONFIRMADO admin,user
@@ -834,6 +968,11 @@ SELECT proname, proowner::regrole, prosecdef, proconfig, proacl FROM pg_proc
 --  sec_is_admin: postgres, t, {search_path=""}, X solo para anon/authenticated
 --  sec_record_download/sec_fail_run/sec_fail_stale_runs/sec_finalize_run: postgres, t, {search_path=""}, X solo para service_role
 SELECT has_table_privilege('service_role','public.sec_ingestion_runs','UPDATE');    -- esperado false
+SELECT c.relname, c.relowner::regrole, c.relacl FROM pg_class c
+ WHERE c.relnamespace='public'::regnamespace AND c.relname LIKE 'sec\_%' AND c.relkind='r';   -- esperado: propietario postgres en las 8
+SELECT t, p, has_table_privilege('postgres', 'public.'||t, p)
+  FROM unnest(ARRAY['sec_ingestion_runs','sec_filings','sec_raw_facts','sec_raw_fact_observations',
+                    'sec_normalized_facts','sec_normalized_fact_sources']) t, unnest(ARRAY['INSERT','UPDATE','SELECT']) p;  -- esperado true
 ```
 Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constraint`, `pg_policies` y `pg_trigger` con la sección C y se informa de las diferencias antes de decidir. No se aborta sin análisis.
 
@@ -873,16 +1012,18 @@ Si aparece algún `sec_*`: se comparan `information_schema.columns`, `pg_constra
 3. Las corridas huérfanas dependen de que se ejecute `sec_fail_stale_runs`. Si no se llama, quedan en `running` (aunque nunca `completed`).
 4. Hace falta un parser JSON sin pérdida en el entorno de la función de backend; la dependencia se elige en Build.
 5. Los hechos de texto o nil en companyfacts y el patrón real de `submissions_page` no se han observado en payloads reales.
-6. `frame_only` conserva la evidencia pero no hace fallar la corrida (B9). Si se prefiere tratarlo como fallo, es una decisión explícita pendiente.
+6. El parser JSON sin pérdida de la función de backend debe reproducir exactamente el comportamiento de D.5 (TH-J); hasta Build solo está verificado el de los scripts de referencia.
 7. Ingerir `srt`, `ifrs-full` u otros formularios requiere una decisión de alcance explícita.
 8. T1–T31 no se han ejecutado.
 
 ---
 
 ## H. Estado final
-- **CONFIRMADO:** PostgreSQL 17.6 (admite `NULLS NOT DISTINCT`); no existen tablas ni funciones `sec_*`; definición y propietario de `has_role`; EXECUTE sobre `has_role`: anon=false, authenticated=true, postgres=true (sin cambios); `postgres` puede ejecutar `auth.uid()` y tiene USAGE en `auth`; default privileges amplios (REVOKE obligatorio); fact hash v1 con `taxonomy_key` y decimal exacto: 19 vectores (61 dígitos y texto vacío incluidos) y 5 rechazos de lexema, idénticos en Python y TypeScript con el mismo validador (diff vacío, 24 líneas).
+- **CONFIRMADO:** PostgreSQL 17.6 (admite `NULLS NOT DISTINCT`); no existen tablas ni funciones `sec_*`; definición y propietario de `has_role`; EXECUTE sobre `has_role`: anon=false, authenticated=true, postgres=true (sin cambios); `postgres` puede ejecutar `auth.uid()` y tiene USAGE en `auth`; default privileges amplios (REVOKE obligatorio); `fact_hash` v1 con `taxonomy_key` y decimal exacto: 20 vectores (V01–V20: los 19 previstos más el borde de exponente) y 8 casos de dominio de lexema, idénticos en dos runtimes; `raw_json_sha256`: 13 vectores y 3 rechazos, idénticos en dos runtimes. Diff conjunto vacío, 44 líneas, con el bloque autocontenido de D.5.
 - **NOT VERIFIED:** prueba JWT real de `sec_is_admin()`; hechos de texto, nil o vacíos y patrón de `submissions_page` en payloads reales; colisiones `sec_*` de triggers, políticas, constraints y tipos (lo cubre el preflight ampliado).
-- **NOT RUN:** T1–T31 y TH como test guardado en el proyecto.
+- **NOT VERIFIED (propiedad):** rol migrador y su capacidad de transferir la propiedad a postgres (preflight F.1).
+- **NOT RUN:** T1–T31 y TH-F/TH-J como tests guardados en el proyecto.
+- Este documento es el único archivo modificado: sin cambios de aplicación, base de datos ni migraciones.
 - FND-001 sigue **NOT STARTED**.
 
 M1.1 remains NOT APPROVED; no implementation performed.
