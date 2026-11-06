@@ -26,3 +26,8 @@
 - [x] Observed walk-forward (AAPL/MSFT/SPY/TLT 2y): 17 origins, 0 failed, GMV 8.89% vs EW 12.08% realized vol; reproduction exact
 - [x] Registry plan, matrix IN PROGRESS (5 layers COMPLETED, Academic PLANNED), /portfolio page, docs, CI step
 - [x] Quality checks green on 8a6dcd5c706b4d3a6030aa54532af7c2525831f9: https://github.com/adrynaavroli-dotcom/navaroli-analysis/actions/runs/41236797590 → COMPLETED
+
+## FND-001 M1.1
+- [x] Schema applied (8 sec_* tables, guards, RPCs, RLS) — 2026-11-06
+- [x] Hash vectors TH-F/TH-J saved and in CI
+- [ ] DB/RLS tests T1–T33 — blocked: need an isolated test database
