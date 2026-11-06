@@ -46,6 +46,9 @@ jobs:
       - name: POR-001 benchmark vs approved numpy/scipy fixture + observed walk-forward reproduction
         if: ${{ !cancelled() }}
         run: bun validation/run-por001.ts
+      - name: FND-001 M1.1 hash vectors (Python vs TypeScript, TH-F/TH-J)
+        if: ${{ !cancelled() }}
+        run: bash validation/fnd001/hash-vectors.sh
       - name: Production build (no deployment)
         if: ${{ !cancelled() }}
         run: bun run build
