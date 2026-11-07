@@ -1,5 +1,7 @@
 # FND-001 / M1.1 — Especificación canónica consolidada (Plan/Review, NO BUILD)
 
+> **As-built:** la implementación, las desviaciones y la evidencia de M1.1 se registran en `docs/fnd001/m1.1-as-built.md`. Este documento conserva las decisiones aprobadas y no se modifica.
+
 Estado: FND-001 **NOT STARTED**. M1.1 **NOT APPROVED**. Este documento sustituye íntegramente a la versión anterior. No se ha modificado ningún archivo de aplicación ni de migración, no se ha ejecutado DDL/DML y ningún test ha escrito en la base de datos. Las únicas ejecuciones han sido lecturas del catálogo y dos scripts de hash en memoria.
 
 ---
