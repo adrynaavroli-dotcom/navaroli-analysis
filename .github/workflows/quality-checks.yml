@@ -52,3 +52,47 @@ jobs:
       - name: Production build (no deployment)
         if: ${{ !cancelled() }}
         run: bun run build
+  fnd001-db:
+    name: FND-001 M1.1 database and access tests (ephemeral Supabase stack)
+    # Isolated by construction: a throwaway Supabase stack inside the runner. No
+    # secret, no connection to the live project; every script refuses non-loopback
+    # targets (validation/fnd001/lib/guard.sh).
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Record checked commit
+        run: echo "Checked commit $GITHUB_SHA"
+      - name: Migration chain guards (single source of truth)
+        run: bash validation/fnd001/check-migration-chain.sh
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start ephemeral Supabase stack (PostgreSQL 17)
+        run: bash validation/fnd001/ci/start-stack.sh
+      - name: Rebuild schema from the migration chain
+        run: |
+          bash validation/fnd001/apply-chain.sh
+          psql "$FND001_TEST_DB_URL" -X -q -c "NOTIFY pgrst, 'reload schema'"
+          sleep 3
+      - name: Catalog fingerprint of the rebuilt schema (drift baseline)
+        run: |
+          mkdir -p fnd001-evidence
+          psql "$FND001_TEST_DB_URL" -X -f validation/fnd001/sql/catalog-fingerprint.sql > fnd001-evidence/catalog-fingerprint.txt
+          wc -l fnd001-evidence/catalog-fingerprint.txt
+      - name: T1–T33 database portion (BEGIN … ROLLBACK, zero rows left)
+        run: bash validation/fnd001/run-db-tests.sh 2>&1 | tee fnd001-evidence/db-tests.txt; exit ${PIPESTATUS[0]}
+      - name: T20/T21 with real JWTs through the REST API
+        if: ${{ !cancelled() }}
+        run: bun validation/fnd001/access-check.ts 2>&1 | tee fnd001-evidence/access-check.txt; exit ${PIPESTATUS[0]}
+      - name: Upload evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: fnd001-m11-evidence
+          path: fnd001-evidence/

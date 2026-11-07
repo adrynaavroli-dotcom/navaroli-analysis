@@ -30,4 +30,12 @@
 ## FND-001 M1.1
 - [x] Schema applied (8 sec_* tables, guards, RPCs, RLS) — 2026-11-06
 - [x] Hash vectors TH-F/TH-J saved and in CI
-- [ ] DB/RLS tests T1–T33 — blocked: need an isolated test database
+- [x] Isolated test environment: ephemeral Supabase stack in CI job `fnd001-db` (D1)
+- [x] Single migration chain + CI guards (check-migration-chain.sh)
+- [x] T1–T33 DB portion written (db_tests.sql) — local shim run 186/186, mutation check 14/14 detected (not official)
+- [x] Real-JWT access check written (access-check.ts) — not run locally
+- [x] As-built log: docs/fnd001/m1.1-as-built.md
+- [ ] Official CI evidence for `fnd001-db` on a concrete SHA — waits for the next GitHub sync/run
+- [ ] D3 production catalog fingerprint + drift diff — waits for user authorization (read-only)
+- [ ] D4 sandbox_exec_* write grants on sec_* — waits for D3 results and user authorization
+- [ ] M1.2: sec-ingest, atomic supersession RPC, T19/T22/T32 and parser parts
