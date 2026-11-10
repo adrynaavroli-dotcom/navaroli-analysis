@@ -36,4 +36,11 @@ else say "not ok - drizzle journal and SQL files differ"; diff <(echo "$tags") <
 if grep -Eq 'drizzle-kit[^"]*(generate|pull|push)' package.json; then say "not ok - package.json runs drizzle-kit generate/pull/push"; fail=1
 else say "ok - no drizzle-kit generate/pull/push scripts"; fi
 
+# 6. The CI workflow never calls psql directly: every database script runs through its
+#    guarded wrapper (apply-chain.sh, run-db-tests.sh, catalog-fingerprint.sh,
+#    access-check.ts), which enforces lib/guard.sh.
+if grep -nE '(^|[^a-z_])psql([^a-z_]|$)' .github/workflows/quality-checks.yml >/dev/null; then
+  say "not ok - quality-checks.yml calls psql directly (use the guarded wrappers)"; fail=1
+else say "ok - workflow runs SQL only through guarded wrappers"; fi
+
 exit $fail
