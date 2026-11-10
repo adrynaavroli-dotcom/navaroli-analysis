@@ -35,7 +35,10 @@
 - [x] T1–T33 DB portion written (db_tests.sql) — local shim run 186/186, mutation check 14/14 detected (not official)
 - [x] Real-JWT access check written (access-check.ts) — not run locally
 - [x] As-built log: docs/fnd001/m1.1-as-built.md
-- [ ] Official CI evidence for `fnd001-db` on a concrete SHA — waits for the next GitHub sync/run
-- [ ] D3 production catalog fingerprint + drift diff — waits for user authorization (read-only)
-- [ ] D4 sandbox_exec_* write grants on sec_* — waits for D3 results and user authorization
+- [x] Official CI evidence for `fnd001-db`: run 42360647941 on 3d7d106942de4e5e0a212eb9b3d2a75258d7c8ed — 186/186 DB, 29/29 real-JWT (https://github.com/adrynaavroli-dotcom/navaroli-analysis/actions/runs/42360647941)
+- [x] D3 production catalog fingerprint (read-only) — identical to CI (906 lines, empty diff); platform roles report in docs/fnd001/d3-catalog-report.md
+- [x] Wrapper hardening: access-check.ts uses guard.sh; workflow runs SQL only through guarded wrappers
+- [ ] Pin CI toolchain (Supabase CLI 3.0.0, setup-cli SHA, Bun 1.4.4) — proposed, waits for user approval
+- [ ] User sign-off on the as-built deviations (§7) — waits for user
+- [ ] D4 sandbox_exec* INSERT/EXECUTE on sec_* — proposal in d3-catalog-report.md §6, waits for user authorization
 - [ ] M1.2: sec-ingest, atomic supersession RPC, T19/T22/T32 and parser parts
