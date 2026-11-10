@@ -23,3 +23,6 @@ for t in $tags; do
   fnd001_psql -1 -f "$ROOT/drizzle/migrations/$t.sql"
 done
 echo "== chain applied"
+# Make PostgREST (CI stack) see the new objects before the REST/JWT checks; harmless
+# on a bare local PostgreSQL where nobody listens on the channel.
+fnd001_psql -c "NOTIFY pgrst, 'reload schema'"

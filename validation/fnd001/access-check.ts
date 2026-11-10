@@ -27,15 +27,29 @@ const API = env("FND001_SUPABASE_URL");
 const ANON = env("FND001_ANON_KEY");
 const SERVICE = env("FND001_SERVICE_ROLE_KEY");
 const DB = env("FND001_TEST_DB_URL");
-if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+\/?$/.test(API) || !/@(127\.0\.0\.1|localhost):\d+\//.test(DB)) {
+// Environment without any ambient libpq PG* variable (the Lovable sandbox exports PG*
+// pointing at the live project), so psql can only use the explicit URL below.
+const cleanEnv = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("PG")));
+
+// DB target: delegate to lib/guard.sh so the shell scripts and this harness share ONE
+// rule (anchored loopback URL + hosted/pooler/project-ref denylist). A local regex here
+// would drift from guard.sh; an unanchored one could be bypassed via the query string.
+try {
+  execFileSync("bash", ["-c", 'source "$1" && fnd001_require_local_db', "fnd001-guard",
+    resolve(import.meta.dir, "lib/guard.sh")], { env: { ...cleanEnv, FND001_TEST_DB_URL: DB }, stdio: "inherit" });
+} catch {
+  console.error("REFUSED: FND001_TEST_DB_URL rejected by lib/guard.sh");
+  process.exit(2);
+}
+// API target: same policy for the REST/Auth endpoint (anchored loopback, same denylist).
+if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+\/?$/.test(API) || /zhhagwrgufwamqvjaoip|supabase\.(co|com)|pooler/.test(API)) {
   console.error("REFUSED: access-check only runs against a loopback (ephemeral) stack");
   process.exit(2);
 }
 
-/** psql against the ephemeral DB with every ambient PG* variable removed. */
+/** psql against the guarded ephemeral DB with every ambient PG* variable removed. */
 function psql(args: string[]): string {
-  const clean = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("PG")));
-  return execFileSync("psql", [DB, "-X", "-q", "-At", "-v", "ON_ERROR_STOP=1", ...args], { env: clean, encoding: "utf8" });
+  return execFileSync("psql", [DB, "-X", "-q", "-At", "-v", "ON_ERROR_STOP=1", ...args], { env: cleanEnv, encoding: "utf8" });
 }
 
 let failures = 0, n = 0;

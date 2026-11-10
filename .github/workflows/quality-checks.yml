@@ -78,12 +78,12 @@ jobs:
       - name: Rebuild schema from the migration chain
         run: |
           bash validation/fnd001/apply-chain.sh
-          psql "$FND001_TEST_DB_URL" -X -q -c "NOTIFY pgrst, 'reload schema'"
           sleep 3
       - name: Catalog fingerprint of the rebuilt schema (drift baseline)
         run: |
           mkdir -p fnd001-evidence
-          psql "$FND001_TEST_DB_URL" -X -f validation/fnd001/sql/catalog-fingerprint.sql > fnd001-evidence/catalog-fingerprint.txt
+          supabase --version > fnd001-evidence/toolchain.txt
+          bash validation/fnd001/catalog-fingerprint.sh > fnd001-evidence/catalog-fingerprint.txt
           wc -l fnd001-evidence/catalog-fingerprint.txt
       - name: T1–T33 database portion (BEGIN … ROLLBACK, zero rows left)
         run: bash validation/fnd001/run-db-tests.sh 2>&1 | tee fnd001-evidence/db-tests.txt; exit ${PIPESTATUS[0]}
