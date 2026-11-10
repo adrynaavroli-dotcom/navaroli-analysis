@@ -1,0 +1,906 @@
+acl|analysis_workspaces|anon|DELETE
+acl|analysis_workspaces|anon|INSERT
+acl|analysis_workspaces|anon|MAINTAIN
+acl|analysis_workspaces|anon|REFERENCES
+acl|analysis_workspaces|anon|SELECT
+acl|analysis_workspaces|anon|TRIGGER
+acl|analysis_workspaces|anon|TRUNCATE
+acl|analysis_workspaces|anon|UPDATE
+acl|analysis_workspaces|authenticated|DELETE
+acl|analysis_workspaces|authenticated|INSERT
+acl|analysis_workspaces|authenticated|MAINTAIN
+acl|analysis_workspaces|authenticated|REFERENCES
+acl|analysis_workspaces|authenticated|SELECT
+acl|analysis_workspaces|authenticated|TRIGGER
+acl|analysis_workspaces|authenticated|TRUNCATE
+acl|analysis_workspaces|authenticated|UPDATE
+acl|analysis_workspaces|postgres|DELETE
+acl|analysis_workspaces|postgres|INSERT
+acl|analysis_workspaces|postgres|MAINTAIN
+acl|analysis_workspaces|postgres|REFERENCES
+acl|analysis_workspaces|postgres|SELECT
+acl|analysis_workspaces|postgres|TRIGGER
+acl|analysis_workspaces|postgres|TRUNCATE
+acl|analysis_workspaces|postgres|UPDATE
+acl|analysis_workspaces|service_role|DELETE
+acl|analysis_workspaces|service_role|INSERT
+acl|analysis_workspaces|service_role|MAINTAIN
+acl|analysis_workspaces|service_role|REFERENCES
+acl|analysis_workspaces|service_role|SELECT
+acl|analysis_workspaces|service_role|TRIGGER
+acl|analysis_workspaces|service_role|TRUNCATE
+acl|analysis_workspaces|service_role|UPDATE
+acl|page_content|anon|DELETE
+acl|page_content|anon|INSERT
+acl|page_content|anon|MAINTAIN
+acl|page_content|anon|REFERENCES
+acl|page_content|anon|SELECT
+acl|page_content|anon|TRIGGER
+acl|page_content|anon|TRUNCATE
+acl|page_content|anon|UPDATE
+acl|page_content|authenticated|DELETE
+acl|page_content|authenticated|INSERT
+acl|page_content|authenticated|MAINTAIN
+acl|page_content|authenticated|REFERENCES
+acl|page_content|authenticated|SELECT
+acl|page_content|authenticated|TRIGGER
+acl|page_content|authenticated|TRUNCATE
+acl|page_content|authenticated|UPDATE
+acl|page_content|postgres|DELETE
+acl|page_content|postgres|INSERT
+acl|page_content|postgres|MAINTAIN
+acl|page_content|postgres|REFERENCES
+acl|page_content|postgres|SELECT
+acl|page_content|postgres|TRIGGER
+acl|page_content|postgres|TRUNCATE
+acl|page_content|postgres|UPDATE
+acl|page_content|service_role|DELETE
+acl|page_content|service_role|INSERT
+acl|page_content|service_role|MAINTAIN
+acl|page_content|service_role|REFERENCES
+acl|page_content|service_role|SELECT
+acl|page_content|service_role|TRIGGER
+acl|page_content|service_role|TRUNCATE
+acl|page_content|service_role|UPDATE
+acl|profiles|anon|DELETE
+acl|profiles|anon|INSERT
+acl|profiles|anon|MAINTAIN
+acl|profiles|anon|REFERENCES
+acl|profiles|anon|SELECT
+acl|profiles|anon|TRIGGER
+acl|profiles|anon|TRUNCATE
+acl|profiles|anon|UPDATE
+acl|profiles|authenticated|DELETE
+acl|profiles|authenticated|INSERT
+acl|profiles|authenticated|MAINTAIN
+acl|profiles|authenticated|REFERENCES
+acl|profiles|authenticated|SELECT
+acl|profiles|authenticated|TRIGGER
+acl|profiles|authenticated|TRUNCATE
+acl|profiles|authenticated|UPDATE
+acl|profiles|postgres|DELETE
+acl|profiles|postgres|INSERT
+acl|profiles|postgres|MAINTAIN
+acl|profiles|postgres|REFERENCES
+acl|profiles|postgres|SELECT
+acl|profiles|postgres|TRIGGER
+acl|profiles|postgres|TRUNCATE
+acl|profiles|postgres|UPDATE
+acl|profiles|service_role|DELETE
+acl|profiles|service_role|INSERT
+acl|profiles|service_role|MAINTAIN
+acl|profiles|service_role|REFERENCES
+acl|profiles|service_role|SELECT
+acl|profiles|service_role|TRIGGER
+acl|profiles|service_role|TRUNCATE
+acl|profiles|service_role|UPDATE
+acl|public_thesis_data_view|anon|DELETE
+acl|public_thesis_data_view|anon|INSERT
+acl|public_thesis_data_view|anon|MAINTAIN
+acl|public_thesis_data_view|anon|REFERENCES
+acl|public_thesis_data_view|anon|SELECT
+acl|public_thesis_data_view|anon|TRIGGER
+acl|public_thesis_data_view|anon|TRUNCATE
+acl|public_thesis_data_view|anon|UPDATE
+acl|public_thesis_data_view|authenticated|DELETE
+acl|public_thesis_data_view|authenticated|INSERT
+acl|public_thesis_data_view|authenticated|MAINTAIN
+acl|public_thesis_data_view|authenticated|REFERENCES
+acl|public_thesis_data_view|authenticated|SELECT
+acl|public_thesis_data_view|authenticated|TRIGGER
+acl|public_thesis_data_view|authenticated|TRUNCATE
+acl|public_thesis_data_view|authenticated|UPDATE
+acl|public_thesis_data_view|postgres|DELETE
+acl|public_thesis_data_view|postgres|INSERT
+acl|public_thesis_data_view|postgres|MAINTAIN
+acl|public_thesis_data_view|postgres|REFERENCES
+acl|public_thesis_data_view|postgres|SELECT
+acl|public_thesis_data_view|postgres|TRIGGER
+acl|public_thesis_data_view|postgres|TRUNCATE
+acl|public_thesis_data_view|postgres|UPDATE
+acl|public_thesis_data_view|service_role|DELETE
+acl|public_thesis_data_view|service_role|INSERT
+acl|public_thesis_data_view|service_role|MAINTAIN
+acl|public_thesis_data_view|service_role|REFERENCES
+acl|public_thesis_data_view|service_role|SELECT
+acl|public_thesis_data_view|service_role|TRIGGER
+acl|public_thesis_data_view|service_role|TRUNCATE
+acl|public_thesis_data_view|service_role|UPDATE
+acl|public_thesis_data|authenticated|DELETE
+acl|public_thesis_data|authenticated|INSERT
+acl|public_thesis_data|authenticated|MAINTAIN
+acl|public_thesis_data|authenticated|REFERENCES
+acl|public_thesis_data|authenticated|SELECT
+acl|public_thesis_data|authenticated|TRIGGER
+acl|public_thesis_data|authenticated|TRUNCATE
+acl|public_thesis_data|authenticated|UPDATE
+acl|public_thesis_data|postgres|DELETE
+acl|public_thesis_data|postgres|INSERT
+acl|public_thesis_data|postgres|MAINTAIN
+acl|public_thesis_data|postgres|REFERENCES
+acl|public_thesis_data|postgres|SELECT
+acl|public_thesis_data|postgres|TRIGGER
+acl|public_thesis_data|postgres|TRUNCATE
+acl|public_thesis_data|postgres|UPDATE
+acl|public_thesis_data|service_role|DELETE
+acl|public_thesis_data|service_role|INSERT
+acl|public_thesis_data|service_role|MAINTAIN
+acl|public_thesis_data|service_role|REFERENCES
+acl|public_thesis_data|service_role|SELECT
+acl|public_thesis_data|service_role|TRIGGER
+acl|public_thesis_data|service_role|TRUNCATE
+acl|public_thesis_data|service_role|UPDATE
+acl|sec_companies|anon|SELECT
+acl|sec_companies|authenticated|SELECT
+acl|sec_companies|postgres|DELETE
+acl|sec_companies|postgres|INSERT
+acl|sec_companies|postgres|MAINTAIN
+acl|sec_companies|postgres|REFERENCES
+acl|sec_companies|postgres|SELECT
+acl|sec_companies|postgres|TRIGGER
+acl|sec_companies|postgres|TRUNCATE
+acl|sec_companies|postgres|UPDATE
+acl|sec_companies|service_role|INSERT
+acl|sec_companies|service_role|SELECT
+acl|sec_companies|service_role|UPDATE
+acl|sec_filings|anon|SELECT
+acl|sec_filings|authenticated|SELECT
+acl|sec_filings|postgres|DELETE
+acl|sec_filings|postgres|INSERT
+acl|sec_filings|postgres|MAINTAIN
+acl|sec_filings|postgres|REFERENCES
+acl|sec_filings|postgres|SELECT
+acl|sec_filings|postgres|TRIGGER
+acl|sec_filings|postgres|TRUNCATE
+acl|sec_filings|postgres|UPDATE
+acl|sec_filings|service_role|INSERT
+acl|sec_filings|service_role|SELECT
+acl|sec_ingestion_runs|authenticated|SELECT
+acl|sec_ingestion_runs|postgres|DELETE
+acl|sec_ingestion_runs|postgres|INSERT
+acl|sec_ingestion_runs|postgres|MAINTAIN
+acl|sec_ingestion_runs|postgres|REFERENCES
+acl|sec_ingestion_runs|postgres|SELECT
+acl|sec_ingestion_runs|postgres|TRIGGER
+acl|sec_ingestion_runs|postgres|TRUNCATE
+acl|sec_ingestion_runs|postgres|UPDATE
+acl|sec_ingestion_runs|service_role|INSERT
+acl|sec_ingestion_runs|service_role|SELECT
+acl|sec_normalized_fact_sources|authenticated|SELECT
+acl|sec_normalized_fact_sources|postgres|DELETE
+acl|sec_normalized_fact_sources|postgres|INSERT
+acl|sec_normalized_fact_sources|postgres|MAINTAIN
+acl|sec_normalized_fact_sources|postgres|REFERENCES
+acl|sec_normalized_fact_sources|postgres|SELECT
+acl|sec_normalized_fact_sources|postgres|TRIGGER
+acl|sec_normalized_fact_sources|postgres|TRUNCATE
+acl|sec_normalized_fact_sources|postgres|UPDATE
+acl|sec_normalized_fact_sources|service_role|INSERT
+acl|sec_normalized_fact_sources|service_role|SELECT
+acl|sec_normalized_facts|anon|SELECT
+acl|sec_normalized_facts|authenticated|SELECT
+acl|sec_normalized_facts|postgres|DELETE
+acl|sec_normalized_facts|postgres|INSERT
+acl|sec_normalized_facts|postgres|MAINTAIN
+acl|sec_normalized_facts|postgres|REFERENCES
+acl|sec_normalized_facts|postgres|SELECT
+acl|sec_normalized_facts|postgres|TRIGGER
+acl|sec_normalized_facts|postgres|TRUNCATE
+acl|sec_normalized_facts|postgres|UPDATE
+acl|sec_normalized_facts|service_role|INSERT
+acl|sec_normalized_facts|service_role|SELECT
+acl|sec_normalized_facts|service_role|UPDATE
+acl|sec_raw_fact_observations|authenticated|SELECT
+acl|sec_raw_fact_observations|postgres|DELETE
+acl|sec_raw_fact_observations|postgres|INSERT
+acl|sec_raw_fact_observations|postgres|MAINTAIN
+acl|sec_raw_fact_observations|postgres|REFERENCES
+acl|sec_raw_fact_observations|postgres|SELECT
+acl|sec_raw_fact_observations|postgres|TRIGGER
+acl|sec_raw_fact_observations|postgres|TRUNCATE
+acl|sec_raw_fact_observations|postgres|UPDATE
+acl|sec_raw_fact_observations|service_role|INSERT
+acl|sec_raw_fact_observations|service_role|SELECT
+acl|sec_raw_facts|authenticated|SELECT
+acl|sec_raw_facts|postgres|DELETE
+acl|sec_raw_facts|postgres|INSERT
+acl|sec_raw_facts|postgres|MAINTAIN
+acl|sec_raw_facts|postgres|REFERENCES
+acl|sec_raw_facts|postgres|SELECT
+acl|sec_raw_facts|postgres|TRIGGER
+acl|sec_raw_facts|postgres|TRUNCATE
+acl|sec_raw_facts|postgres|UPDATE
+acl|sec_raw_facts|service_role|INSERT
+acl|sec_raw_facts|service_role|SELECT
+acl|sec_ticker_mappings|anon|SELECT
+acl|sec_ticker_mappings|authenticated|SELECT
+acl|sec_ticker_mappings|postgres|DELETE
+acl|sec_ticker_mappings|postgres|INSERT
+acl|sec_ticker_mappings|postgres|MAINTAIN
+acl|sec_ticker_mappings|postgres|REFERENCES
+acl|sec_ticker_mappings|postgres|SELECT
+acl|sec_ticker_mappings|postgres|TRIGGER
+acl|sec_ticker_mappings|postgres|TRUNCATE
+acl|sec_ticker_mappings|postgres|UPDATE
+acl|sec_ticker_mappings|service_role|INSERT
+acl|sec_ticker_mappings|service_role|SELECT
+acl|sec_ticker_mappings|service_role|UPDATE
+acl|theses|anon|DELETE
+acl|theses|anon|INSERT
+acl|theses|anon|MAINTAIN
+acl|theses|anon|REFERENCES
+acl|theses|anon|SELECT
+acl|theses|anon|TRIGGER
+acl|theses|anon|TRUNCATE
+acl|theses|anon|UPDATE
+acl|theses|authenticated|DELETE
+acl|theses|authenticated|INSERT
+acl|theses|authenticated|MAINTAIN
+acl|theses|authenticated|REFERENCES
+acl|theses|authenticated|SELECT
+acl|theses|authenticated|TRIGGER
+acl|theses|authenticated|TRUNCATE
+acl|theses|authenticated|UPDATE
+acl|theses|postgres|DELETE
+acl|theses|postgres|INSERT
+acl|theses|postgres|MAINTAIN
+acl|theses|postgres|REFERENCES
+acl|theses|postgres|SELECT
+acl|theses|postgres|TRIGGER
+acl|theses|postgres|TRUNCATE
+acl|theses|postgres|UPDATE
+acl|theses|service_role|DELETE
+acl|theses|service_role|INSERT
+acl|theses|service_role|MAINTAIN
+acl|theses|service_role|REFERENCES
+acl|theses|service_role|SELECT
+acl|theses|service_role|TRIGGER
+acl|theses|service_role|TRUNCATE
+acl|theses|service_role|UPDATE
+acl|thesis_alerts|anon|DELETE
+acl|thesis_alerts|anon|INSERT
+acl|thesis_alerts|anon|MAINTAIN
+acl|thesis_alerts|anon|REFERENCES
+acl|thesis_alerts|anon|SELECT
+acl|thesis_alerts|anon|TRIGGER
+acl|thesis_alerts|anon|TRUNCATE
+acl|thesis_alerts|anon|UPDATE
+acl|thesis_alerts|authenticated|DELETE
+acl|thesis_alerts|authenticated|INSERT
+acl|thesis_alerts|authenticated|MAINTAIN
+acl|thesis_alerts|authenticated|REFERENCES
+acl|thesis_alerts|authenticated|SELECT
+acl|thesis_alerts|authenticated|TRIGGER
+acl|thesis_alerts|authenticated|TRUNCATE
+acl|thesis_alerts|authenticated|UPDATE
+acl|thesis_alerts|postgres|DELETE
+acl|thesis_alerts|postgres|INSERT
+acl|thesis_alerts|postgres|MAINTAIN
+acl|thesis_alerts|postgres|REFERENCES
+acl|thesis_alerts|postgres|SELECT
+acl|thesis_alerts|postgres|TRIGGER
+acl|thesis_alerts|postgres|TRUNCATE
+acl|thesis_alerts|postgres|UPDATE
+acl|thesis_alerts|service_role|DELETE
+acl|thesis_alerts|service_role|INSERT
+acl|thesis_alerts|service_role|MAINTAIN
+acl|thesis_alerts|service_role|REFERENCES
+acl|thesis_alerts|service_role|SELECT
+acl|thesis_alerts|service_role|TRIGGER
+acl|thesis_alerts|service_role|TRUNCATE
+acl|thesis_alerts|service_role|UPDATE
+acl|thesis_purchases|anon|DELETE
+acl|thesis_purchases|anon|INSERT
+acl|thesis_purchases|anon|MAINTAIN
+acl|thesis_purchases|anon|REFERENCES
+acl|thesis_purchases|anon|SELECT
+acl|thesis_purchases|anon|TRIGGER
+acl|thesis_purchases|anon|TRUNCATE
+acl|thesis_purchases|anon|UPDATE
+acl|thesis_purchases|authenticated|DELETE
+acl|thesis_purchases|authenticated|INSERT
+acl|thesis_purchases|authenticated|MAINTAIN
+acl|thesis_purchases|authenticated|REFERENCES
+acl|thesis_purchases|authenticated|SELECT
+acl|thesis_purchases|authenticated|TRIGGER
+acl|thesis_purchases|authenticated|TRUNCATE
+acl|thesis_purchases|authenticated|UPDATE
+acl|thesis_purchases|postgres|DELETE
+acl|thesis_purchases|postgres|INSERT
+acl|thesis_purchases|postgres|MAINTAIN
+acl|thesis_purchases|postgres|REFERENCES
+acl|thesis_purchases|postgres|SELECT
+acl|thesis_purchases|postgres|TRIGGER
+acl|thesis_purchases|postgres|TRUNCATE
+acl|thesis_purchases|postgres|UPDATE
+acl|thesis_purchases|service_role|DELETE
+acl|thesis_purchases|service_role|INSERT
+acl|thesis_purchases|service_role|MAINTAIN
+acl|thesis_purchases|service_role|REFERENCES
+acl|thesis_purchases|service_role|SELECT
+acl|thesis_purchases|service_role|TRIGGER
+acl|thesis_purchases|service_role|TRUNCATE
+acl|thesis_purchases|service_role|UPDATE
+acl|user_roles|anon|DELETE
+acl|user_roles|anon|INSERT
+acl|user_roles|anon|MAINTAIN
+acl|user_roles|anon|REFERENCES
+acl|user_roles|anon|SELECT
+acl|user_roles|anon|TRIGGER
+acl|user_roles|anon|TRUNCATE
+acl|user_roles|anon|UPDATE
+acl|user_roles|authenticated|DELETE
+acl|user_roles|authenticated|INSERT
+acl|user_roles|authenticated|MAINTAIN
+acl|user_roles|authenticated|REFERENCES
+acl|user_roles|authenticated|SELECT
+acl|user_roles|authenticated|TRIGGER
+acl|user_roles|authenticated|TRUNCATE
+acl|user_roles|authenticated|UPDATE
+acl|user_roles|postgres|DELETE
+acl|user_roles|postgres|INSERT
+acl|user_roles|postgres|MAINTAIN
+acl|user_roles|postgres|REFERENCES
+acl|user_roles|postgres|SELECT
+acl|user_roles|postgres|TRIGGER
+acl|user_roles|postgres|TRUNCATE
+acl|user_roles|postgres|UPDATE
+acl|user_roles|service_role|DELETE
+acl|user_roles|service_role|INSERT
+acl|user_roles|service_role|MAINTAIN
+acl|user_roles|service_role|REFERENCES
+acl|user_roles|service_role|SELECT
+acl|user_roles|service_role|TRIGGER
+acl|user_roles|service_role|TRUNCATE
+acl|user_roles|service_role|UPDATE
+col|analysis_workspaces.analyst_notes|text|notnull=f|default=
+col|analysis_workspaces.column_mappings|jsonb|notnull=f|default='{}'::jsonb
+col|analysis_workspaces.company_name|text|notnull=t|default=
+col|analysis_workspaces.created_at|timestamp with time zone|notnull=t|default=now()
+col|analysis_workspaces.id|uuid|notnull=t|default=gen_random_uuid()
+col|analysis_workspaces.industry|text|notnull=f|default=
+col|analysis_workspaces.raw_data|jsonb|notnull=f|default='{}'::jsonb
+col|analysis_workspaces.template_type|analysis_template_type|notnull=t|default='dcf'::analysis_template_type
+col|analysis_workspaces.ticker|text|notnull=t|default=
+col|analysis_workspaces.updated_at|timestamp with time zone|notnull=t|default=now()
+col|analysis_workspaces.user_id|uuid|notnull=t|default=
+col|page_content.content|jsonb|notnull=t|default='{}'::jsonb
+col|page_content.id|uuid|notnull=t|default=gen_random_uuid()
+col|page_content.page_key|text|notnull=t|default=
+col|page_content.updated_at|timestamp with time zone|notnull=t|default=now()
+col|page_content.updated_by|uuid|notnull=f|default=
+col|profiles.avatar_url|text|notnull=f|default=
+col|profiles.bio|text|notnull=f|default=
+col|profiles.created_at|timestamp with time zone|notnull=t|default=now()
+col|profiles.full_name|text|notnull=f|default=
+col|profiles.id|uuid|notnull=t|default=gen_random_uuid()
+col|profiles.linkedin_url|text|notnull=f|default=
+col|profiles.notification_email|text|notnull=f|default=
+col|profiles.title|text|notnull=f|default='Equity Research Analyst'::text
+col|profiles.updated_at|timestamp with time zone|notnull=t|default=now()
+col|profiles.user_id|uuid|notnull=t|default=
+col|public_thesis_data.alert_type|text|notnull=f|default=
+col|public_thesis_data.analyst_notes|text|notnull=f|default=
+col|public_thesis_data.base_fcf|numeric|notnull=f|default=
+col|public_thesis_data.capital_allocation_data|jsonb|notnull=f|default='[]'::jsonb
+col|public_thesis_data.capital_efficiency_data|jsonb|notnull=f|default='[]'::jsonb
+col|public_thesis_data.cash|numeric|notnull=f|default=
+col|public_thesis_data.company_name|text|notnull=t|default=
+col|public_thesis_data.created_at|timestamp with time zone|notnull=t|default=now()
+col|public_thesis_data.current_price|numeric|notnull=f|default=
+col|public_thesis_data.dcf_projections|jsonb|notnull=f|default='[]'::jsonb
+col|public_thesis_data.export_config|jsonb|notnull=f|default='{}'::jsonb
+col|public_thesis_data.fair_value|numeric|notnull=f|default=
+col|public_thesis_data.growth_margins_data|jsonb|notnull=f|default='[]'::jsonb
+col|public_thesis_data.id|uuid|notnull=t|default=gen_random_uuid()
+col|public_thesis_data.implied_growth_rate|numeric|notnull=f|default=
+col|public_thesis_data.kpi_data|jsonb|notnull=f|default='{}'::jsonb
+col|public_thesis_data.last_alert_sent_at|timestamp with time zone|notnull=f|default=
+col|public_thesis_data.last_reviewed_at|timestamp with time zone|notnull=f|default=
+col|public_thesis_data.needs_review|boolean|notnull=f|default=false
+col|public_thesis_data.price_at_last_check|numeric|notnull=f|default=
+col|public_thesis_data.published_at|timestamp with time zone|notnull=f|default=
+col|public_thesis_data.sensitivity_matrix|jsonb|notnull=f|default='[]'::jsonb
+col|public_thesis_data.shares_outstanding|numeric|notnull=f|default=
+col|public_thesis_data.terminal_growth|numeric|notnull=f|default=
+col|public_thesis_data.ticker|text|notnull=t|default=
+col|public_thesis_data.total_debt|numeric|notnull=f|default=
+col|public_thesis_data.updated_at|timestamp with time zone|notnull=t|default=now()
+col|public_thesis_data.upside_percent|numeric|notnull=f|default=
+col|public_thesis_data.user_id|uuid|notnull=t|default=
+col|public_thesis_data.valuation_context_data|jsonb|notnull=f|default='[]'::jsonb
+col|public_thesis_data.wacc|numeric|notnull=f|default=
+col|public_thesis_data.workspace_id|uuid|notnull=f|default=
+col|public_thesis_data_view.alert_type|text|notnull=f|default=
+col|public_thesis_data_view.analyst_notes|text|notnull=f|default=
+col|public_thesis_data_view.base_fcf|numeric|notnull=f|default=
+col|public_thesis_data_view.capital_allocation_data|jsonb|notnull=f|default=
+col|public_thesis_data_view.capital_efficiency_data|jsonb|notnull=f|default=
+col|public_thesis_data_view.cash|numeric|notnull=f|default=
+col|public_thesis_data_view.company_name|text|notnull=f|default=
+col|public_thesis_data_view.created_at|timestamp with time zone|notnull=f|default=
+col|public_thesis_data_view.current_price|numeric|notnull=f|default=
+col|public_thesis_data_view.dcf_projections|jsonb|notnull=f|default=
+col|public_thesis_data_view.export_config|jsonb|notnull=f|default=
+col|public_thesis_data_view.fair_value|numeric|notnull=f|default=
+col|public_thesis_data_view.growth_margins_data|jsonb|notnull=f|default=
+col|public_thesis_data_view.id|uuid|notnull=f|default=
+col|public_thesis_data_view.implied_growth_rate|numeric|notnull=f|default=
+col|public_thesis_data_view.kpi_data|jsonb|notnull=f|default=
+col|public_thesis_data_view.published_at|timestamp with time zone|notnull=f|default=
+col|public_thesis_data_view.sensitivity_matrix|jsonb|notnull=f|default=
+col|public_thesis_data_view.shares_outstanding|numeric|notnull=f|default=
+col|public_thesis_data_view.terminal_growth|numeric|notnull=f|default=
+col|public_thesis_data_view.ticker|text|notnull=f|default=
+col|public_thesis_data_view.total_debt|numeric|notnull=f|default=
+col|public_thesis_data_view.updated_at|timestamp with time zone|notnull=f|default=
+col|public_thesis_data_view.upside_percent|numeric|notnull=f|default=
+col|public_thesis_data_view.valuation_context_data|jsonb|notnull=f|default=
+col|public_thesis_data_view.wacc|numeric|notnull=f|default=
+col|sec_companies.cik|text|notnull=t|default=
+col|sec_companies.created_at|timestamp with time zone|notnull=t|default=now()
+col|sec_companies.entity_name|text|notnull=t|default=
+col|sec_companies.is_published|boolean|notnull=t|default=false
+col|sec_companies.updated_at|timestamp with time zone|notnull=t|default=now()
+col|sec_filings.accepted_at|timestamp with time zone|notnull=f|default=
+col|sec_filings.accession_number|text|notnull=t|default=
+col|sec_filings.cik|text|notnull=t|default=
+col|sec_filings.created_at|timestamp with time zone|notnull=t|default=now()
+col|sec_filings.filed_date|date|notnull=t|default=
+col|sec_filings.first_run_id|uuid|notnull=t|default=
+col|sec_filings.form|text|notnull=t|default=
+col|sec_filings.report_date|date|notnull=f|default=
+col|sec_ingestion_runs.cik|text|notnull=t|default=
+col|sec_ingestion_runs.conflict_samples|jsonb|notnull=f|default=
+col|sec_ingestion_runs.content_type|text|notnull=f|default=
+col|sec_ingestion_runs.endpoint_url|text|notnull=t|default=
+col|sec_ingestion_runs.error_message|text|notnull=f|default=
+col|sec_ingestion_runs.facts_existing|integer|notnull=f|default=
+col|sec_ingestion_runs.facts_inserted|integer|notnull=f|default=
+col|sec_ingestion_runs.facts_rejected|integer|notnull=f|default=
+col|sec_ingestion_runs.facts_skipped_scope|integer|notnull=f|default=
+col|sec_ingestion_runs.filing_conflicts|integer|notnull=f|default=
+col|sec_ingestion_runs.filings_inserted|integer|notnull=f|default=
+col|sec_ingestion_runs.filings_not_inserted|integer|notnull=f|default=
+col|sec_ingestion_runs.filings_skipped_form|integer|notnull=f|default=
+col|sec_ingestion_runs.finished_at|timestamp with time zone|notnull=f|default=
+col|sec_ingestion_runs.frame_changes|integer|notnull=f|default=
+col|sec_ingestion_runs.http_status|integer|notnull=f|default=
+col|sec_ingestion_runs.initiated_by|uuid|notnull=f|default=
+col|sec_ingestion_runs.metadata_conflicts|integer|notnull=f|default=
+col|sec_ingestion_runs.observations_written|integer|notnull=f|default=
+col|sec_ingestion_runs.page_name|text|notnull=f|default=
+col|sec_ingestion_runs.payload_bytes|bigint|notnull=f|default=
+col|sec_ingestion_runs.payload_duplicate_count|integer|notnull=f|default=
+col|sec_ingestion_runs.payload_fact_count|integer|notnull=f|default=
+col|sec_ingestion_runs.payload_filing_count|integer|notnull=f|default=
+col|sec_ingestion_runs.payload_sha256|bytea|notnull=f|default=
+col|sec_ingestion_runs.resource_kind|text|notnull=t|default=
+col|sec_ingestion_runs.run_id|uuid|notnull=t|default=gen_random_uuid()
+col|sec_ingestion_runs.started_at|timestamp with time zone|notnull=t|default=now()
+col|sec_ingestion_runs.status|text|notnull=t|default='running'::text
+col|sec_ingestion_runs.storage_bucket|text|notnull=f|default=
+col|sec_ingestion_runs.storage_path|text|notnull=f|default=
+col|sec_ingestion_runs.user_agent|text|notnull=t|default=
+col|sec_normalized_fact_sources.cik|text|notnull=t|default=
+col|sec_normalized_fact_sources.normalized_fact_id|uuid|notnull=t|default=
+col|sec_normalized_fact_sources.raw_fact_hash|bytea|notnull=t|default=
+col|sec_normalized_fact_sources.role|text|notnull=t|default='primary'::text
+col|sec_normalized_facts.accession_number|text|notnull=t|default=
+col|sec_normalized_facts.canonical_concept|text|notnull=t|default=
+col|sec_normalized_facts.cik|text|notnull=t|default=
+col|sec_normalized_facts.created_at|timestamp with time zone|notnull=t|default=now()
+col|sec_normalized_facts.is_current|boolean|notnull=t|default=true
+col|sec_normalized_facts.logical_key|text|notnull=t|default=
+col|sec_normalized_facts.normalized_fact_id|uuid|notnull=t|default=gen_random_uuid()
+col|sec_normalized_facts.normalizer_version|text|notnull=t|default=
+col|sec_normalized_facts.period_end|date|notnull=t|default=
+col|sec_normalized_facts.period_start|date|notnull=f|default=
+col|sec_normalized_facts.period_type|text|notnull=t|default=
+col|sec_normalized_facts.resolved_fiscal_period|text|notnull=f|default=
+col|sec_normalized_facts.resolved_fiscal_year|integer|notnull=f|default=
+col|sec_normalized_facts.rule_version|text|notnull=t|default=
+col|sec_normalized_facts.sec_fiscal_period|text|notnull=f|default=
+col|sec_normalized_facts.sec_fiscal_year|integer|notnull=f|default=
+col|sec_normalized_facts.source_run_id|uuid|notnull=t|default=
+col|sec_normalized_facts.superseded_by|uuid|notnull=f|default=
+col|sec_normalized_facts.unit|text|notnull=t|default=
+col|sec_normalized_facts.value_numeric|numeric|notnull=t|default=
+col|sec_raw_fact_observations.cik|text|notnull=t|default=
+col|sec_raw_fact_observations.conflict_detail|jsonb|notnull=f|default=
+col|sec_raw_fact_observations.conflict_kind|text|notnull=f|default=
+col|sec_raw_fact_observations.conflict|boolean|notnull=t|default=false
+col|sec_raw_fact_observations.filed_date|date|notnull=f|default=
+col|sec_raw_fact_observations.fiscal_period|text|notnull=f|default=
+col|sec_raw_fact_observations.fiscal_year|integer|notnull=f|default=
+col|sec_raw_fact_observations.form|text|notnull=f|default=
+col|sec_raw_fact_observations.frame|text|notnull=f|default=
+col|sec_raw_fact_observations.observation_id|uuid|notnull=t|default=gen_random_uuid()
+col|sec_raw_fact_observations.observed_at|timestamp with time zone|notnull=t|default=now()
+col|sec_raw_fact_observations.raw_fact_hash|bytea|notnull=t|default=
+col|sec_raw_fact_observations.raw_json_sha256|bytea|notnull=t|default=
+col|sec_raw_fact_observations.raw_json|jsonb|notnull=t|default=
+col|sec_raw_fact_observations.run_id|uuid|notnull=t|default=
+col|sec_raw_facts.accession_number|text|notnull=t|default=
+col|sec_raw_facts.cik|text|notnull=t|default=
+col|sec_raw_facts.created_at|timestamp with time zone|notnull=t|default=now()
+col|sec_raw_facts.fact_hash_version|smallint|notnull=t|default=1
+col|sec_raw_facts.fact_hash|bytea|notnull=t|default=
+col|sec_raw_facts.first_run_id|uuid|notnull=t|default=
+col|sec_raw_facts.fiscal_period|text|notnull=f|default=
+col|sec_raw_facts.fiscal_year|integer|notnull=f|default=
+col|sec_raw_facts.period_end|date|notnull=t|default=
+col|sec_raw_facts.period_start|date|notnull=f|default=
+col|sec_raw_facts.period_type|text|notnull=t|default=
+col|sec_raw_facts.tag|text|notnull=t|default=
+col|sec_raw_facts.taxonomy_key|text|notnull=t|default=
+col|sec_raw_facts.taxonomy_uri|text|notnull=f|default=
+col|sec_raw_facts.unit|text|notnull=f|default=
+col|sec_raw_facts.value_kind|text|notnull=t|default=
+col|sec_raw_facts.value_numeric|numeric|notnull=f|default=
+col|sec_raw_facts.value_text|text|notnull=f|default=
+col|sec_ticker_mappings.cik|text|notnull=t|default=
+col|sec_ticker_mappings.created_at|timestamp with time zone|notnull=t|default=now()
+col|sec_ticker_mappings.exchange|text|notnull=f|default=
+col|sec_ticker_mappings.is_active|boolean|notnull=t|default=true
+col|sec_ticker_mappings.ticker|text|notnull=t|default=
+col|sec_ticker_mappings.valid_from|date|notnull=f|default=
+col|sec_ticker_mappings.valid_to|date|notnull=f|default=
+col|theses.analysis_date|date|notnull=t|default=CURRENT_DATE
+col|theses.chart_data|jsonb|notnull=f|default='{}'::jsonb
+col|theses.company_name|text|notnull=t|default=
+col|theses.created_at|timestamp with time zone|notnull=t|default=now()
+col|theses.currency|text|notnull=t|default='USD'::text
+col|theses.current_price|numeric(12,2)|notnull=t|default=
+col|theses.direction|thesis_direction|notnull=t|default='long'::thesis_direction
+col|theses.executive_summary|text|notnull=f|default=
+col|theses.id|uuid|notnull=t|default=gen_random_uuid()
+col|theses.investment_case|text|notnull=f|default=
+col|theses.is_published|boolean|notnull=t|default=false
+col|theses.market_cap_category|market_cap_category|notnull=t|default='large'::market_cap_category
+col|theses.metrics|jsonb|notnull=f|default='{}'::jsonb
+col|theses.risks|text|notnull=f|default=
+col|theses.sector|text|notnull=t|default=
+col|theses.sparkline_data|jsonb|notnull=f|default='[]'::jsonb
+col|theses.strategy|investment_strategy|notnull=t|default='growth'::investment_strategy
+col|theses.target_price|numeric(12,2)|notnull=f|default=
+col|theses.ticker|text|notnull=t|default=
+col|theses.updated_at|timestamp with time zone|notnull=t|default=now()
+col|theses.user_id|uuid|notnull=f|default=
+col|theses.valuation|text|notnull=f|default=
+col|thesis_alerts.acknowledged|boolean|notnull=f|default=false
+col|thesis_alerts.alert_type|text|notnull=t|default=
+col|thesis_alerts.created_at|timestamp with time zone|notnull=f|default=now()
+col|thesis_alerts.email_sent|boolean|notnull=f|default=false
+col|thesis_alerts.id|uuid|notnull=t|default=gen_random_uuid()
+col|thesis_alerts.message|text|notnull=t|default=
+col|thesis_alerts.thesis_id|uuid|notnull=f|default=
+col|thesis_alerts.ticker|text|notnull=t|default=
+col|thesis_alerts.triggered_at|timestamp with time zone|notnull=f|default=now()
+col|thesis_alerts.user_id|uuid|notnull=t|default=
+col|thesis_purchases.created_at|timestamp with time zone|notnull=t|default=now()
+col|thesis_purchases.id|uuid|notnull=t|default=gen_random_uuid()
+col|thesis_purchases.notes|text|notnull=f|default=
+col|thesis_purchases.price_per_share|numeric|notnull=t|default=
+col|thesis_purchases.purchase_date|date|notnull=t|default=CURRENT_DATE
+col|thesis_purchases.shares|numeric|notnull=t|default=
+col|thesis_purchases.thesis_id|uuid|notnull=t|default=
+col|thesis_purchases.updated_at|timestamp with time zone|notnull=t|default=now()
+col|thesis_purchases.user_id|uuid|notnull=t|default=
+col|user_roles.created_at|timestamp with time zone|notnull=t|default=now()
+col|user_roles.id|uuid|notnull=t|default=gen_random_uuid()
+col|user_roles.role|app_role|notnull=t|default=
+col|user_roles.user_id|uuid|notnull=t|default=
+con|analysis_workspaces|analysis_workspaces_pkey|PRIMARY KEY (id)
+con|page_content|page_content_page_key_key|UNIQUE (page_key)
+con|page_content|page_content_pkey|PRIMARY KEY (id)
+con|page_content|page_content_updated_by_fkey|FOREIGN KEY (updated_by) REFERENCES auth.users(id)
+con|profiles|profiles_pkey|PRIMARY KEY (id)
+con|profiles|profiles_user_id_fkey|FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+con|profiles|profiles_user_id_key|UNIQUE (user_id)
+con|public_thesis_data|public_thesis_data_pkey|PRIMARY KEY (id)
+con|public_thesis_data|public_thesis_data_workspace_id_fkey|FOREIGN KEY (workspace_id) REFERENCES analysis_workspaces(id) ON DELETE CASCADE
+con|public_thesis_data|public_thesis_data_workspace_id_key|UNIQUE (workspace_id)
+con|sec_companies|sec_companies_cik_check|CHECK ((cik ~ '^[0-9]{10}$'::text))
+con|sec_companies|sec_companies_pkey|PRIMARY KEY (cik)
+con|sec_filings|sec_filings_accession_number_check|CHECK ((accession_number ~ '^[0-9]{10}-[0-9]{2}-[0-9]{6}$'::text))
+con|sec_filings|sec_filings_cik_first_run_id_fkey|FOREIGN KEY (cik, first_run_id) REFERENCES sec_ingestion_runs(cik, run_id) ON DELETE RESTRICT
+con|sec_filings|sec_filings_cik_fkey|FOREIGN KEY (cik) REFERENCES sec_companies(cik) ON DELETE RESTRICT
+con|sec_filings|sec_filings_form_check|CHECK ((form = ANY (ARRAY['10-K'::text, '10-K/A'::text, '10-Q'::text, '10-Q/A'::text])))
+con|sec_filings|sec_filings_pkey|PRIMARY KEY (cik, accession_number)
+con|sec_ingestion_runs|sec_ingestion_runs_check1|CHECK ((endpoint_url =
+CASE resource_kind
+    WHEN 'submissions'::text THEN (('https://data.sec.gov/submissions/CIK'::text || cik) || '.json'::text)
+    WHEN 'submissions_page'::text THEN ('https://data.sec.gov/submissions/'::text || page_name)
+    WHEN 'companyfacts'::text THEN (('https://data.sec.gov/api/xbrl/companyfacts/CIK'::text || cik) || '.json'::text)
+    ELSE NULL::text
+END))
+con|sec_ingestion_runs|sec_ingestion_runs_check2|CHECK (((page_name IS NULL) OR (substr(page_name, 4, 10) = cik)))
+con|sec_ingestion_runs|sec_ingestion_runs_check3|CHECK (((storage_bucket IS NULL) AND (storage_path IS NULL)))
+con|sec_ingestion_runs|sec_ingestion_runs_check4|CHECK (((status = 'running'::text) = (finished_at IS NULL)))
+con|sec_ingestion_runs|sec_ingestion_runs_check5|CHECK (((status <> 'failed'::text) OR (error_message IS NOT NULL)))
+con|sec_ingestion_runs|sec_ingestion_runs_check6|CHECK (((status <> 'completed'::text) OR ((http_status = 200) AND (payload_sha256 IS NOT NULL) AND (payload_bytes IS NOT NULL))))
+con|sec_ingestion_runs|sec_ingestion_runs_check7|CHECK (((status <> 'completed'::text) OR (resource_kind = 'companyfacts'::text) OR ((payload_filing_count IS NOT NULL) AND (filings_skipped_form IS NOT NULL) AND (filings_inserted IS NOT NULL) AND (filings_not_inserted IS NOT NULL) AND (filing_conflicts IS NOT NULL) AND (filing_conflicts = 0) AND ((filings_inserted + filings_not_inserted) = payload_filing_count) AND (payload_fact_count IS NULL) AND (observations_written IS NULL))))
+con|sec_ingestion_runs|sec_ingestion_runs_check8|CHECK (((status <> 'completed'::text) OR (resource_kind <> 'companyfacts'::text) OR ((payload_fact_count IS NOT NULL) AND (facts_skipped_scope IS NOT NULL) AND (payload_duplicate_count IS NOT NULL) AND (facts_inserted IS NOT NULL) AND (facts_existing IS NOT NULL) AND (facts_rejected IS NOT NULL) AND (observations_written IS NOT NULL) AND (metadata_conflicts IS NOT NULL) AND (frame_changes IS NOT NULL) AND (facts_rejected = 0) AND (metadata_conflicts = 0) AND ((observations_written + payload_duplicate_count) = payload_fact_count) AND (payload_filing_count IS NULL) AND (filings_inserted IS NULL))))
+con|sec_ingestion_runs|sec_ingestion_runs_check|CHECK (((resource_kind = 'submissions_page'::text) = (page_name IS NOT NULL)))
+con|sec_ingestion_runs|sec_ingestion_runs_cik_fkey|FOREIGN KEY (cik) REFERENCES sec_companies(cik) ON DELETE RESTRICT
+con|sec_ingestion_runs|sec_ingestion_runs_cik_run_id_key|UNIQUE (cik, run_id)
+con|sec_ingestion_runs|sec_ingestion_runs_cik_run_id_resource_kind_key|UNIQUE (cik, run_id, resource_kind)
+con|sec_ingestion_runs|sec_ingestion_runs_conflict_samples_check|CHECK (((conflict_samples IS NULL) OR ((jsonb_typeof(conflict_samples) = 'array'::text) AND (jsonb_array_length(conflict_samples) <= 100))))
+con|sec_ingestion_runs|sec_ingestion_runs_facts_existing_check|CHECK ((facts_existing >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_facts_inserted_check|CHECK ((facts_inserted >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_facts_rejected_check|CHECK ((facts_rejected >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_facts_skipped_scope_check|CHECK ((facts_skipped_scope >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_filing_conflicts_check|CHECK ((filing_conflicts >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_filings_inserted_check|CHECK ((filings_inserted >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_filings_not_inserted_check|CHECK ((filings_not_inserted >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_filings_skipped_form_check|CHECK ((filings_skipped_form >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_frame_changes_check|CHECK ((frame_changes >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_http_status_check|CHECK (((http_status >= 100) AND (http_status <= 599)))
+con|sec_ingestion_runs|sec_ingestion_runs_metadata_conflicts_check|CHECK ((metadata_conflicts >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_observations_written_check|CHECK ((observations_written >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_page_name_check|CHECK (((page_name IS NULL) OR (page_name ~ '^CIK[0-9]{10}-submissions-[0-9]{3}\.json$'::text)))
+con|sec_ingestion_runs|sec_ingestion_runs_payload_bytes_check|CHECK ((payload_bytes >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_payload_duplicate_count_check|CHECK ((payload_duplicate_count >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_payload_fact_count_check|CHECK ((payload_fact_count >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_payload_filing_count_check|CHECK ((payload_filing_count >= 0))
+con|sec_ingestion_runs|sec_ingestion_runs_payload_sha256_check|CHECK (((payload_sha256 IS NULL) OR (octet_length(payload_sha256) = 32)))
+con|sec_ingestion_runs|sec_ingestion_runs_pkey|PRIMARY KEY (run_id)
+con|sec_ingestion_runs|sec_ingestion_runs_resource_kind_check|CHECK ((resource_kind = ANY (ARRAY['submissions'::text, 'submissions_page'::text, 'companyfacts'::text])))
+con|sec_ingestion_runs|sec_ingestion_runs_status_check|CHECK ((status = ANY (ARRAY['running'::text, 'completed'::text, 'failed'::text])))
+con|sec_normalized_fact_sources|sec_normalized_fact_sources_cik_normalized_fact_id_fkey|FOREIGN KEY (cik, normalized_fact_id) REFERENCES sec_normalized_facts(cik, normalized_fact_id) ON DELETE RESTRICT
+con|sec_normalized_fact_sources|sec_normalized_fact_sources_cik_raw_fact_hash_fkey|FOREIGN KEY (cik, raw_fact_hash) REFERENCES sec_raw_facts(cik, fact_hash) ON DELETE RESTRICT
+con|sec_normalized_fact_sources|sec_normalized_fact_sources_pkey|PRIMARY KEY (cik, normalized_fact_id, raw_fact_hash)
+con|sec_normalized_fact_sources|sec_normalized_fact_sources_role_check|CHECK ((role = ANY (ARRAY['primary'::text, 'component'::text, 'fallback'::text])))
+con|sec_normalized_facts|sec_norm_lineage|TRIGGER DEFERRABLE INITIALLY DEFERRED
+con|sec_normalized_facts|sec_norm_supersession|TRIGGER DEFERRABLE INITIALLY DEFERRED
+con|sec_normalized_facts|sec_norm_version_uq|UNIQUE (cik, logical_key, accession_number, normalizer_version, rule_version)
+con|sec_normalized_facts|sec_normalized_facts_canonical_concept_check|CHECK ((canonical_concept ~ '^[A-Za-z][A-Za-z0-9_.:-]*$'::text))
+con|sec_normalized_facts|sec_normalized_facts_check1|CHECK ((is_current = (superseded_by IS NULL)))
+con|sec_normalized_facts|sec_normalized_facts_check2|CHECK ((((period_type = 'instant'::text) AND (period_start IS NULL)) OR ((period_type = 'duration'::text) AND (period_start IS NOT NULL) AND (period_start <= period_end))))
+con|sec_normalized_facts|sec_normalized_facts_check|CHECK (((superseded_by IS NULL) OR (superseded_by <> normalized_fact_id)))
+con|sec_normalized_facts|sec_normalized_facts_cik_accession_number_fkey|FOREIGN KEY (cik, accession_number) REFERENCES sec_filings(cik, accession_number) ON DELETE RESTRICT
+con|sec_normalized_facts|sec_normalized_facts_cik_fkey|FOREIGN KEY (cik) REFERENCES sec_companies(cik) ON DELETE RESTRICT
+con|sec_normalized_facts|sec_normalized_facts_cik_logical_key_accession_number_norma_key|UNIQUE (cik, logical_key, accession_number, normalized_fact_id)
+con|sec_normalized_facts|sec_normalized_facts_cik_logical_key_accession_number_supe_fkey|FOREIGN KEY (cik, logical_key, accession_number, superseded_by) REFERENCES sec_normalized_facts(cik, logical_key, accession_number, normalized_fact_id) ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED
+con|sec_normalized_facts|sec_normalized_facts_cik_normalized_fact_id_key|UNIQUE (cik, normalized_fact_id)
+con|sec_normalized_facts|sec_normalized_facts_cik_source_run_id_fkey|FOREIGN KEY (cik, source_run_id) REFERENCES sec_ingestion_runs(cik, run_id) ON DELETE RESTRICT
+con|sec_normalized_facts|sec_normalized_facts_period_type_check|CHECK ((period_type = ANY (ARRAY['instant'::text, 'duration'::text])))
+con|sec_normalized_facts|sec_normalized_facts_pkey|PRIMARY KEY (normalized_fact_id)
+con|sec_normalized_facts|sec_normalized_facts_unit_check|CHECK (((unit !~ '[|]'::text) AND (unit IS NFC NORMALIZED) AND (unit = btrim(unit)) AND (unit <> ''::text)))
+con|sec_normalized_facts|sec_normalized_facts_value_numeric_check|CHECK ((value_numeric <> ALL (ARRAY['NaN'::numeric, 'Infinity'::numeric, '-Infinity'::numeric])))
+con|sec_raw_fact_observations|sec_obs_content_uq|UNIQUE NULLS NOT DISTINCT (run_id, raw_fact_hash, raw_json_sha256)
+con|sec_raw_fact_observations|sec_raw_fact_observations_check1|CHECK ((conflict = (conflict_detail IS NOT NULL)))
+con|sec_raw_fact_observations|sec_raw_fact_observations_check|CHECK ((conflict = (conflict_kind IS NOT NULL)))
+con|sec_raw_fact_observations|sec_raw_fact_observations_cik_raw_fact_hash_fkey|FOREIGN KEY (cik, raw_fact_hash) REFERENCES sec_raw_facts(cik, fact_hash) ON DELETE RESTRICT
+con|sec_raw_fact_observations|sec_raw_fact_observations_cik_run_id_fkey|FOREIGN KEY (cik, run_id) REFERENCES sec_ingestion_runs(cik, run_id) ON DELETE RESTRICT
+con|sec_raw_fact_observations|sec_raw_fact_observations_conflict_kind_check|CHECK ((conflict_kind = ANY (ARRAY['metadata'::text, 'frame_only'::text])))
+con|sec_raw_fact_observations|sec_raw_fact_observations_pkey|PRIMARY KEY (observation_id)
+con|sec_raw_fact_observations|sec_raw_fact_observations_raw_json_sha256_check|CHECK ((octet_length(raw_json_sha256) = 32))
+con|sec_raw_facts|sec_raw_facts_check1|CHECK ((((value_kind = 'numeric'::text) AND (value_numeric IS NOT NULL) AND (value_text IS NULL) AND (unit IS NOT NULL)) OR ((value_kind = 'text'::text) AND (value_text IS NOT NULL) AND (value_numeric IS NULL)) OR ((value_kind = 'nil'::text) AND (value_text IS NULL) AND (value_numeric IS NULL))))
+con|sec_raw_facts|sec_raw_facts_check|CHECK ((((period_type = 'instant'::text) AND (period_start IS NULL)) OR ((period_type = 'duration'::text) AND (period_start IS NOT NULL) AND (period_start <= period_end))))
+con|sec_raw_facts|sec_raw_facts_cik_accession_number_fkey|FOREIGN KEY (cik, accession_number) REFERENCES sec_filings(cik, accession_number) ON DELETE RESTRICT
+con|sec_raw_facts|sec_raw_facts_cik_fact_hash_key|UNIQUE (cik, fact_hash)
+con|sec_raw_facts|sec_raw_facts_cik_first_run_id_fkey|FOREIGN KEY (cik, first_run_id) REFERENCES sec_ingestion_runs(cik, run_id) ON DELETE RESTRICT
+con|sec_raw_facts|sec_raw_facts_fact_hash_check|CHECK ((octet_length(fact_hash) = 32))
+con|sec_raw_facts|sec_raw_facts_fact_hash_version_check|CHECK ((fact_hash_version = 1))
+con|sec_raw_facts|sec_raw_facts_period_type_check|CHECK ((period_type = ANY (ARRAY['instant'::text, 'duration'::text])))
+con|sec_raw_facts|sec_raw_facts_pkey|PRIMARY KEY (fact_hash)
+con|sec_raw_facts|sec_raw_facts_taxonomy_key_check|CHECK ((taxonomy_key = ANY (ARRAY['us-gaap'::text, 'dei'::text])))
+con|sec_raw_facts|sec_raw_facts_taxonomy_uri_check|CHECK ((taxonomy_uri IS NULL))
+con|sec_raw_facts|sec_raw_facts_value_kind_check|CHECK ((value_kind = ANY (ARRAY['numeric'::text, 'text'::text, 'nil'::text])))
+con|sec_raw_facts|sec_raw_facts_value_numeric_check|CHECK (((value_numeric IS NULL) OR (value_numeric <> ALL (ARRAY['NaN'::numeric, 'Infinity'::numeric, '-Infinity'::numeric]))))
+con|sec_ticker_mappings|sec_ticker_mappings_check|CHECK (((valid_to IS NULL) OR (valid_from IS NULL) OR (valid_to >= valid_from)))
+con|sec_ticker_mappings|sec_ticker_mappings_cik_fkey|FOREIGN KEY (cik) REFERENCES sec_companies(cik) ON DELETE RESTRICT
+con|sec_ticker_mappings|sec_ticker_mappings_pkey|PRIMARY KEY (ticker, cik)
+con|sec_ticker_mappings|sec_ticker_mappings_ticker_check|CHECK ((ticker ~ '^[A-Z0-9.\-]{1,10}$'::text))
+con|theses|theses_pkey|PRIMARY KEY (id)
+con|theses|theses_user_id_fkey|FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+con|thesis_alerts|thesis_alerts_pkey|PRIMARY KEY (id)
+con|thesis_alerts|thesis_alerts_thesis_id_fkey|FOREIGN KEY (thesis_id) REFERENCES public_thesis_data(id) ON DELETE CASCADE
+con|thesis_purchases|thesis_purchases_pkey|PRIMARY KEY (id)
+con|thesis_purchases|thesis_purchases_price_per_share_check|CHECK ((price_per_share > (0)::numeric))
+con|thesis_purchases|thesis_purchases_shares_check|CHECK ((shares > (0)::numeric))
+con|thesis_purchases|thesis_purchases_thesis_id_fkey|FOREIGN KEY (thesis_id) REFERENCES theses(id) ON DELETE CASCADE
+con|user_roles|user_roles_pkey|PRIMARY KEY (id)
+con|user_roles|user_roles_user_id_fkey|FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+con|user_roles|user_roles_user_id_role_key|UNIQUE (user_id, role)
+enum|analysis_template_type|dcf,comparables,lbo,sum_of_parts,custom
+enum|app_role|admin,user
+enum|investment_strategy|value,growth,compounder,turnaround,dividend
+enum|market_cap_category|mega,large,mid,small,micro
+enum|thesis_direction|long,short
+fnacl|handle_new_user()|postgres|EXECUTE
+fnacl|handle_new_user()|service_role|EXECUTE
+fnacl|has_role(uuid,app_role)|authenticated|EXECUTE
+fnacl|has_role(uuid,app_role)|postgres|EXECUTE
+fnacl|has_role(uuid,app_role)|service_role|EXECUTE
+fnacl|sec_fail_run(uuid,text,jsonb)|postgres|EXECUTE
+fnacl|sec_fail_run(uuid,text,jsonb)|service_role|EXECUTE
+fnacl|sec_fail_stale_runs(interval)|postgres|EXECUTE
+fnacl|sec_fail_stale_runs(interval)|service_role|EXECUTE
+fnacl|sec_finalize_run(uuid,jsonb,jsonb)|postgres|EXECUTE
+fnacl|sec_finalize_run(uuid,jsonb,jsonb)|service_role|EXECUTE
+fnacl|sec_guard()|postgres|EXECUTE
+fnacl|sec_insert_guard()|postgres|EXECUTE
+fnacl|sec_is_admin()|anon|EXECUTE
+fnacl|sec_is_admin()|authenticated|EXECUTE
+fnacl|sec_is_admin()|postgres|EXECUTE
+fnacl|sec_norm_lineage_check()|postgres|EXECUTE
+fnacl|sec_record_download(uuid,integer,text,bigint,bytea)|postgres|EXECUTE
+fnacl|sec_record_download(uuid,integer,text,bigint,bytea)|service_role|EXECUTE
+fnacl|sec_supersession_check()|postgres|EXECUTE
+fnacl|update_updated_at_column()|postgres|EXECUTE
+fnacl|update_updated_at_column()|service_role|EXECUTE
+fn|handle_new_user()|owner=postgres|secdef=t|vol=v|config={search_path=public}|src_md5=7d70d0e098ab55ffe50377017bfa6f61
+fn|has_role(uuid,app_role)|owner=postgres|secdef=t|vol=s|config={search_path=public}|src_md5=dcfc17cfff0b246634d5df8bf8ceb915
+fn|sec_fail_run(uuid,text,jsonb)|owner=postgres|secdef=t|vol=v|config={"search_path=\"\""}|src_md5=148f1aaffbba88f15426cd9c74cd7def
+fn|sec_fail_stale_runs(interval)|owner=postgres|secdef=t|vol=v|config={"search_path=\"\""}|src_md5=bd5182edb8cb2a031030d5446669049b
+fn|sec_finalize_run(uuid,jsonb,jsonb)|owner=postgres|secdef=t|vol=v|config={"search_path=\"\""}|src_md5=4c27b9c490b5cbdb69e14852daa98b3a
+fn|sec_guard()|owner=postgres|secdef=f|vol=v|config={"search_path=\"\""}|src_md5=cea8559394d37ee1a1e7882509a7c507
+fn|sec_insert_guard()|owner=postgres|secdef=f|vol=v|config={"search_path=\"\""}|src_md5=d048ce3b84afc5591bf3f1aae418ff83
+fn|sec_is_admin()|owner=postgres|secdef=t|vol=s|config={"search_path=\"\""}|src_md5=61679fafe4fd8b50d30059073de18298
+fn|sec_norm_lineage_check()|owner=postgres|secdef=f|vol=v|config={"search_path=\"\""}|src_md5=c18911444b8d5da53b4ee67b8b5c30ca
+fn|sec_record_download(uuid,integer,text,bigint,bytea)|owner=postgres|secdef=t|vol=v|config={"search_path=\"\""}|src_md5=fcf25a5fd174e22f8ef26132159e9c73
+fn|sec_supersession_check()|owner=postgres|secdef=f|vol=v|config={"search_path=\"\""}|src_md5=ae8d2de2d809adef4df6a58f530c1b2e
+fn|update_updated_at_column()|owner=postgres|secdef=f|vol=v|config={search_path=public}|src_md5=301a884953d37769916294bb60562e05
+idx|CREATE INDEX idx_theses_analysis_date ON public.theses USING btree (analysis_date DESC)
+idx|CREATE INDEX idx_theses_direction ON public.theses USING btree (direction)
+idx|CREATE INDEX idx_theses_is_published ON public.theses USING btree (is_published)
+idx|CREATE INDEX idx_theses_sector ON public.theses USING btree (sector)
+idx|CREATE INDEX idx_theses_ticker ON public.theses USING btree (ticker)
+idx|CREATE INDEX idx_theses_user_id ON public.theses USING btree (user_id)
+idx|CREATE INDEX idx_thesis_purchases_thesis_id ON public.thesis_purchases USING btree (thesis_id)
+idx|CREATE INDEX idx_thesis_purchases_user_id ON public.thesis_purchases USING btree (user_id)
+idx|CREATE INDEX sec_norm_lookup ON public.sec_normalized_facts USING btree (cik, canonical_concept, period_end) WHERE is_current
+idx|CREATE INDEX sec_obs_fact ON public.sec_raw_fact_observations USING btree (raw_fact_hash)
+idx|CREATE INDEX sec_obs_run ON public.sec_raw_fact_observations USING btree (cik, run_id)
+idx|CREATE INDEX sec_raw_facts_lookup ON public.sec_raw_facts USING btree (cik, taxonomy_key, tag, period_end)
+idx|CREATE UNIQUE INDEX analysis_workspaces_pkey ON public.analysis_workspaces USING btree (id)
+idx|CREATE UNIQUE INDEX page_content_page_key_key ON public.page_content USING btree (page_key)
+idx|CREATE UNIQUE INDEX page_content_pkey ON public.page_content USING btree (id)
+idx|CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id)
+idx|CREATE UNIQUE INDEX profiles_user_id_key ON public.profiles USING btree (user_id)
+idx|CREATE UNIQUE INDEX public_thesis_data_pkey ON public.public_thesis_data USING btree (id)
+idx|CREATE UNIQUE INDEX public_thesis_data_workspace_id_key ON public.public_thesis_data USING btree (workspace_id)
+idx|CREATE UNIQUE INDEX sec_companies_pkey ON public.sec_companies USING btree (cik)
+idx|CREATE UNIQUE INDEX sec_filings_pkey ON public.sec_filings USING btree (cik, accession_number)
+idx|CREATE UNIQUE INDEX sec_ingestion_runs_cik_run_id_key ON public.sec_ingestion_runs USING btree (cik, run_id)
+idx|CREATE UNIQUE INDEX sec_ingestion_runs_cik_run_id_resource_kind_key ON public.sec_ingestion_runs USING btree (cik, run_id, resource_kind)
+idx|CREATE UNIQUE INDEX sec_ingestion_runs_pkey ON public.sec_ingestion_runs USING btree (run_id)
+idx|CREATE UNIQUE INDEX sec_norm_current_uq ON public.sec_normalized_facts USING btree (cik, logical_key, accession_number) WHERE is_current
+idx|CREATE UNIQUE INDEX sec_norm_version_uq ON public.sec_normalized_facts USING btree (cik, logical_key, accession_number, normalizer_version, rule_version)
+idx|CREATE UNIQUE INDEX sec_normalized_fact_sources_pkey ON public.sec_normalized_fact_sources USING btree (cik, normalized_fact_id, raw_fact_hash)
+idx|CREATE UNIQUE INDEX sec_normalized_facts_cik_logical_key_accession_number_norma_key ON public.sec_normalized_facts USING btree (cik, logical_key, accession_number, normalized_fact_id)
+idx|CREATE UNIQUE INDEX sec_normalized_facts_cik_normalized_fact_id_key ON public.sec_normalized_facts USING btree (cik, normalized_fact_id)
+idx|CREATE UNIQUE INDEX sec_normalized_facts_pkey ON public.sec_normalized_facts USING btree (normalized_fact_id)
+idx|CREATE UNIQUE INDEX sec_obs_content_uq ON public.sec_raw_fact_observations USING btree (run_id, raw_fact_hash, raw_json_sha256) NULLS NOT DISTINCT
+idx|CREATE UNIQUE INDEX sec_raw_fact_observations_pkey ON public.sec_raw_fact_observations USING btree (observation_id)
+idx|CREATE UNIQUE INDEX sec_raw_facts_cik_fact_hash_key ON public.sec_raw_facts USING btree (cik, fact_hash)
+idx|CREATE UNIQUE INDEX sec_raw_facts_pkey ON public.sec_raw_facts USING btree (fact_hash)
+idx|CREATE UNIQUE INDEX sec_ticker_active_uq ON public.sec_ticker_mappings USING btree (ticker) WHERE is_active
+idx|CREATE UNIQUE INDEX sec_ticker_mappings_pkey ON public.sec_ticker_mappings USING btree (ticker, cik)
+idx|CREATE UNIQUE INDEX theses_pkey ON public.theses USING btree (id)
+idx|CREATE UNIQUE INDEX thesis_alerts_pkey ON public.thesis_alerts USING btree (id)
+idx|CREATE UNIQUE INDEX thesis_purchases_pkey ON public.thesis_purchases USING btree (id)
+idx|CREATE UNIQUE INDEX user_roles_pkey ON public.user_roles USING btree (id)
+idx|CREATE UNIQUE INDEX user_roles_user_id_role_key ON public.user_roles USING btree (user_id, role)
+pol|analysis_workspaces|Users can create their own workspaces|PERMISSIVE|INSERT|roles=public|using=|check=(auth.uid() = user_id)
+pol|analysis_workspaces|Users can delete their own workspaces|PERMISSIVE|DELETE|roles=public|using=(auth.uid() = user_id)|check=
+pol|analysis_workspaces|Users can update their own workspaces|PERMISSIVE|UPDATE|roles=authenticated|using=(auth.uid() = user_id)|check=(auth.uid() = user_id)
+pol|analysis_workspaces|Users can view their own workspaces|PERMISSIVE|SELECT|roles=public|using=(auth.uid() = user_id)|check=
+pol|page_content|Admins can insert page content|PERMISSIVE|INSERT|roles=authenticated|using=|check=has_role(auth.uid(), 'admin'::app_role)
+pol|page_content|Admins can update page content|PERMISSIVE|UPDATE|roles=authenticated|using=has_role(auth.uid(), 'admin'::app_role)|check=
+pol|page_content|Anyone can view page content|PERMISSIVE|SELECT|roles=public|using=true|check=
+pol|profiles|Users can insert their own profile|PERMISSIVE|INSERT|roles=authenticated|using=|check=(auth.uid() = user_id)
+pol|profiles|Users can update their own profile|PERMISSIVE|UPDATE|roles=authenticated|using=(auth.uid() = user_id)|check=(auth.uid() = user_id)
+pol|profiles|Users can view their own profile|PERMISSIVE|SELECT|roles=public|using=(auth.uid() = user_id)|check=
+pol|public_thesis_data|Anyone can view published thesis data|PERMISSIVE|SELECT|roles=public|using=(published_at IS NOT NULL)|check=
+pol|public_thesis_data|Only owners can view their thesis data directly|PERMISSIVE|SELECT|roles=public|using=(auth.uid() = user_id)|check=
+pol|public_thesis_data|Users can create their own thesis data|PERMISSIVE|INSERT|roles=public|using=|check=(auth.uid() = user_id)
+pol|public_thesis_data|Users can delete their own thesis data|PERMISSIVE|DELETE|roles=public|using=(auth.uid() = user_id)|check=
+pol|public_thesis_data|Users can update their own thesis data|PERMISSIVE|UPDATE|roles=authenticated|using=(auth.uid() = user_id)|check=(auth.uid() = user_id)
+pol|public_thesis_data|Users can view their own thesis data|PERMISSIVE|SELECT|roles=public|using=(auth.uid() = user_id)|check=
+pol|sec_companies|sec_companies_read|PERMISSIVE|SELECT|roles=anon,authenticated|using=(is_published OR sec_is_admin())|check=
+pol|sec_filings|sec_filings_read|PERMISSIVE|SELECT|roles=anon,authenticated|using=((EXISTS ( SELECT 1
+   FROM sec_companies c
+  WHERE ((c.cik = sec_filings.cik) AND c.is_published))) OR sec_is_admin())|check=
+pol|sec_ingestion_runs|sec_runs_admin|PERMISSIVE|SELECT|roles=authenticated|using=sec_is_admin()|check=
+pol|sec_normalized_fact_sources|sec_sources_admin|PERMISSIVE|SELECT|roles=authenticated|using=sec_is_admin()|check=
+pol|sec_normalized_facts|sec_norm_read|PERMISSIVE|SELECT|roles=anon,authenticated|using=((is_current AND (EXISTS ( SELECT 1
+   FROM sec_companies c
+  WHERE ((c.cik = sec_normalized_facts.cik) AND c.is_published)))) OR sec_is_admin())|check=
+pol|sec_raw_fact_observations|sec_obs_admin|PERMISSIVE|SELECT|roles=authenticated|using=sec_is_admin()|check=
+pol|sec_raw_facts|sec_raw_admin|PERMISSIVE|SELECT|roles=authenticated|using=sec_is_admin()|check=
+pol|sec_ticker_mappings|sec_tickers_read|PERMISSIVE|SELECT|roles=anon,authenticated|using=((EXISTS ( SELECT 1
+   FROM sec_companies c
+  WHERE ((c.cik = sec_ticker_mappings.cik) AND c.is_published))) OR sec_is_admin())|check=
+pol|theses|Anyone can view published theses|PERMISSIVE|SELECT|roles=public|using=(is_published = true)|check=
+pol|theses|Users can create their own theses|PERMISSIVE|INSERT|roles=authenticated|using=|check=(auth.uid() = user_id)
+pol|theses|Users can delete their own theses|PERMISSIVE|DELETE|roles=authenticated|using=(auth.uid() = user_id)|check=
+pol|theses|Users can update their own theses|PERMISSIVE|UPDATE|roles=authenticated|using=(auth.uid() = user_id)|check=(auth.uid() = user_id)
+pol|theses|Users can view their own theses|PERMISSIVE|SELECT|roles=authenticated|using=(auth.uid() = user_id)|check=
+pol|thesis_alerts|Users can delete their own alerts|PERMISSIVE|DELETE|roles=public|using=(auth.uid() = user_id)|check=
+pol|thesis_alerts|Users can update their own alerts|PERMISSIVE|UPDATE|roles=authenticated|using=(auth.uid() = user_id)|check=(auth.uid() = user_id)
+pol|thesis_alerts|Users can view their own alerts|PERMISSIVE|SELECT|roles=public|using=(auth.uid() = user_id)|check=
+pol|thesis_purchases|Users can create their own purchases|PERMISSIVE|INSERT|roles=authenticated|using=|check=((auth.uid() = user_id) AND ((EXISTS ( SELECT 1
+   FROM theses
+  WHERE ((theses.id = thesis_purchases.thesis_id) AND (theses.user_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM theses
+  WHERE ((theses.id = thesis_purchases.thesis_id) AND (theses.is_published = true))))))
+pol|thesis_purchases|Users can delete their own purchases|PERMISSIVE|DELETE|roles=public|using=(auth.uid() = user_id)|check=
+pol|thesis_purchases|Users can update their own purchases|PERMISSIVE|UPDATE|roles=authenticated|using=(auth.uid() = user_id)|check=(auth.uid() = user_id)
+pol|thesis_purchases|Users can view their own purchases|PERMISSIVE|SELECT|roles=authenticated|using=((auth.uid() = user_id) AND ((EXISTS ( SELECT 1
+   FROM theses
+  WHERE ((theses.id = thesis_purchases.thesis_id) AND (theses.user_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM theses
+  WHERE ((theses.id = thesis_purchases.thesis_id) AND (theses.is_published = true))))))|check=
+pol|user_roles|Admins can delete roles|PERMISSIVE|DELETE|roles=authenticated|using=has_role(auth.uid(), 'admin'::app_role)|check=
+pol|user_roles|Admins can insert roles|PERMISSIVE|INSERT|roles=authenticated|using=|check=has_role(auth.uid(), 'admin'::app_role)
+pol|user_roles|Admins can view all roles|PERMISSIVE|SELECT|roles=authenticated|using=has_role(auth.uid(), 'admin'::app_role)|check=
+pol|user_roles|Users can view their own roles|PERMISSIVE|SELECT|roles=authenticated|using=(auth.uid() = user_id)|check=
+rel|analysis_workspaces|kind=r|owner=postgres|rls=t|force=f
+rel|page_content|kind=r|owner=postgres|rls=t|force=f
+rel|profiles|kind=r|owner=postgres|rls=t|force=f
+rel|public_thesis_data_view|kind=v|owner=postgres|rls=f|force=f
+rel|public_thesis_data|kind=r|owner=postgres|rls=t|force=f
+rel|sec_companies|kind=r|owner=postgres|rls=t|force=f
+rel|sec_filings|kind=r|owner=postgres|rls=t|force=f
+rel|sec_ingestion_runs|kind=r|owner=postgres|rls=t|force=f
+rel|sec_normalized_fact_sources|kind=r|owner=postgres|rls=t|force=f
+rel|sec_normalized_facts|kind=r|owner=postgres|rls=t|force=f
+rel|sec_raw_fact_observations|kind=r|owner=postgres|rls=t|force=f
+rel|sec_raw_facts|kind=r|owner=postgres|rls=t|force=f
+rel|sec_ticker_mappings|kind=r|owner=postgres|rls=t|force=f
+rel|theses|kind=r|owner=postgres|rls=t|force=f
+rel|thesis_alerts|kind=r|owner=postgres|rls=t|force=f
+rel|thesis_purchases|kind=r|owner=postgres|rls=t|force=f
+rel|user_roles|kind=r|owner=postgres|rls=t|force=f
+trg|CREATE CONSTRAINT TRIGGER sec_norm_lineage AFTER INSERT ON public.sec_normalized_facts DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION sec_norm_lineage_check()
+trg|CREATE CONSTRAINT TRIGGER sec_norm_supersession AFTER UPDATE ON public.sec_normalized_facts DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION sec_supersession_check()
+trg|CREATE TRIGGER sec_companies_updated_at BEFORE UPDATE ON public.sec_companies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+trg|CREATE TRIGGER sec_filings_guard BEFORE DELETE OR UPDATE ON public.sec_filings FOR EACH ROW EXECUTE FUNCTION sec_guard()
+trg|CREATE TRIGGER sec_filings_ins BEFORE INSERT ON public.sec_filings FOR EACH ROW EXECUTE FUNCTION sec_insert_guard()
+trg|CREATE TRIGGER sec_filings_trunc BEFORE TRUNCATE ON public.sec_filings FOR EACH STATEMENT EXECUTE FUNCTION sec_guard()
+trg|CREATE TRIGGER sec_norm_guard BEFORE DELETE OR UPDATE ON public.sec_normalized_facts FOR EACH ROW EXECUTE FUNCTION sec_guard()
+trg|CREATE TRIGGER sec_norm_ins BEFORE INSERT ON public.sec_normalized_facts FOR EACH ROW EXECUTE FUNCTION sec_insert_guard()
+trg|CREATE TRIGGER sec_norm_trunc BEFORE TRUNCATE ON public.sec_normalized_facts FOR EACH STATEMENT EXECUTE FUNCTION sec_guard()
+trg|CREATE TRIGGER sec_obs_guard BEFORE DELETE OR UPDATE ON public.sec_raw_fact_observations FOR EACH ROW EXECUTE FUNCTION sec_guard()
+trg|CREATE TRIGGER sec_obs_ins BEFORE INSERT ON public.sec_raw_fact_observations FOR EACH ROW EXECUTE FUNCTION sec_insert_guard()
+trg|CREATE TRIGGER sec_obs_trunc BEFORE TRUNCATE ON public.sec_raw_fact_observations FOR EACH STATEMENT EXECUTE FUNCTION sec_guard()
+trg|CREATE TRIGGER sec_raw_guard BEFORE DELETE OR UPDATE ON public.sec_raw_facts FOR EACH ROW EXECUTE FUNCTION sec_guard()
+trg|CREATE TRIGGER sec_raw_ins BEFORE INSERT ON public.sec_raw_facts FOR EACH ROW EXECUTE FUNCTION sec_insert_guard()
+trg|CREATE TRIGGER sec_raw_trunc BEFORE TRUNCATE ON public.sec_raw_facts FOR EACH STATEMENT EXECUTE FUNCTION sec_guard()
+trg|CREATE TRIGGER sec_runs_guard BEFORE DELETE OR UPDATE ON public.sec_ingestion_runs FOR EACH ROW EXECUTE FUNCTION sec_guard()
+trg|CREATE TRIGGER sec_runs_ins BEFORE INSERT ON public.sec_ingestion_runs FOR EACH ROW EXECUTE FUNCTION sec_insert_guard()
+trg|CREATE TRIGGER sec_runs_trunc BEFORE TRUNCATE ON public.sec_ingestion_runs FOR EACH STATEMENT EXECUTE FUNCTION sec_guard()
+trg|CREATE TRIGGER sec_src_guard BEFORE DELETE OR UPDATE ON public.sec_normalized_fact_sources FOR EACH ROW EXECUTE FUNCTION sec_guard()
+trg|CREATE TRIGGER sec_src_ins BEFORE INSERT ON public.sec_normalized_fact_sources FOR EACH ROW EXECUTE FUNCTION sec_insert_guard()
+trg|CREATE TRIGGER sec_src_trunc BEFORE TRUNCATE ON public.sec_normalized_fact_sources FOR EACH STATEMENT EXECUTE FUNCTION sec_guard()
+trg|CREATE TRIGGER update_analysis_workspaces_updated_at BEFORE UPDATE ON public.analysis_workspaces FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+trg|CREATE TRIGGER update_page_content_updated_at BEFORE UPDATE ON public.page_content FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+trg|CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+trg|CREATE TRIGGER update_public_thesis_data_updated_at BEFORE UPDATE ON public.public_thesis_data FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+trg|CREATE TRIGGER update_theses_updated_at BEFORE UPDATE ON public.theses FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+trg|CREATE TRIGGER update_thesis_purchases_updated_at BEFORE UPDATE ON public.thesis_purchases FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+view|public_thesis_data_view|def_md5=24f25317bb4fc8c6ef68c86dee09e728
