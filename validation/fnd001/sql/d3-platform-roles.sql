@@ -13,7 +13,7 @@ FROM pg_roles
 WHERE rolname LIKE 'sandbox\_exec%' OR rolname IN
   ('authenticator','anon','authenticated','service_role','postgres','supabase_admin',
    'supabase_read_only_user','dashboard_user','pgbouncer','supabase_auth_admin')
-ORDER BY rolname COLLATE "C";
+ORDER BY rolname;
 
 \echo '== 2. memberships touching sandbox_exec* or PostgREST roles (pg_auth_members)'
 SELECT r.rolname AS role, m.rolname AS member, g.rolname AS grantor,
@@ -25,7 +25,7 @@ LEFT JOIN pg_roles g ON g.oid = am.grantor
 WHERE r.rolname LIKE 'sandbox\_exec%' OR m.rolname LIKE 'sandbox\_exec%'
    OR r.rolname IN ('authenticator','anon','authenticated','service_role')
    OR m.rolname IN ('authenticator','anon','authenticated','service_role')
-ORDER BY role COLLATE "C", member COLLATE "C";
+ORDER BY role, member;
 
 \echo '== 3. transitive role graph from sandbox_exec* (which roles they can act as)'
 WITH RECURSIVE g(start_role, via_role, depth) AS (
@@ -36,7 +36,7 @@ WITH RECURSIVE g(start_role, via_role, depth) AS (
   JOIN pg_auth_members am ON am.member = c.oid
   JOIN pg_roles p ON p.oid = am.roleid
   WHERE g.depth < 10)
-SELECT start_role, via_role, depth FROM g ORDER BY start_role COLLATE "C", depth, via_role COLLATE "C";
+SELECT start_role, via_role, depth FROM g ORDER BY start_role, depth, via_role;
 
 \echo '== 4. reverse: can a PostgREST role reach sandbox_exec*? (pg_has_role MEMBER/USAGE)'
 SELECT a.rolname AS api_role, s.rolname AS platform_role,
@@ -44,7 +44,7 @@ SELECT a.rolname AS api_role, s.rolname AS platform_role,
 FROM pg_roles a CROSS JOIN pg_roles s
 WHERE a.rolname IN ('authenticator','anon','authenticated','service_role')
   AND s.rolname LIKE 'sandbox\_exec%'
-ORDER BY api_role COLLATE "C", platform_role COLLATE "C";
+ORDER BY api_role, platform_role;
 
 \echo '== 5. default ACLs (pg_default_acl), all grantees'
 SELECT d.defaclrole::regrole AS owner_role, COALESCE(n.nspname, '<all schemas>') AS schema,
@@ -54,7 +54,7 @@ SELECT d.defaclrole::regrole AS owner_role, COALESCE(n.nspname, '<all schemas>')
 FROM pg_default_acl d LEFT JOIN pg_namespace n ON n.oid = d.defaclnamespace,
      aclexplode(d.defaclacl) x
 WHERE n.nspname IS NULL OR n.nspname = 'public'
-ORDER BY owner_role::text COLLATE "C", schema COLLATE "C", objtype, grantee COLLATE "C", privilege_type COLLATE "C";
+ORDER BY 1, schema, objtype, grantee, privilege_type;
 
 \echo '== 6. explicit ACL entries for sandbox_exec* on public relations (filtered out of the fingerprint)'
 SELECT c.relname, x.grantee::regrole AS grantee, string_agg(x.privilege_type, ',' ORDER BY x.privilege_type) AS privs,
@@ -63,14 +63,14 @@ FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace, aclexplode(c.rela
 WHERE n.nspname = 'public' AND c.relkind IN ('r','p','v','m','S') AND x.grantee <> 0
   AND x.grantee::regrole::text LIKE 'sandbox\_exec%'
 GROUP BY c.relname, x.grantee, x.grantor
-ORDER BY c.relname COLLATE "C", x.grantee::regrole::text COLLATE "C";
+ORDER BY c.relname, 2;
 
 \echo '== 7. explicit EXECUTE for sandbox_exec* on public functions'
 SELECT p.oid::regprocedure AS fn, x.grantee::regrole AS grantee, x.privilege_type, x.grantor::regrole AS grantor
 FROM pg_proc p, aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) x
 WHERE p.pronamespace = 'public'::regnamespace AND x.grantee <> 0
   AND x.grantee::regrole::text LIKE 'sandbox\_exec%'
-ORDER BY fn::text COLLATE "C", grantee::text COLLATE "C";
+ORDER BY 1, 2;
 
 \echo '== 8. effective privileges of every sandbox_exec* role on sec_* tables'
 SELECT r.rolname AS role, c.relname,
@@ -81,14 +81,14 @@ SELECT r.rolname AS role, c.relname,
 FROM pg_roles r CROSS JOIN pg_class c
 WHERE r.rolname LIKE 'sandbox\_exec%' AND c.relnamespace = 'public'::regnamespace
   AND c.relname LIKE 'sec\_%' AND c.relkind IN ('r','p','v')
-ORDER BY role COLLATE "C", c.relname COLLATE "C";
+ORDER BY role, c.relname;
 
 \echo '== 9. effective EXECUTE of sandbox_exec* and PostgREST roles on sec_* functions and has_role'
 SELECT r.rolname AS role, p.oid::regprocedure AS fn, has_function_privilege(r.oid, p.oid, 'EXECUTE') AS exec
 FROM pg_roles r CROSS JOIN pg_proc p
 WHERE (r.rolname LIKE 'sandbox\_exec%' OR r.rolname IN ('authenticator','anon','authenticated','service_role'))
   AND p.pronamespace = 'public'::regnamespace AND (p.proname LIKE 'sec\_%' OR p.proname = 'has_role')
-ORDER BY role COLLATE "C", fn::text COLLATE "C";
+ORDER BY 1, 2;
 
 \echo '== 10. schema privileges (public, auth) for sandbox_exec* and PostgREST roles'
 SELECT r.rolname AS role, s.nspname AS schema,
@@ -96,10 +96,10 @@ SELECT r.rolname AS role, s.nspname AS schema,
 FROM pg_roles r CROSS JOIN pg_namespace s
 WHERE (r.rolname LIKE 'sandbox\_exec%' OR r.rolname IN ('authenticator','anon','authenticated','service_role'))
   AND s.nspname IN ('public','auth')
-ORDER BY role COLLATE "C", schema COLLATE "C";
+ORDER BY role, schema;
 
 \echo '== 11. role-level settings (pg_db_role_setting) for these roles'
 SELECT COALESCE(r.rolname, '<all>') AS role, COALESCE(d.datname, '<all>') AS db, s.setconfig
 FROM pg_db_role_setting s LEFT JOIN pg_roles r ON r.oid = s.setrole LEFT JOIN pg_database d ON d.oid = s.setdatabase
 WHERE r.rolname LIKE 'sandbox\_exec%' OR r.rolname IN ('authenticator','anon','authenticated','service_role')
-ORDER BY role COLLATE "C";
+ORDER BY role;
