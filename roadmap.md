@@ -41,6 +41,5 @@
 - [x] Pin CI toolchain (ubuntu-24.04, Bun 1.4.4, setup-cli@1dedf2c…, Supabase CLI 3.0.0) — approved 2026-11-11
 - [x] User accepted the 6 as-built deviations (§7) with conditions — 2026-11-11
 - [ ] CI evidence (`fnd001-db` + `quality`) on the SHA that pins the toolchain — waits for the sync of this change
-- [ ] User sign-off on the as-built deviations (§7) — waits for user
 - [ ] D4 sandbox_exec* INSERT/EXECUTE on sec_* — revised proposal docs/fnd001/d4-proposal.md (local simulation PASS, not official), waits for explicit user authorization
 - [ ] M1.2: sec-ingest, atomic supersession RPC, T19/T22/T32 and parser parts
