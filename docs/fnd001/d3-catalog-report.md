@@ -80,9 +80,11 @@ El job `quality` del mismo run también pasó: TypeScript, Vitest, VOL-003/004/0
 | Bun | 1.4.4 | `bun-version: latest` |
 | Runner | ubuntu-24.04, imagen 20261101.360.1 | `ubuntu-latest` |
 
-**Propuesta (no aplicada):**
-- en el job `fnd001-db`, fijar `supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb` con `version: 3.0.0`, y `bun-version: 1.4.4`;
-- actualizar las versiones solo de forma deliberada, con un run nuevo y anotado aquí.
+**Aplicado el 2026-11-11, con autorización del usuario:**
+- en los dos jobs, runner `ubuntu-24.04` y `bun-version: 1.4.4`. Los registros del run 42360647941 confirman Bun 1.4.4 y la imagen ubuntu-24.04 20261101.360.1 en ambos jobs;
+- en `fnd001-db`, `supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb` (la etiqueta v1 que resolvió el run; el commit existe en `supabase/setup-cli`) con `version: 3.0.0`;
+- `actions/checkout@v4`, `oven-sh/setup-bun@v2` y `actions/upload-artifact@v4` siguen con etiqueta móvil: no estaban en la autorización;
+- las versiones solo se actualizarán de forma deliberada, con un run nuevo anotado aquí.
 
 Desde este turno, el job guarda `supabase --version` en `fnd001-evidence/toolchain.txt`.
 
@@ -100,7 +102,7 @@ Desde este turno, el job guarda `supabase --version` en `fnd001-evidence/toolcha
   - las guardas dieron 7/7.
   - Un `psql` directo fuera del wrapper falló por el `PGSSLMODE` heredado del entorno; el wrapper lo elimina.
 
-## 6. Propuesta D4 (solo propuesta; no autorizada ni ejecutada)
+## 6. Propuesta D4 (SUSTITUIDA el 2026-11-11 por `docs/fnd001/d4-proposal.md`; se conserva como histórico)
 
 **Objetivo:** cumplir la regla «escrituras en `sec_*` solo por la ingesta y las RPC» también frente a los roles de plataforma, sin tocar privilegios globales del proyecto.
 
