@@ -38,7 +38,8 @@
 - [x] Official CI evidence for `fnd001-db`: run 42360647941 on 3d7d106942de4e5e0a212eb9b3d2a75258d7c8ed — 186/186 DB, 29/29 real-JWT (https://github.com/adrynaavroli-dotcom/navaroli-analysis/actions/runs/42360647941)
 - [x] D3 production catalog fingerprint (read-only) — identical to CI (906 lines, empty diff); platform roles report in docs/fnd001/d3-catalog-report.md
 - [x] Wrapper hardening: access-check.ts uses guard.sh; workflow runs SQL only through guarded wrappers
-- [ ] Pin CI toolchain (Supabase CLI 3.0.0, setup-cli SHA, Bun 1.4.4) — proposed, waits for user approval
-- [ ] User sign-off on the as-built deviations (§7) — waits for user
-- [ ] D4 sandbox_exec* INSERT/EXECUTE on sec_* — proposal in d3-catalog-report.md §6, waits for user authorization
+- [x] Pin CI toolchain (ubuntu-24.04, Bun 1.4.4, setup-cli@1dedf2c…, Supabase CLI 3.0.0) — approved 2026-11-11
+- [x] User accepted the 6 as-built deviations (§7) with conditions — 2026-11-11
+- [ ] CI evidence (`fnd001-db` + `quality`) on the SHA that pins the toolchain — waits for the sync of this change
+- [ ] D4 sandbox_exec* INSERT/EXECUTE on sec_* — revised proposal docs/fnd001/d4-proposal.md (local simulation PASS, not official), waits for explicit user authorization
 - [ ] M1.2: sec-ingest, atomic supersession RPC, T19/T22/T32 and parser parts

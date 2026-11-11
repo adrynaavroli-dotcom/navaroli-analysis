@@ -1,0 +1,4 @@
+748a749
+> fnacl|sec_lockdown_platform_privileges()|postgres|EXECUTE
+762a764
+> fn|sec_lockdown_platform_privileges()|owner=postgres|secdef=f|vol=v|config={"search_path=\"\""}|src_md5=a7fd9cca620c19f31a96d2bbb5e0b6d0

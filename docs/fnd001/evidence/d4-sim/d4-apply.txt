@@ -1,0 +1,5 @@
+ sec_lockdown_platform_privileges 
+----------------------------------
+                               34
+(1 row)
+

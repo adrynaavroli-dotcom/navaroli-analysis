@@ -1,0 +1,9 @@
+violation|R1|relation|sec_d4_probe|sandbox_exec_ci0mockref|INSERT
+violation|R1|relation|sec_d4_probe|sandbox_exec|INSERT
+violation|R1|routine|sec_d4_probe_fn()|PUBLIC|EXECUTE
+violation|R1|routine|sec_d4_probe_fn()|sandbox_exec_ci0mockref|EXECUTE
+violation|R2|relation|sec_d4_probe|sandbox_exec_ci0mockref|INSERT
+violation|R2|relation|sec_d4_probe|sandbox_exec|INSERT
+violation|R2|routine|sec_d4_probe_fn()|sandbox_exec_ci0mockref|EXECUTE
+violation|R2|routine|sec_d4_probe_fn()|sandbox_exec|EXECUTE
+summary|violations=8

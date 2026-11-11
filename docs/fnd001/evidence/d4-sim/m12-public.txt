@@ -1,0 +1,2 @@
+ERROR:  sec_lockdown_platform_privileges: 2 write path(s) remain for sandbox_exec* on sec_* objects (caller must own them)
+CONTEXT:  PL/pgSQL function public.sec_lockdown_platform_privileges() line 66 at RAISE
