@@ -33,8 +33,6 @@ BEGIN
         'sec_raw_facts', 'sec_raw_fact_observations', 'sec_normalized_facts', 'sec_normalized_fact_sources'] LOOP
       PERFORM pg_temp.expect(format('D4.ins %s %s denied', r, t), r,
         format('INSERT INTO public.%I SELECT * FROM public.%I WHERE false', t, t), '42501');
-      PERFORM pg_temp.expect(format('D4.sel %s %s kept', r, t), r,
-        format('PERFORM count(*) FROM public.%I', t), '00000');
     END LOOP;
     FOREACH f IN ARRAY ARRAY['public.sec_record_download(NULL::uuid,NULL::integer,NULL::text,NULL::bigint,NULL::bytea)',
         'public.sec_fail_run(NULL::uuid,NULL::text,NULL::jsonb)', 'public.sec_fail_stale_runs(NULL::interval)',
@@ -43,9 +41,6 @@ BEGIN
     END LOOP;
   END LOOP;
 END $$;
--- PERFORM is PL/pgSQL only; the SELECT-kept cases above run through EXECUTE, so rewrite
--- them as plain SELECTs (EXECUTE 'PERFORM …' is a syntax error that would mask a pass).
-DELETE FROM d4_results WHERE label LIKE 'D4.sel %';
 DO $$
 DECLARE r text; t text;
 BEGIN
