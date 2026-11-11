@@ -51,15 +51,29 @@ ROLLBACK;
 SQL
 echo "   violations without call: $(violations "$OUT/m12-without.txt")"
 [ "$(violations "$OUT/m12-without.txt")" -gt 0 ] || { echo "not ok - guard missed a SEC object without lockdown"; exit 1; }
-echo "== 4d. same migration WITH the lockdown call (guard must pass)"
+echo "== 4d. same migration following the M1.1 ACL convention + lockdown call (guard must pass)"
 fnd001_psql -At > "$OUT/m12-with.txt" <<'SQL'
 BEGIN;
 CREATE TABLE public.sec_d4_probe (id int PRIMARY KEY);
 CREATE FUNCTION public.sec_d4_probe_fn() RETURNS int LANGUAGE sql AS 'SELECT 1';
+REVOKE ALL ON public.sec_d4_probe FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.sec_d4_probe_fn() FROM PUBLIC, anon, authenticated, service_role;
 SELECT 'revoked=' || public.sec_lockdown_platform_privileges();
 \i validation/fnd001/sql/sec-platform-acl-guard.sql
 ROLLBACK;
 SQL
 echo "   violations with call: $(violations "$OUT/m12-with.txt")"
 [ "$(violations "$OUT/m12-with.txt")" -eq 0 ] || { cat "$OUT/m12-with.txt"; exit 1; }
+echo "== 4e. lockdown call but routine left executable by PUBLIC (helper must abort the migration)"
+set +e
+fnd001_psql -At > "$OUT/m12-public.txt" 2>&1 <<'SQL'
+BEGIN;
+CREATE FUNCTION public.sec_d4_probe_fn() RETURNS int LANGUAGE sql AS 'SELECT 1';
+SELECT public.sec_lockdown_platform_privileges();
+ROLLBACK;
+SQL
+rc=$?; set -e
+if [ "$rc" -ne 0 ] && grep -q 'write path(s) remain' "$OUT/m12-public.txt"; then
+  echo "   helper aborted as expected: $(grep -o 'sec_lockdown[^(]*: [0-9]* write path(s) remain' "$OUT/m12-public.txt")"
+else echo "not ok - helper did not abort on a PUBLIC-executable sec_* routine"; exit 1; fi
 echo "== D4 simulation: all steps passed"
