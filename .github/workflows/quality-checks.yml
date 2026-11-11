@@ -13,15 +13,18 @@ concurrency:
   group: quality-${{ github.ref }}
   cancel-in-progress: true
 
+# Toolchain pinned to the versions that produced the FND-001 M1.1 evidence (run
+# 42360647941): runner ubuntu-24.04, Bun 1.4.4, Supabase CLI 3.0.0. Change any of them
+# only on purpose, with a new run noted in docs/fnd001/d3-catalog-report.md §5.
 jobs:
   quality:
     name: TypeScript, regression, VOL-003/VOL-004/VOL-005 and production build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.4
       - name: Install dependencies
         run: bun install --frozen-lockfile
       - name: Record checked commit
@@ -57,22 +60,24 @@ jobs:
     # Isolated by construction: a throwaway Supabase stack inside the runner. No
     # secret, no connection to the live project; every script refuses non-loopback
     # targets (validation/fnd001/lib/guard.sh).
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.4
       - name: Install dependencies
         run: bun install --frozen-lockfile
       - name: Record checked commit
         run: echo "Checked commit $GITHUB_SHA"
       - name: Migration chain guards (single source of truth)
         run: bash validation/fnd001/check-migration-chain.sh
-      - uses: supabase/setup-cli@v1
+      # Pinned to the commit behind the v1 tag observed in run 42360647941; bump only
+      # deliberately, with a new run recorded in docs/fnd001/d3-catalog-report.md §5.
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1
         with:
-          version: latest
+          version: 3.0.0
       - name: Start ephemeral Supabase stack (PostgreSQL 17)
         run: bash validation/fnd001/ci/start-stack.sh
       - name: Rebuild schema from the migration chain
