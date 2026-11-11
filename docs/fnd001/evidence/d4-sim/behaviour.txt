@@ -1,0 +1,57 @@
+ok - D4.ins sandbox_exec sec_companies denied
+ok - D4.ins sandbox_exec sec_ticker_mappings denied
+ok - D4.ins sandbox_exec sec_ingestion_runs denied
+ok - D4.ins sandbox_exec sec_filings denied
+ok - D4.ins sandbox_exec sec_raw_facts denied
+ok - D4.ins sandbox_exec sec_raw_fact_observations denied
+ok - D4.ins sandbox_exec sec_normalized_facts denied
+ok - D4.ins sandbox_exec sec_normalized_fact_sources denied
+ok - D4.exec sandbox_exec public.sec_record_download denied
+ok - D4.exec sandbox_exec public.sec_fail_run denied
+ok - D4.exec sandbox_exec public.sec_fail_stale_runs denied
+ok - D4.exec sandbox_exec public.sec_finalize_run denied
+ok - D4.exec sandbox_exec public.sec_lockdown_platform_privileges denied
+ok - D4.ins sandbox_exec_ci0mockref sec_companies denied
+ok - D4.ins sandbox_exec_ci0mockref sec_ticker_mappings denied
+ok - D4.ins sandbox_exec_ci0mockref sec_ingestion_runs denied
+ok - D4.ins sandbox_exec_ci0mockref sec_filings denied
+ok - D4.ins sandbox_exec_ci0mockref sec_raw_facts denied
+ok - D4.ins sandbox_exec_ci0mockref sec_raw_fact_observations denied
+ok - D4.ins sandbox_exec_ci0mockref sec_normalized_facts denied
+ok - D4.ins sandbox_exec_ci0mockref sec_normalized_fact_sources denied
+ok - D4.exec sandbox_exec_ci0mockref public.sec_record_download denied
+ok - D4.exec sandbox_exec_ci0mockref public.sec_fail_run denied
+ok - D4.exec sandbox_exec_ci0mockref public.sec_fail_stale_runs denied
+ok - D4.exec sandbox_exec_ci0mockref public.sec_finalize_run denied
+ok - D4.exec sandbox_exec_ci0mockref public.sec_lockdown_platform_privileges denied
+ok - D4.sel sandbox_exec sec_companies kept
+ok - D4.sel sandbox_exec sec_ticker_mappings kept
+ok - D4.sel sandbox_exec sec_ingestion_runs kept
+ok - D4.sel sandbox_exec sec_filings kept
+ok - D4.sel sandbox_exec sec_raw_facts kept
+ok - D4.sel sandbox_exec sec_raw_fact_observations kept
+ok - D4.sel sandbox_exec sec_normalized_facts kept
+ok - D4.sel sandbox_exec sec_normalized_fact_sources kept
+ok - D4.sel sandbox_exec_ci0mockref sec_companies kept
+ok - D4.sel sandbox_exec_ci0mockref sec_ticker_mappings kept
+ok - D4.sel sandbox_exec_ci0mockref sec_ingestion_runs kept
+ok - D4.sel sandbox_exec_ci0mockref sec_filings kept
+ok - D4.sel sandbox_exec_ci0mockref sec_raw_facts kept
+ok - D4.sel sandbox_exec_ci0mockref sec_raw_fact_observations kept
+ok - D4.sel sandbox_exec_ci0mockref sec_normalized_facts kept
+ok - D4.sel sandbox_exec_ci0mockref sec_normalized_fact_sources kept
+ok - D4.trg sandbox_exec public.sec_guard() EXECUTE revoked
+ok - D4.trg sandbox_exec public.sec_insert_guard() EXECUTE revoked
+ok - D4.trg sandbox_exec public.sec_norm_lineage_check() EXECUTE revoked
+ok - D4.trg sandbox_exec public.sec_supersession_check() EXECUTE revoked
+ok - D4.trg sandbox_exec_ci0mockref public.sec_guard() EXECUTE revoked
+ok - D4.trg sandbox_exec_ci0mockref public.sec_insert_guard() EXECUTE revoked
+ok - D4.trg sandbox_exec_ci0mockref public.sec_norm_lineage_check() EXECUTE revoked
+ok - D4.trg sandbox_exec_ci0mockref public.sec_supersession_check() EXECUTE revoked
+ok - D4.keep sandbox_exec_ci0mockref sec_is_admin() EXECUTE kept
+ok - D4.keep sandbox_exec_ci0mockref has_role() EXECUTE untouched (out of D4 scope)
+ok - D4.keep sandbox_exec user_roles INSERT untouched (out of D4 scope)
+ok - D4.api anon/authenticated/service_role no EXECUTE on lockdown helper
+ok - D4.api service_role keeps EXECUTE on the 4 run RPCs
+ok - D4.idem second lockdown call succeeds
+# D4 behaviour: 56/56 ok

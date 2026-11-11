@@ -1,0 +1,3 @@
+# DEFERRED to M1.2 (need sec-ingest): T19; T22; T32; parser/payload parts of T17, T23, T24, T28, T29, T33
+# total=186 passed=186 failed=0
+ok - rollback check: 0 sec_* rows left behind
