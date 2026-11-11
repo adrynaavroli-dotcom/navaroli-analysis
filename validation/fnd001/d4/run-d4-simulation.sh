@@ -12,6 +12,7 @@
 # Output directory: $1 (default /tmp/fnd001-d4).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+cd "$ROOT"
 source "$ROOT/validation/fnd001/lib/guard.sh"
 fnd001_require_local_db
 OUT="${1:-/tmp/fnd001-d4}"; mkdir -p "$OUT"
