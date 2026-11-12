@@ -112,10 +112,7 @@ FROM pg_trigger t JOIN pg_proc p ON p.oid = t.tgfoid
 JOIN pg_class c ON c.oid = t.tgrelid JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE n.nspname = 'auth' AND c.relname = 'users' AND NOT t.tgisinternal ORDER BY 1;
 
-\echo '== E3. scheduled jobs (name, schedule, run-as, active; command text omitted: it may embed secrets)'
-SELECT jobname, schedule, username, active,
-       CASE WHEN command ILIKE '%service_role%' THEN 'mentions service_role' ELSE '-' END AS note
-FROM cron.job ORDER BY jobname;
+-- E3 (cron.job listing) omitted: the audit session has no USAGE on schema cron (see D1).
 
 \echo '== E4. user_roles constraints'
 SELECT conname, contype, pg_get_constraintdef(oid) FROM pg_constraint
