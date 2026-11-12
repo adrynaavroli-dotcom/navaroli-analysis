@@ -2,8 +2,8 @@
 -- Answers: what can each identity (anon, authenticated, service_role, sandbox_exec*) do on
 -- every public relation/function, which RLS policies decide row access, and which paths
 -- could grant admin or modify site content. Only catalog SELECTs and built-in privilege
--- functions; the only non-catalog reads are aggregate COUNTs (user_roles by role,
--- auth.users total) — no ids, emails or business rows. Run only through
+-- functions; the only non-catalog read is an aggregate COUNT of user_roles by role
+-- — no ids, emails or business rows. Run only through
 -- validation/fnd001/run-d3-catalog.sh (session forced read-only).
 -- The project-specific platform role is printed as sandbox_exec_<ref>.
 \pset footer off
@@ -109,7 +109,8 @@ UNION ALL SELECT 'objects_policies', count(*)::text FROM pg_policies WHERE schem
 \echo '== E2. triggers on auth.users (signup lifecycle) and their functions'
 SELECT t.tgname, p.oid::regprocedure AS fn, p.prosecdef AS secdef
 FROM pg_trigger t JOIN pg_proc p ON p.oid = t.tgfoid
-WHERE t.tgrelid = 'auth.users'::regclass AND NOT t.tgisinternal ORDER BY 1;
+JOIN pg_class c ON c.oid = t.tgrelid JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'auth' AND c.relname = 'users' AND NOT t.tgisinternal ORDER BY 1;
 
 \echo '== E3. scheduled jobs (name, schedule, run-as, active; command text omitted: it may embed secrets)'
 SELECT jobname, schedule, username, active,
@@ -120,7 +121,5 @@ FROM cron.job ORDER BY jobname;
 SELECT conname, contype, pg_get_constraintdef(oid) FROM pg_constraint
 WHERE conrelid = 'public.user_roles'::regclass ORDER BY conname;
 
-\echo '== E5. aggregate counts (no identities): user_roles by role, auth users total'
-SELECT 'user_roles:' || role::text AS item, count(*)::text AS value FROM public.user_roles GROUP BY role
-UNION ALL SELECT 'auth.users:total', count(*)::text FROM auth.users
-ORDER BY 1;
+\echo '== E5. aggregate count (no identities): user_roles rows by role'
+SELECT 'user_roles:' || role::text AS item, count(*)::text AS value FROM public.user_roles GROUP BY role ORDER BY 1;
