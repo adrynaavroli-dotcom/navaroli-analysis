@@ -1,0 +1,331 @@
+== A1. identities: role attributes
+anon|f|f|f|f|f|f
+authenticated|f|f|f|f|f|f
+authenticator|f|f|f|t|f|f
+postgres|f|t|t|t|t|t
+sandbox_exec|f|f|f|t|t|f
+sandbox_exec_<ref>|f|f|f|t|t|f
+service_role|f|f|f|f|t|f
+== A2. roles each identity can act as (transitive membership, excluding itself)
+authenticator|anon,authenticated,service_role
+== B1. public relations: kind, owner, RLS enabled/forced, view security_invoker
+analysis_workspaces|r|postgres|t|f|-
+page_content|r|postgres|t|f|-
+profiles|r|postgres|t|f|-
+public_thesis_data|r|postgres|t|f|-
+public_thesis_data_view|v|postgres|f|f|on
+sec_companies|r|postgres|t|f|-
+sec_filings|r|postgres|t|f|-
+sec_ingestion_runs|r|postgres|t|f|-
+sec_normalized_fact_sources|r|postgres|t|f|-
+sec_normalized_facts|r|postgres|t|f|-
+sec_raw_fact_observations|r|postgres|t|f|-
+sec_raw_facts|r|postgres|t|f|-
+sec_ticker_mappings|r|postgres|t|f|-
+theses|r|postgres|t|f|-
+thesis_alerts|r|postgres|t|f|-
+thesis_purchases|r|postgres|t|f|-
+user_roles|r|postgres|t|f|-
+== B2. effective privileges per identity on public relations (S I U D T; lowercase s i u = column-level only)
+analysis_workspaces|anon|SIUDT
+analysis_workspaces|authenticated|SIUDT
+analysis_workspaces|sandbox_exec|SI
+analysis_workspaces|sandbox_exec_<ref>|SI
+analysis_workspaces|service_role|SIUDT
+page_content|anon|SIUDT
+page_content|authenticated|SIUDT
+page_content|sandbox_exec|SI
+page_content|sandbox_exec_<ref>|SI
+page_content|service_role|SIUDT
+profiles|anon|SIUDT
+profiles|authenticated|SIUDT
+profiles|sandbox_exec|SI
+profiles|sandbox_exec_<ref>|SI
+profiles|service_role|SIUDT
+public_thesis_data|anon|s
+public_thesis_data|authenticated|SIUDT
+public_thesis_data|sandbox_exec|SI
+public_thesis_data|sandbox_exec_<ref>|SI
+public_thesis_data|service_role|SIUDT
+public_thesis_data_view|anon|SIUDT
+public_thesis_data_view|authenticated|SIUDT
+public_thesis_data_view|sandbox_exec|SI
+public_thesis_data_view|sandbox_exec_<ref>|SI
+public_thesis_data_view|service_role|SIUDT
+sec_companies|anon|S
+sec_companies|authenticated|S
+sec_companies|sandbox_exec|SI
+sec_companies|sandbox_exec_<ref>|SI
+sec_companies|service_role|SIU
+sec_filings|anon|S
+sec_filings|authenticated|S
+sec_filings|sandbox_exec|SI
+sec_filings|sandbox_exec_<ref>|SI
+sec_filings|service_role|SI
+sec_ingestion_runs|anon|
+sec_ingestion_runs|authenticated|S
+sec_ingestion_runs|sandbox_exec|SI
+sec_ingestion_runs|sandbox_exec_<ref>|SI
+sec_ingestion_runs|service_role|SI
+sec_normalized_fact_sources|anon|
+sec_normalized_fact_sources|authenticated|S
+sec_normalized_fact_sources|sandbox_exec|SI
+sec_normalized_fact_sources|sandbox_exec_<ref>|SI
+sec_normalized_fact_sources|service_role|SI
+sec_normalized_facts|anon|S
+sec_normalized_facts|authenticated|S
+sec_normalized_facts|sandbox_exec|SI
+sec_normalized_facts|sandbox_exec_<ref>|SI
+sec_normalized_facts|service_role|SIU
+sec_raw_fact_observations|anon|
+sec_raw_fact_observations|authenticated|S
+sec_raw_fact_observations|sandbox_exec|SI
+sec_raw_fact_observations|sandbox_exec_<ref>|SI
+sec_raw_fact_observations|service_role|SI
+sec_raw_facts|anon|
+sec_raw_facts|authenticated|S
+sec_raw_facts|sandbox_exec|SI
+sec_raw_facts|sandbox_exec_<ref>|SI
+sec_raw_facts|service_role|SI
+sec_ticker_mappings|anon|S
+sec_ticker_mappings|authenticated|S
+sec_ticker_mappings|sandbox_exec|SI
+sec_ticker_mappings|sandbox_exec_<ref>|SI
+sec_ticker_mappings|service_role|SIU
+theses|anon|SIUDT
+theses|authenticated|SIUDT
+theses|sandbox_exec|SI
+theses|sandbox_exec_<ref>|SI
+theses|service_role|SIUDT
+thesis_alerts|anon|SIUDT
+thesis_alerts|authenticated|SIUDT
+thesis_alerts|sandbox_exec|SI
+thesis_alerts|sandbox_exec_<ref>|SI
+thesis_alerts|service_role|SIUDT
+thesis_purchases|anon|SIUDT
+thesis_purchases|authenticated|SIUDT
+thesis_purchases|sandbox_exec|SI
+thesis_purchases|sandbox_exec_<ref>|SI
+thesis_purchases|service_role|SIUDT
+user_roles|anon|SIUDT
+user_roles|authenticated|SIUDT
+user_roles|sandbox_exec|SI
+user_roles|sandbox_exec_<ref>|SI
+user_roles|service_role|SIUDT
+== B3. RLS policies on public tables (cmd, roles, permissive, USING, WITH CHECK)
+analysis_workspaces|Users can delete their own workspaces|DELETE|public|PERMISSIVE|(auth.uid() = user_id)|-
+analysis_workspaces|Users can create their own workspaces|INSERT|public|PERMISSIVE|-|(auth.uid() = user_id)
+analysis_workspaces|Users can view their own workspaces|SELECT|public|PERMISSIVE|(auth.uid() = user_id)|-
+analysis_workspaces|Users can update their own workspaces|UPDATE|authenticated|PERMISSIVE|(auth.uid() = user_id)|(auth.uid() = user_id)
+page_content|Admins can insert page content|INSERT|authenticated|PERMISSIVE|-|has_role(auth.uid(), 'admin'::app_role)
+page_content|Anyone can view page content|SELECT|public|PERMISSIVE|true|-
+page_content|Admins can update page content|UPDATE|authenticated|PERMISSIVE|has_role(auth.uid(), 'admin'::app_role)|-
+profiles|Users can insert their own profile|INSERT|authenticated|PERMISSIVE|-|(auth.uid() = user_id)
+profiles|Users can view their own profile|SELECT|public|PERMISSIVE|(auth.uid() = user_id)|-
+profiles|Users can update their own profile|UPDATE|authenticated|PERMISSIVE|(auth.uid() = user_id)|(auth.uid() = user_id)
+public_thesis_data|Users can delete their own thesis data|DELETE|public|PERMISSIVE|(auth.uid() = user_id)|-
+public_thesis_data|Users can create their own thesis data|INSERT|public|PERMISSIVE|-|(auth.uid() = user_id)
+public_thesis_data|Anyone can view published thesis data|SELECT|public|PERMISSIVE|(published_at IS NOT NULL)|-
+public_thesis_data|Only owners can view their thesis data directly|SELECT|public|PERMISSIVE|(auth.uid() = user_id)|-
+public_thesis_data|Users can view their own thesis data|SELECT|public|PERMISSIVE|(auth.uid() = user_id)|-
+public_thesis_data|Users can update their own thesis data|UPDATE|authenticated|PERMISSIVE|(auth.uid() = user_id)|(auth.uid() = user_id)
+sec_companies|sec_companies_read|SELECT|anon,authenticated|PERMISSIVE|(is_published OR sec_is_admin())|-
+sec_filings|sec_filings_read|SELECT|anon,authenticated|PERMISSIVE|((EXISTS ( SELECT 1
+   FROM sec_companies c
+  WHERE ((c.cik = sec_filings.cik) AND c.is_published))) OR sec_is_admin())|-
+sec_ingestion_runs|sec_runs_admin|SELECT|authenticated|PERMISSIVE|sec_is_admin()|-
+sec_normalized_fact_sources|sec_sources_admin|SELECT|authenticated|PERMISSIVE|sec_is_admin()|-
+sec_normalized_facts|sec_norm_read|SELECT|anon,authenticated|PERMISSIVE|((is_current AND (EXISTS ( SELECT 1
+   FROM sec_companies c
+  WHERE ((c.cik = sec_normalized_facts.cik) AND c.is_published)))) OR sec_is_admin())|-
+sec_raw_fact_observations|sec_obs_admin|SELECT|authenticated|PERMISSIVE|sec_is_admin()|-
+sec_raw_facts|sec_raw_admin|SELECT|authenticated|PERMISSIVE|sec_is_admin()|-
+sec_ticker_mappings|sec_tickers_read|SELECT|anon,authenticated|PERMISSIVE|((EXISTS ( SELECT 1
+   FROM sec_companies c
+  WHERE ((c.cik = sec_ticker_mappings.cik) AND c.is_published))) OR sec_is_admin())|-
+theses|Users can delete their own theses|DELETE|authenticated|PERMISSIVE|(auth.uid() = user_id)|-
+theses|Users can create their own theses|INSERT|authenticated|PERMISSIVE|-|(auth.uid() = user_id)
+theses|Anyone can view published theses|SELECT|public|PERMISSIVE|(is_published = true)|-
+theses|Users can view their own theses|SELECT|authenticated|PERMISSIVE|(auth.uid() = user_id)|-
+theses|Users can update their own theses|UPDATE|authenticated|PERMISSIVE|(auth.uid() = user_id)|(auth.uid() = user_id)
+thesis_alerts|Users can delete their own alerts|DELETE|public|PERMISSIVE|(auth.uid() = user_id)|-
+thesis_alerts|Users can view their own alerts|SELECT|public|PERMISSIVE|(auth.uid() = user_id)|-
+thesis_alerts|Users can update their own alerts|UPDATE|authenticated|PERMISSIVE|(auth.uid() = user_id)|(auth.uid() = user_id)
+thesis_purchases|Users can delete their own purchases|DELETE|public|PERMISSIVE|(auth.uid() = user_id)|-
+thesis_purchases|Users can create their own purchases|INSERT|authenticated|PERMISSIVE|-|((auth.uid() = user_id) AND ((EXISTS ( SELECT 1
+   FROM theses
+  WHERE ((theses.id = thesis_purchases.thesis_id) AND (theses.user_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM theses
+  WHERE ((theses.id = thesis_purchases.thesis_id) AND (theses.is_published = true))))))
+thesis_purchases|Users can view their own purchases|SELECT|authenticated|PERMISSIVE|((auth.uid() = user_id) AND ((EXISTS ( SELECT 1
+   FROM theses
+  WHERE ((theses.id = thesis_purchases.thesis_id) AND (theses.user_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM theses
+  WHERE ((theses.id = thesis_purchases.thesis_id) AND (theses.is_published = true))))))|-
+thesis_purchases|Users can update their own purchases|UPDATE|authenticated|PERMISSIVE|(auth.uid() = user_id)|(auth.uid() = user_id)
+user_roles|Admins can delete roles|DELETE|authenticated|PERMISSIVE|has_role(auth.uid(), 'admin'::app_role)|-
+user_roles|Admins can insert roles|INSERT|authenticated|PERMISSIVE|-|has_role(auth.uid(), 'admin'::app_role)
+user_roles|Admins can view all roles|SELECT|authenticated|PERMISSIVE|has_role(auth.uid(), 'admin'::app_role)|-
+user_roles|Users can view their own roles|SELECT|authenticated|PERMISSIVE|(auth.uid() = user_id)|-
+== C1. public functions: security definer, owner, search_path, EXECUTE per identity (a=anon u=authenticated s=service_role p=PUBLIC x=sandbox_exec X=sandbox_exec_<ref>)
+update_updated_at_column()|f|postgres|search_path=public|sX
+handle_new_user()|t|postgres|search_path=public|sX
+has_role(uuid,app_role)|t|postgres|search_path=public|usX
+sec_is_admin()|t|postgres|search_path=""|auX
+sec_guard()|f|postgres|search_path=""|X
+sec_insert_guard()|f|postgres|search_path=""|X
+sec_norm_lineage_check()|f|postgres|search_path=""|X
+sec_supersession_check()|f|postgres|search_path=""|X
+sec_record_download(uuid,integer,text,bigint,bytea)|t|postgres|search_path=""|sX
+sec_fail_run(uuid,text,jsonb)|t|postgres|search_path=""|sX
+sec_fail_stale_runs(interval)|t|postgres|search_path=""|sX
+sec_finalize_run(uuid,jsonb,jsonb)|t|postgres|search_path=""|sX
+== D1. schema privileges per identity (USAGE, CREATE)
+anon|auth|t|f
+anon|cron|f|f
+anon|extensions|t|f
+anon|graphql|t|f
+anon|graphql_public|t|f
+anon|net|t|f
+anon|public|t|f
+anon|realtime|t|f
+anon|storage|t|f
+anon|vault|f|f
+authenticated|auth|t|f
+authenticated|cron|f|f
+authenticated|extensions|t|f
+authenticated|graphql|t|f
+authenticated|graphql_public|t|f
+authenticated|net|t|f
+authenticated|public|t|f
+authenticated|realtime|t|f
+authenticated|storage|t|f
+authenticated|vault|f|f
+sandbox_exec|auth|f|f
+sandbox_exec|cron|f|f
+sandbox_exec|extensions|t|f
+sandbox_exec|graphql|f|f
+sandbox_exec|graphql_public|f|f
+sandbox_exec|net|t|f
+sandbox_exec|public|t|f
+sandbox_exec|realtime|f|f
+sandbox_exec|storage|t|f
+sandbox_exec|vault|f|f
+sandbox_exec_<ref>|auth|f|f
+sandbox_exec_<ref>|cron|f|f
+sandbox_exec_<ref>|extensions|t|f
+sandbox_exec_<ref>|graphql|f|f
+sandbox_exec_<ref>|graphql_public|f|f
+sandbox_exec_<ref>|net|t|f
+sandbox_exec_<ref>|public|t|f
+sandbox_exec_<ref>|realtime|f|f
+sandbox_exec_<ref>|storage|t|f
+sandbox_exec_<ref>|vault|f|f
+service_role|auth|t|f
+service_role|cron|f|f
+service_role|extensions|t|f
+service_role|graphql|t|f
+service_role|graphql_public|t|f
+service_role|net|t|f
+service_role|public|t|f
+service_role|realtime|t|f
+service_role|storage|t|f
+service_role|vault|t|f
+== D2. auth / storage / vault / cron tables: effective write or read per identity (only non-empty)
+auth.audit_log_entries|sandbox_exec|S
+auth.audit_log_entries|sandbox_exec_<ref>|S
+auth.flow_state|sandbox_exec|S
+auth.flow_state|sandbox_exec_<ref>|S
+auth.identities|sandbox_exec|S
+auth.identities|sandbox_exec_<ref>|S
+auth.instances|sandbox_exec|S
+auth.instances|sandbox_exec_<ref>|S
+auth.mfa_amr_claims|sandbox_exec|S
+auth.mfa_amr_claims|sandbox_exec_<ref>|S
+auth.mfa_challenges|sandbox_exec|S
+auth.mfa_challenges|sandbox_exec_<ref>|S
+auth.mfa_factors|sandbox_exec|S
+auth.mfa_factors|sandbox_exec_<ref>|S
+auth.one_time_tokens|sandbox_exec|S
+auth.one_time_tokens|sandbox_exec_<ref>|S
+auth.refresh_tokens|sandbox_exec|S
+auth.refresh_tokens|sandbox_exec_<ref>|S
+auth.saml_providers|sandbox_exec|S
+auth.saml_providers|sandbox_exec_<ref>|S
+auth.saml_relay_states|sandbox_exec|S
+auth.saml_relay_states|sandbox_exec_<ref>|S
+auth.schema_migrations|sandbox_exec|S
+auth.schema_migrations|sandbox_exec_<ref>|S
+auth.sessions|sandbox_exec|S
+auth.sessions|sandbox_exec_<ref>|S
+auth.sso_domains|sandbox_exec|S
+auth.sso_domains|sandbox_exec_<ref>|S
+auth.sso_providers|sandbox_exec|S
+auth.sso_providers|sandbox_exec_<ref>|S
+auth.users|sandbox_exec|S
+auth.users|sandbox_exec_<ref>|S
+cron.job|anon|S
+cron.job|authenticated|S
+cron.job|sandbox_exec|S
+cron.job|sandbox_exec_<ref>|S
+cron.job|service_role|S
+cron.job_run_details|anon|SD
+cron.job_run_details|authenticated|SD
+cron.job_run_details|sandbox_exec|SD
+cron.job_run_details|sandbox_exec_<ref>|SD
+cron.job_run_details|service_role|SD
+storage.buckets|anon|SIUD
+storage.buckets|authenticated|SIUD
+storage.buckets|sandbox_exec|SI
+storage.buckets|sandbox_exec_<ref>|SI
+storage.buckets|service_role|SIUD
+storage.buckets_analytics|anon|SIUD
+storage.buckets_analytics|authenticated|SIUD
+storage.buckets_analytics|service_role|SIUD
+storage.buckets_vectors|anon|S
+storage.buckets_vectors|authenticated|S
+storage.buckets_vectors|service_role|S
+storage.objects|anon|SIUD
+storage.objects|authenticated|SIUD
+storage.objects|sandbox_exec|SI
+storage.objects|sandbox_exec_<ref>|SI
+storage.objects|service_role|SIUD
+storage.s3_multipart_uploads|anon|S
+storage.s3_multipart_uploads|authenticated|S
+storage.s3_multipart_uploads|service_role|SIUD
+storage.s3_multipart_uploads_parts|anon|S
+storage.s3_multipart_uploads_parts|authenticated|S
+storage.s3_multipart_uploads_parts|service_role|SIUD
+storage.vector_indexes|anon|S
+storage.vector_indexes|authenticated|S
+storage.vector_indexes|service_role|S
+vault.decrypted_secrets|service_role|SD
+vault.secrets|service_role|SD
+== D3. EXECUTE on cron.schedule / net.http_post / vault functions per identity
+vault.create_secret(text,text,text,uuid)|service_role
+vault.update_secret(uuid,text,text,text,uuid)|service_role
+cron.schedule(text,text)|anon,authenticated,sandbox_exec,sandbox_exec_<ref>,service_role
+cron.unschedule(bigint)|anon,authenticated,sandbox_exec,sandbox_exec_<ref>,service_role
+cron.schedule(text,text,text)|anon,authenticated,sandbox_exec,sandbox_exec_<ref>,service_role
+cron.unschedule(text)|anon,authenticated,sandbox_exec,sandbox_exec_<ref>,service_role
+net.http_get(text,jsonb,jsonb,integer)|anon,authenticated,sandbox_exec,sandbox_exec_<ref>,service_role
+net.http_post(text,jsonb,jsonb,jsonb,integer)|anon,authenticated,sandbox_exec,sandbox_exec_<ref>,service_role
+== E1. storage buckets (configuration only) and storage.objects policies
+buckets|0
+public_buckets|0
+objects_policies|0
+== E2. triggers on auth.users (signup lifecycle) and their functions
+on_auth_user_created|handle_new_user()|t
+== E4. user_roles constraints
+user_roles_pkey|p|PRIMARY KEY (id)
+user_roles_user_id_fkey|f|FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+user_roles_user_id_role_key|u|UNIQUE (user_id, role)
+== E5. aggregate count (no identities): user_roles rows by role
+user_roles:admin|1
+== E6. aggregate counts: accounts with a profile, and content rows NOT owned by an admin (expected 0)
+profiles:total|1
+profiles:non_admin|0
+theses:non_admin_owner|0
+public_thesis_data:non_admin_owner|0
+analysis_workspaces:non_admin_owner|0
+page_content:edited_by_non_admin|0

@@ -7,7 +7,8 @@
 #   * every session is forced to default_transaction_read_only=on before the SQL runs,
 #     and the script aborts if the server does not confirm the setting;
 #   * the SQL files it runs (catalog-fingerprint.sql, d3-platform-roles.sql) contain only
-#     SELECTs over pg_catalog / information views and built-in privilege functions.
+#     SELECTs over pg_catalog / information views and built-in privilege functions;
+#     validation/security/permissions-audit.sql adds aggregate COUNTs, never row contents.
 # Output: $1 (default /tmp/fnd001-d3) receives prod-catalog-fingerprint.txt and
 # prod-platform-roles.txt; compare the fingerprint with the CI artifact using `diff`.
 set -euo pipefail
@@ -33,4 +34,6 @@ capture() { # $1 sql file, $2 output file
 
 capture "$ROOT/validation/fnd001/sql/catalog-fingerprint.sql" "$OUT/prod-catalog-fingerprint.txt"
 capture "$ROOT/validation/fnd001/sql/d3-platform-roles.sql"   "$OUT/prod-platform-roles.txt"
+# Transversal admin-only audit (catalog + aggregate counts only; see the SQL header).
+capture "$ROOT/validation/security/permissions-audit.sql"       "$OUT/prod-permissions-audit.txt"
 wc -l "$OUT"/prod-*.txt
