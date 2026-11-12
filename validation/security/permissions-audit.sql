@@ -2,7 +2,7 @@
 -- Answers: what can each identity (anon, authenticated, service_role, sandbox_exec*) do on
 -- every public relation/function, which RLS policies decide row access, and which paths
 -- could grant admin or modify site content. Only catalog SELECTs and built-in privilege
--- functions; the only non-catalog read is an aggregate COUNT of user_roles by role
+-- functions; the only non-catalog reads are aggregate COUNTs (E5, E6)
 -- — no ids, emails or business rows. Run only through
 -- validation/fnd001/run-d3-catalog.sh (session forced read-only).
 -- The project-specific platform role is printed as sandbox_exec_<ref>.
@@ -120,3 +120,16 @@ WHERE conrelid = 'public.user_roles'::regclass ORDER BY conname;
 
 \echo '== E5. aggregate count (no identities): user_roles rows by role'
 SELECT 'user_roles:' || role::text AS item, count(*)::text AS value FROM public.user_roles GROUP BY role ORDER BY 1;
+
+\echo '== E6. aggregate counts: accounts with a profile, and content rows NOT owned by an admin (expected 0)'
+SELECT 'profiles:total' AS item, count(*)::text AS value FROM public.profiles
+UNION ALL SELECT 'profiles:non_admin', count(*)::text FROM public.profiles p
+  WHERE NOT EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = p.user_id AND r.role = 'admin')
+UNION ALL SELECT 'theses:non_admin_owner', count(*)::text FROM public.theses t
+  WHERE NOT EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = t.user_id AND r.role = 'admin')
+UNION ALL SELECT 'public_thesis_data:non_admin_owner', count(*)::text FROM public.public_thesis_data t
+  WHERE NOT EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = t.user_id AND r.role = 'admin')
+UNION ALL SELECT 'analysis_workspaces:non_admin_owner', count(*)::text FROM public.analysis_workspaces t
+  WHERE NOT EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = t.user_id AND r.role = 'admin')
+UNION ALL SELECT 'page_content:edited_by_non_admin', count(*)::text FROM public.page_content t
+  WHERE t.updated_by IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.user_roles r WHERE r.user_id = t.updated_by AND r.role = 'admin');
