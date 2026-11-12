@@ -40,6 +40,15 @@
 - [x] Wrapper hardening: access-check.ts uses guard.sh; workflow runs SQL only through guarded wrappers
 - [x] Pin CI toolchain (ubuntu-24.04, Bun 1.4.4, setup-cli@1dedf2c…, Supabase CLI 3.0.0) — approved 2026-11-11
 - [x] User accepted the 6 as-built deviations (§7) with conditions — 2026-11-11
-- [ ] CI evidence (`fnd001-db` + `quality`) on the SHA that pins the toolchain — waits for the sync of this change
+- [x] CI evidence on the pinned-toolchain SHA 66abcef119c8a631f358ea364442d1f7f6833fe1 — Quality checks run 43034468790, both jobs success (https://github.com/adrynaavroli-dotcom/navaroli-analysis/actions/runs/43034468790)
 - [ ] D4 sandbox_exec* INSERT/EXECUTE on sec_* — revised proposal docs/fnd001/d4-proposal.md (local simulation PASS, not official), waits for explicit user authorization
+- [ ] D5 sandbox_exec* INSERT on user_roles (G2) — part of the admin-only model, waits for user approval
 - [ ] M1.2: sec-ingest, atomic supersession RPC, T19/T22/T32 and parser parts
+
+## Security — admin-only requirement (transversal)
+- [x] Read-only permissions audit + matrix: docs/security/admin-only-audit.md (evidence docs/security/evidence/)
+- [ ] Approve target permission model and decisions D-a…D-d — waits for user
+- [ ] Apply DB model (is_admin helper, admin-only write policies, user_roles off the API, hygiene revokes) — after approval
+- [ ] Frontend AdminRoute guard, hide admin links, remove Sign up — after approval
+- [ ] CI regression guard for non-admin write paths on all public tables — after approval
+- [ ] Platform checks (Lovable workspace members, GitHub collaborators/branch protection, 2FA) — user action
