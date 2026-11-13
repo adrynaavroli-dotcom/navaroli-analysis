@@ -33,10 +33,10 @@ ORDER BY 1;
 
 \echo '== P3. migration journals: aggregate row counts only'
 SELECT 'drizzle.__drizzle_migrations', CASE WHEN to_regclass('drizzle.__drizzle_migrations') IS NULL THEN 'absent'
-       WHEN has_table_privilege('drizzle.__drizzle_migrations', 'SELECT') THEN 'readable' ELSE 'not readable by this session' END
+       WHEN has_table_privilege(to_regclass('drizzle.__drizzle_migrations'), 'SELECT') AND has_schema_privilege('drizzle', 'USAGE') THEN 'readable' ELSE 'not readable by this session' END
 UNION ALL
 SELECT 'supabase_migrations.schema_migrations', CASE WHEN to_regclass('supabase_migrations.schema_migrations') IS NULL THEN 'absent'
-       WHEN has_table_privilege('supabase_migrations.schema_migrations', 'SELECT') THEN 'readable' ELSE 'not readable by this session' END;
+       WHEN has_table_privilege(to_regclass('supabase_migrations.schema_migrations'), 'SELECT') AND has_schema_privilege('supabase_migrations', 'USAGE') THEN 'readable' ELSE 'not readable by this session' END;
 
 \echo '== P4. role attributes and memberships of the privileged roles'
 SELECT rolname, rolsuper, rolcreaterole, rolbypassrls, rolcanlogin,
