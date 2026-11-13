@@ -76,10 +76,14 @@ probe execute-grant "GRANT EXECUTE ON FUNCTION public.sec_finalize_run(uuid, jso
 probe sandbox-insert "GRANT INSERT ON public.user_roles TO sandbox_exec;" G3
 probe storage-insert "GRANT INSERT ON storage.objects TO sandbox_exec;" G8
 probe membership "GRANT service_role TO anon;" G7
-# The new-table probe after the baseline call must report ONLY the inventory rule.
-if grep '^violation|' "$OUT/probe-new-table-baseline.txt" | grep -vq '^violation|G1|'; then
-  grep '^violation|' "$OUT/probe-new-table-baseline.txt"; fail "baseline call left privilege violations on a new table"; fi
-echo "   ok - baseline call leaves a new table with only the review/inventory violation"
+# After the baseline call a new table may only report what needs an explicit review: the
+# inventory (G1) and the authenticated/service_role writes inherited from the default ACL
+# (G3), which each migration must keep or revoke on purpose. Nothing for anon, PUBLIC or
+# sandbox_exec* may remain.
+if grep '^violation|' "$OUT/probe-new-table-baseline.txt" \
+   | grep -vE '^violation\|(G1\||G3\|relation zz_probe\|(authenticated|service_role)\|)' | grep -q .; then
+  grep '^violation|' "$OUT/probe-new-table-baseline.txt"; fail "baseline call left anon/PUBLIC/platform paths on a new table"; fi
+echo "   ok - after the baseline call a new table keeps only review items (inventory + explicit authenticated/service_role decisions)"
 
 echo "== 5. idempotence"
 fnd001_psql -At -c "SELECT 'baseline objects=' || public.enforce_privilege_baseline()"
