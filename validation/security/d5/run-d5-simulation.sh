@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# D5 (admin-only model) — simulation of the PROPOSED permission migration on a
+# DISPOSABLE database. Never touches production: every psql call goes through
+# validation/fnd001/lib/guard.sh (loopback only, ambient PG* variables dropped).
+# Expects an EMPTY database whose cluster has the Supabase API roles (CI stack, or bare
+# PostgreSQL after validation/fnd001/sql/local-shim.sql). Steps:
+#   1. platform mocks (sandbox_exec roles + default ACLs, storage grants) — as production;
+#   2. chain rebuild -> fingerprint F0; guard and behaviour tests MUST FAIL (they detect
+#      today's open paths, so they are able to fail);
+#   3. D5 proposal in one transaction -> fingerprint F1; guard 0 violations; behaviour
+#      tests all pass; FND-001 T1–T33 suite still passes;
+#   4. regression probes: a new object without review, an owner-based write policy, a
+#      has_role() policy and an unreviewed SECURITY DEFINER function must each fail the guard;
+#   5. idempotence: a second baseline call changes nothing.
+# Output directory: $1 (default /tmp/d5-sim).
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+cd "$ROOT"
+source "$ROOT/validation/fnd001/lib/guard.sh"
+fnd001_require_local_db
+OUT="${1:-/tmp/d5-sim}"; mkdir -p "$OUT"
+SEC="$ROOT/validation/security/sql"
+guard() { fnd001_psql -At -f "$SEC/admin-only-acl-guard.sql" | sed '/^$/d'; }
+violations() { grep -c '^violation|' "$1" || true; }
+tests() { fnd001_psql -At -f "$SEC/admin-only-tests.sql" 2>&1 | sed '/^$/d'; }
+fail() { echo "not ok - $1"; exit 1; }
+
+echo "== 1. platform mocks"
+fnd001_psql -f "$ROOT/validation/fnd001/sql/ci-platform-roles-mock.sql"
+fnd001_psql -f "$SEC/d5-platform-mock.sql"
+echo "== 2. chain (current schema = production)"
+bash "$ROOT/validation/fnd001/apply-chain.sh" > "$OUT/apply-chain.txt"
+bash "$ROOT/validation/fnd001/catalog-fingerprint.sh" > "$OUT/F0-fingerprint.txt"
+guard > "$OUT/guard-before.txt"
+echo "   guard before D5: $(violations "$OUT/guard-before.txt") violation(s) (expected > 0)"
+[ "$(violations "$OUT/guard-before.txt")" -gt 0 ] || fail "guard did not detect today's open paths"
+tests > "$OUT/tests-before.txt" || true
+echo "   behaviour tests before D5: $(grep -c '^not ok' "$OUT/tests-before.txt" || true) failing case(s) (expected > 0)"
+grep -q '^ADMIN-ONLY-FAIL' "$OUT/tests-before.txt" || fail "behaviour tests passed on the unprotected schema"
+
+echo "== 3. D5 proposal (single transaction)"
+fnd001_psql -1 -f "$ROOT/validation/security/d5/d5-admin-only-migration.sql" > "$OUT/d5-apply.txt"
+bash "$ROOT/validation/fnd001/catalog-fingerprint.sh" > "$OUT/F1-fingerprint.txt"
+diff "$OUT/F0-fingerprint.txt" "$OUT/F1-fingerprint.txt" > "$OUT/fingerprint-F0-F1.diff" || true
+echo "   fingerprint F0 -> F1: $(grep -c '^<' "$OUT/fingerprint-F0-F1.diff" || true) line(s) removed, $(grep -c '^>' "$OUT/fingerprint-F0-F1.diff" || true) added"
+if grep '^[<>]' "$OUT/fingerprint-F0-F1.diff" | grep -E '\|sec_' | grep -vE 'sandbox|is_admin|enforce_privilege_baseline' | grep -E '^[<>] (acl|pol|col|con|trg|fn)\|' | grep -q .; then
+  grep '^[<>]' "$OUT/fingerprint-F0-F1.diff" | grep -E '\|sec_' > "$OUT/sec-changes.txt"
+  fail "D5 changed sec_* catalog lines (see $OUT/sec-changes.txt); M1.1 canonical ACLs must stay"
+fi
+guard > "$OUT/guard-after.txt"
+echo "   guard after D5: $(violations "$OUT/guard-after.txt") violation(s) (expected 0); $(grep -c '^info|' "$OUT/guard-after.txt" || true) info line(s)"
+[ "$(violations "$OUT/guard-after.txt")" -eq 0 ] || { grep '^violation' "$OUT/guard-after.txt"; fail "guard after D5"; }
+tests > "$OUT/tests-after.txt" || true
+grep '^# admin-only' "$OUT/tests-after.txt"
+grep -q '^ADMIN-ONLY-PASS' "$OUT/tests-after.txt" || { grep '^not ok' "$OUT/tests-after.txt"; fail "behaviour tests after D5"; }
+bash "$ROOT/validation/fnd001/run-db-tests.sh" > "$OUT/fnd001-db-tests-after-d5.txt" 2>&1 || { tail -20 "$OUT/fnd001-db-tests-after-d5.txt"; fail "FND-001 suite after D5"; }
+grep -E '^# |rollback' "$OUT/fnd001-db-tests-after-d5.txt" | tail -2
+
+echo "== 4. regression probes (each must produce violations; all rolled back)"
+probe() { # $1 name, $2 SQL, $3 rule that must appear
+  fnd001_psql -At > "$OUT/probe-$1.txt" 2>&1 <<SQL
+BEGIN;
+$2
+\i validation/security/sql/admin-only-acl-guard.sql
+ROLLBACK;
+SQL
+  grep -q "^violation|$3|" "$OUT/probe-$1.txt" || { cat "$OUT/probe-$1.txt"; fail "probe $1 not caught by $3"; }
+  echo "   ok - probe $1 caught ($3: $(grep -c "^violation|$3|" "$OUT/probe-$1.txt"))"
+}
+probe new-table-defaults "CREATE TABLE public.zz_probe (id int PRIMARY KEY);" G3
+probe new-table-baseline "CREATE TABLE public.zz_probe (id int PRIMARY KEY); ALTER TABLE public.zz_probe ENABLE ROW LEVEL SECURITY; SELECT public.enforce_privilege_baseline();" G1
+probe owner-write-policy "CREATE POLICY zz_owner ON public.theses FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);" G6
+probe has-role-policy "CREATE POLICY zz_hr ON public.page_content FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'admin'));" G6
+probe secdef-function "CREATE FUNCTION public.zz_grant_admin() RETURNS void LANGUAGE sql SECURITY DEFINER AS 'SELECT 1'; SELECT public.enforce_privilege_baseline();" G5
+probe execute-grant "GRANT EXECUTE ON FUNCTION public.sec_finalize_run(uuid, jsonb, jsonb) TO authenticated;" G4
+probe sandbox-insert "GRANT INSERT ON public.user_roles TO sandbox_exec;" G3
+probe storage-insert "GRANT INSERT ON storage.objects TO sandbox_exec;" G8
+probe membership "GRANT service_role TO anon;" G7
+# The new-table probe after the baseline call must report ONLY the inventory rule.
+if grep '^violation|' "$OUT/probe-new-table-baseline.txt" | grep -vq '^violation|G1|'; then
+  grep '^violation|' "$OUT/probe-new-table-baseline.txt"; fail "baseline call left privilege violations on a new table"; fi
+echo "   ok - baseline call leaves a new table with only the review/inventory violation"
+
+echo "== 5. idempotence"
+fnd001_psql -At -c "SELECT 'baseline objects=' || public.enforce_privilege_baseline()"
+bash "$ROOT/validation/fnd001/catalog-fingerprint.sh" > "$OUT/F2-fingerprint.txt"
+cmp -s "$OUT/F1-fingerprint.txt" "$OUT/F2-fingerprint.txt" || fail "second baseline call changed the catalog"
+echo "   ok - second call leaves the catalog byte-identical"
+echo "== D5 simulation: all steps passed"
