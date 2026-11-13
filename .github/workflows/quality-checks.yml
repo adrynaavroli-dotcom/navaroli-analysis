@@ -101,3 +101,38 @@ jobs:
         with:
           name: fnd001-m11-evidence
           path: fnd001-evidence/
+  admin-only-db:
+    name: Admin-only model (D5 proposal, not applied in production) on an ephemeral Supabase stack
+    # Same isolation as fnd001-db: throwaway stack inside the runner, no secret, no
+    # connection to the live project; every script refuses non-loopback targets.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Record checked commit
+        run: echo "Checked commit $GITHUB_SHA"
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1
+        with:
+          version: 3.0.0
+      - name: Start ephemeral Supabase stack (PostgreSQL 17)
+        run: bash validation/fnd001/ci/start-stack.sh
+      - name: D5 simulation (mocks, chain, guard/tests fail before, D5, guard 0, tests, T1–T33, probes, idempotence)
+        run: bash validation/security/d5/run-d5-simulation.sh d5-evidence 2>&1 | tee d5-simulation.txt; exit ${PIPESTATUS[0]}
+      - name: T20/T21 with real JWTs through the REST API after D5
+        if: ${{ !cancelled() }}
+        run: |
+          sleep 3
+          bun validation/fnd001/access-check.ts 2>&1 | tee d5-evidence/access-check-after-d5.txt; exit ${PIPESTATUS[0]}
+      - name: Upload evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-only-d5-evidence
+          path: |
+            d5-simulation.txt
+            d5-evidence/

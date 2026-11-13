@@ -1,0 +1,123 @@
+== P1. identity of the ambient sandbox session (agent shell / read tools)
+sandbox_exec|sandbox_exec|f|t|f|f
+== P2. owners of the objects created by migrations (who executes DDL)
+owner_of_public_functions|postgres
+owner_of_public_relations|postgres
+schema:auth|supabase_admin
+schema:cron|supabase_admin
+schema:drizzle|postgres
+schema:extensions|postgres
+schema:net|supabase_admin
+schema:public|pg_database_owner
+schema:storage|supabase_admin
+schema:supabase_migrations|postgres
+table:drizzle.__drizzle_migrations|postgres
+table:supabase_migrations.schema_migrations|postgres
+== P3. migration journals: existence and whether this session may read them (no row access)
+drizzle.__drizzle_migrations|postgres|f|f
+supabase_migrations.schema_migrations|postgres|f|f
+== P4. role attributes and memberships of the privileged roles
+authenticator|f|f|f|t|anon,authenticated,service_role
+postgres|f|t|t|t|anon,authenticated,service_role,authenticator,pg_monitor,pg_read_all_data,pg_signal_backend,pg_create_subscription,supabase_realtime_admin,sandbox_exec_<ref>,sandbox_exec,supabase_privileged_role
+service_role|f|f|t|f|
+supabase_admin|t|t|t|t|
+supabase_auth_admin|f|t|f|t|
+supabase_read_only_user|f|f|t|t|pg_read_all_data,pg_monitor
+supabase_storage_admin|f|t|f|t|authenticator
+== P5. storage.buckets / storage.objects: owner, RLS, explicit ACL entries (grantor>grantee:privilege*grant_option)
+storage.buckets|supabase_storage_admin|t|f|supabase_storage_admin>service_role:INSERT supabase_storage_admin>service_role:SELECT supabase_storage_admin>service_role:UPDATE supabase_storage_admin>service_role:DELETE supabase_storage_admin>service_role:TRUNCATE supabase_storage_admin>service_role:REFERENCES supabase_storage_admin>service_role:TRIGGER supabase_storage_admin>service_role:MAINTAIN supabase_storage_admin>authenticated:INSERT supabase_storage_admin>authenticated:SELECT supabase_storage_admin>authenticated:UPDATE supabase_storage_admin>authenticated:DELETE supabase_storage_admin>authenticated:TRUNCATE supabase_storage_admin>authenticated:REFERENCES supabase_storage_admin>authenticated:TRIGGER supabase_storage_admin>authenticated:MAINTAIN supabase_storage_admin>anon:INSERT supabase_storage_admin>anon:SELECT supabase_storage_admin>anon:UPDATE supabase_storage_admin>anon:DELETE supabase_storage_admin>anon:TRUNCATE supabase_storage_admin>anon:REFERENCES supabase_storage_admin>anon:TRIGGER supabase_storage_admin>anon:MAINTAIN supabase_storage_admin>postgres:INSERT* supabase_storage_admin>postgres:SELECT* supabase_storage_admin>postgres:UPDATE* supabase_storage_admin>postgres:DELETE* supabase_storage_admin>postgres:TRUNCATE* supabase_storage_admin>postgres:REFERENCES* supabase_storage_admin>postgres:TRIGGER* supabase_storage_admin>postgres:MAINTAIN* postgres>sandbox_exec_<ref>:INSERT postgres>sandbox_exec_<ref>:SELECT postgres>sandbox_exec:INSERT postgres>sandbox_exec:SELECT
+storage.objects|supabase_storage_admin|t|f|supabase_storage_admin>service_role:INSERT supabase_storage_admin>service_role:SELECT supabase_storage_admin>service_role:UPDATE supabase_storage_admin>service_role:DELETE supabase_storage_admin>service_role:TRUNCATE supabase_storage_admin>service_role:REFERENCES supabase_storage_admin>service_role:TRIGGER supabase_storage_admin>service_role:MAINTAIN supabase_storage_admin>authenticated:INSERT supabase_storage_admin>authenticated:SELECT supabase_storage_admin>authenticated:UPDATE supabase_storage_admin>authenticated:DELETE supabase_storage_admin>authenticated:TRUNCATE supabase_storage_admin>authenticated:REFERENCES supabase_storage_admin>authenticated:TRIGGER supabase_storage_admin>authenticated:MAINTAIN supabase_storage_admin>anon:INSERT supabase_storage_admin>anon:SELECT supabase_storage_admin>anon:UPDATE supabase_storage_admin>anon:DELETE supabase_storage_admin>anon:TRUNCATE supabase_storage_admin>anon:REFERENCES supabase_storage_admin>anon:TRIGGER supabase_storage_admin>anon:MAINTAIN supabase_storage_admin>postgres:INSERT* supabase_storage_admin>postgres:SELECT* supabase_storage_admin>postgres:UPDATE* supabase_storage_admin>postgres:DELETE* supabase_storage_admin>postgres:TRUNCATE* supabase_storage_admin>postgres:REFERENCES* supabase_storage_admin>postgres:TRIGGER* supabase_storage_admin>postgres:MAINTAIN* postgres>sandbox_exec_<ref>:INSERT postgres>sandbox_exec_<ref>:SELECT postgres>sandbox_exec:INSERT postgres>sandbox_exec:SELECT
+== P6. can the migrator (postgres) revoke the sandbox grants? (member of grantor or owner)
+storage.buckets|sandbox_exec|postgres|t|f
+storage.buckets|sandbox_exec_<ref>|postgres|t|f
+storage.objects|sandbox_exec|postgres|t|f
+storage.objects|sandbox_exec_<ref>|postgres|t|f
+== P7. RLS policies on storage.objects / storage.buckets (count)
+== P8. net: extension, schema ACL, routines and queue tables (owner, grantor>grantee:priv)
+extension:pg_cron 1.6.4|supabase_admin|pg_catalog
+extension:pg_net 0.19.5|supabase_admin|extensions
+schema:cron|supabase_admin|{supabase_admin=UC/supabase_admin,postgres=U*/supabase_admin}
+schema:net|supabase_admin|{supabase_admin=UC/supabase_admin,=U/supabase_admin,supabase_functions_admin=U/supabase_admin,postgres=U/supabase_admin,anon=U/supabase_admin,authenticated=U/supabase_admin,service_role=U/supabase_admin}
+routine:cron.alter_job(bigint,text,text,text,text,boolean)|supabase_admin|f|supabase_admin|f
+routine:cron.schedule_in_database(text,text,text,text,text,boolean)|supabase_admin|f|supabase_admin|f
+routine:cron.schedule(text,text,text)|supabase_admin|f|supabase_admin|f
+routine:cron.schedule(text,text)|supabase_admin|f|supabase_admin|f
+routine:cron.unschedule(bigint)|supabase_admin|f|supabase_admin|f
+routine:cron.unschedule(text)|supabase_admin|f|supabase_admin|f
+routine:net._await_response(bigint)|supabase_admin|f||f
+routine:net._encode_url_with_params_array(text,text[])|supabase_admin|f||f
+routine:net._http_collect_response(bigint,boolean)|supabase_admin|f||f
+routine:net._urlencode_string(character varying)|supabase_admin|f||f
+routine:net.check_worker_is_up()|supabase_admin|f||f
+routine:net.http_collect_response(bigint,boolean)|supabase_admin|f||f
+routine:net.http_delete(text,jsonb,jsonb,integer,jsonb)|supabase_admin|f||f
+routine:net.http_get(text,jsonb,jsonb,integer)|supabase_admin|f||f
+routine:net.http_post(text,jsonb,jsonb,jsonb,integer)|supabase_admin|f||f
+routine:net.wait_until_running()|supabase_admin|f||f
+routine:net.wake()|supabase_admin|f||f
+routine:net.worker_restart()|supabase_admin|f||f
+table:cron.job|supabase_admin|S|anon|f
+table:cron.job|supabase_admin|S|authenticated|f
+table:cron.job|supabase_admin|S|sandbox_exec|f
+table:cron.job|supabase_admin|S|sandbox_exec_<ref>|f
+table:cron.job|supabase_admin|S|service_role|f
+table:cron.job_run_details|supabase_admin|SD|anon|f
+table:cron.job_run_details|supabase_admin|SD|authenticated|f
+table:cron.job_run_details|supabase_admin|SD|sandbox_exec|f
+table:cron.job_run_details|supabase_admin|SD|sandbox_exec_<ref>|f
+table:cron.job_run_details|supabase_admin|SD|service_role|f
+table:net._http_response|supabase_admin|SIUD|anon|t
+table:net._http_response|supabase_admin|SIUD|authenticated|t
+table:net._http_response|supabase_admin|SIUD|sandbox_exec|t
+table:net._http_response|supabase_admin|SIUD|sandbox_exec_<ref>|t
+table:net._http_response|supabase_admin|SIUD|service_role|t
+table:net.http_request_queue|supabase_admin|SIUD|anon|t
+table:net.http_request_queue|supabase_admin|SIUD|authenticated|t
+table:net.http_request_queue|supabase_admin|SIUD|sandbox_exec|t
+table:net.http_request_queue|supabase_admin|SIUD|sandbox_exec_<ref>|t
+table:net.http_request_queue|supabase_admin|SIUD|service_role|t
+== P9. default privileges (pg_default_acl), all owners and schemas
+postgres|auth|S|{sandbox_exec_<ref>=rU/postgres,sandbox_exec=rU/postgres}
+postgres|auth|f|{sandbox_exec_<ref>=X/postgres}
+postgres|auth|r|{sandbox_exec_<ref>=ar/postgres,sandbox_exec=ar/postgres}
+postgres|extensions|S|{sandbox_exec_<ref>=rU/postgres,sandbox_exec=rU/postgres}
+postgres|extensions|f|{sandbox_exec_<ref>=X/postgres}
+postgres|extensions|r|{sandbox_exec_<ref>=ar/postgres,sandbox_exec=ar/postgres}
+postgres|public|S|{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres,sandbox_exec_<ref>=rU/postgres,sandbox_exec=rU/postgres}
+postgres|public|f|{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres,sandbox_exec_<ref>=X/postgres}
+postgres|public|r|{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres,sandbox_exec_<ref>=ar/postgres,sandbox_exec=ar/postgres}
+postgres|storage|S|{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres,sandbox_exec_<ref>=rU/postgres,sandbox_exec=rU/postgres}
+postgres|storage|f|{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres,sandbox_exec_<ref>=X/postgres}
+postgres|storage|r|{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres,sandbox_exec_<ref>=ar/postgres,sandbox_exec=ar/postgres}
+supabase_admin|cron|S|{postgres=r*w*U*/supabase_admin}
+supabase_admin|cron|f|{postgres=X*/supabase_admin}
+supabase_admin|cron|r|{postgres=a*r*w*d*D*x*t*m*/supabase_admin}
+supabase_admin|extensions|S|{postgres=r*w*U*/supabase_admin}
+supabase_admin|extensions|f|{postgres=X*/supabase_admin}
+supabase_admin|extensions|r|{postgres=a*r*w*d*D*x*t*m*/supabase_admin}
+supabase_admin|graphql|S|{postgres=rwU/supabase_admin,anon=rwU/supabase_admin,authenticated=rwU/supabase_admin,service_role=rwU/supabase_admin}
+supabase_admin|graphql|f|{postgres=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}
+supabase_admin|graphql|r|{postgres=arwdDxtm/supabase_admin,anon=arwdDxtm/supabase_admin,authenticated=arwdDxtm/supabase_admin,service_role=arwdDxtm/supabase_admin}
+supabase_admin|graphql_public|S|{postgres=rwU/supabase_admin,anon=rwU/supabase_admin,authenticated=rwU/supabase_admin,service_role=rwU/supabase_admin}
+supabase_admin|graphql_public|f|{postgres=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}
+supabase_admin|graphql_public|r|{postgres=arwdDxtm/supabase_admin,anon=arwdDxtm/supabase_admin,authenticated=arwdDxtm/supabase_admin,service_role=arwdDxtm/supabase_admin}
+supabase_admin|public|S|{postgres=rwU/supabase_admin,anon=rwU/supabase_admin,authenticated=rwU/supabase_admin,service_role=rwU/supabase_admin}
+supabase_admin|public|f|{postgres=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}
+supabase_admin|public|r|{postgres=arwdDxtm/supabase_admin,anon=arwdDxtm/supabase_admin,authenticated=arwdDxtm/supabase_admin,service_role=arwdDxtm/supabase_admin}
+supabase_admin|realtime|S|{postgres=rwU/supabase_admin,dashboard_user=rwU/supabase_admin}
+supabase_admin|realtime|f|{postgres=X/supabase_admin,dashboard_user=X/supabase_admin}
+supabase_admin|realtime|r|{postgres=arwdDxtm/supabase_admin,dashboard_user=arwdDxtm/supabase_admin}
+supabase_auth_admin|auth|S|{postgres=rwU/supabase_auth_admin,dashboard_user=rwU/supabase_auth_admin}
+supabase_auth_admin|auth|f|{postgres=X/supabase_auth_admin,dashboard_user=X/supabase_auth_admin}
+supabase_auth_admin|auth|r|{postgres=arwdDxtm/supabase_auth_admin,dashboard_user=arwdDxtm/supabase_auth_admin}
+== P10. event triggers (DDL hooks that could re-grant privileges)
+issue_graphql_placeholder|sql_drop|supabase_admin|extensions.set_graphql_placeholder|O|DROP EXTENSION
+issue_pg_cron_access|ddl_command_end|supabase_admin|extensions.grant_pg_cron_access|O|CREATE EXTENSION
+issue_pg_graphql_access|ddl_command_end|supabase_admin|extensions.grant_pg_graphql_access|O|CREATE FUNCTION
+issue_pg_net_access|ddl_command_end|supabase_admin|extensions.grant_pg_net_access|O|CREATE EXTENSION
+pgrst_ddl_watch|ddl_command_end|supabase_admin|extensions.pgrst_ddl_watch|O|-
+pgrst_drop_watch|sql_drop|supabase_admin|extensions.pgrst_drop_watch|O|-
+== P11. public grants issued by a grantor other than postgres (migrator could not revoke them)
+== P11 end
+== P12. public sequences
+== P12 end

@@ -1,6 +1,6 @@
 # Auditoría transversal de permisos — requisito «administración exclusiva»
 
-Fecha: 2026-11-12 (UTC). Estado: **AUDITORÍA COMPLETADA, MODELO OBJETIVO PENDIENTE DE APROBACIÓN.**
+Fecha: 2026-11-12 (UTC). Estado: **AUDITORÍA COMPLETADA.** Decisiones D-a…D-d tomadas el 2026-11-13; diseño consolidado, SQL y simulación en `docs/security/d5-design.md` (no aplicado en producción).
 Nada de este documento se ha aplicado. No se ha ejecutado DDL/DML, ni D4, ni D5, ni M1.2.
 
 ## 0. Requisito (permanente)
