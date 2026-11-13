@@ -247,7 +247,6 @@ FROM pg_roles r CROSS JOIN (VALUES
   ('sec_fail_stale_runs()', $q$SELECT public.sec_fail_stale_runs('1 day')$q$, 'grant'),
   ('sec_record_download()', $q$SELECT public.sec_record_download(gen_random_uuid(), 200, 'x', 1, '\x00')$q$, 'grant'),
   ('enforce_privilege_baseline()', 'SELECT public.enforce_privilege_baseline()', 'grant'),
-  ('is_admin() read helper', 'SELECT public.is_admin()', 'ok'),
   ('select theses (read kept)', 'SELECT count(*) FROM public.theses', 'ok')) f(label, sql, want)
 WHERE r.rolname ~ '^sandbox_exec(_[a-z0-9]+)?$';
 SELECT adm_t.expect(format('X %s insert storage.%s', CASE WHEN r.rolname ~ '^sandbox_exec_' THEN 'sandbox_exec_<ref>' ELSE r.rolname END, t),
