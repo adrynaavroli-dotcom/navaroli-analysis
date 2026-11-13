@@ -41,7 +41,7 @@ ORDER BY 1;
 
 \echo '== P4. role attributes and memberships of the privileged roles'
 SELECT rolname, rolsuper, rolcreaterole, rolbypassrls, rolcanlogin,
-       (SELECT string_agg(pg_get_userbyid(roleid), ',' ORDER BY pg_get_userbyid(roleid)) FROM pg_auth_members WHERE member = r.oid) AS member_of
+       (SELECT string_agg(regexp_replace(pg_get_userbyid(roleid), 'sandbox_exec_[a-z0-9]+', 'sandbox_exec_<ref>'), ',' ORDER BY 1) FROM pg_auth_members WHERE member = r.oid) AS member_of
 FROM pg_roles r
 WHERE rolname IN ('postgres','supabase_admin','supabase_storage_admin','supabase_auth_admin','supabase_read_only_user','service_role','authenticator')
 ORDER BY 1;
