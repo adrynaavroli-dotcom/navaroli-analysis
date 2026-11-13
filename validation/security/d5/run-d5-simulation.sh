@@ -90,4 +90,6 @@ fnd001_psql -At -c "SELECT 'baseline objects=' || public.enforce_privilege_basel
 bash "$ROOT/validation/fnd001/catalog-fingerprint.sh" > "$OUT/F2-fingerprint.txt"
 cmp -s "$OUT/F1-fingerprint.txt" "$OUT/F2-fingerprint.txt" || fail "second baseline call changed the catalog"
 echo "   ok - second call leaves the catalog byte-identical"
+# Let PostgREST (CI stack) see the new functions/policies before the REST checks.
+fnd001_psql -c "NOTIFY pgrst, 'reload schema'"
 echo "== D5 simulation: all steps passed"
