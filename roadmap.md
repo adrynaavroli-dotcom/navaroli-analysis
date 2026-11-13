@@ -41,14 +41,18 @@
 - [x] Pin CI toolchain (ubuntu-24.04, Bun 1.4.4, setup-cli@1dedf2c…, Supabase CLI 3.0.0) — approved 2026-11-11
 - [x] User accepted the 6 as-built deviations (§7) with conditions — 2026-11-11
 - [x] CI evidence on the pinned-toolchain SHA 66abcef119c8a631f358ea364442d1f7f6833fe1 — Quality checks run 43034468790, both jobs success (https://github.com/adrynaavroli-dotcom/navaroli-analysis/actions/runs/43034468790)
-- [ ] D4 sandbox_exec* INSERT/EXECUTE on sec_* — revised proposal docs/fnd001/d4-proposal.md (local simulation PASS, not official), waits for explicit user authorization
-- [ ] D5 sandbox_exec* INSERT on user_roles (G2) — part of the admin-only model, waits for user approval
+- [x] D4 merged into D5 (user decision 2026-11-13) — not applied separately
 - [ ] M1.2: sec-ingest, atomic supersession RPC, T19/T22/T32 and parser parts
 
 ## Security — admin-only requirement (transversal)
 - [x] Read-only permissions audit + matrix: docs/security/admin-only-audit.md (evidence docs/security/evidence/)
-- [ ] Approve target permission model and decisions D-a…D-d — waits for user
-- [ ] Apply DB model (is_admin helper, admin-only write policies, user_roles off the API, hygiene revokes) — after approval
-- [ ] Frontend AdminRoute guard, hide admin links, remove Sign up — after approval
-- [ ] CI regression guard for non-admin write paths on all public tables — after approval
+- [x] Decisions D-a…D-d taken (all public, user_roles off the API, profiles admin-only, order 1–7) — 2026-11-13
+- [x] Step 1 design + proposed SQL: docs/security/d5-design.md, validation/security/d5/d5-admin-only-migration.sql
+- [x] Identity probe (read-only): migrator = postgres, agent session = sandbox_exec; storage grants issued by postgres; net/cron resolved
+- [x] Step 2 local simulation (unofficial): guard 244→0 (pre-state identical to prod), tests 216/216, T1–T33 186/186, 9/9 probes, idempotent
+- [x] Step 3 CI job `admin-only-db` + guard/tests in the repo; admin-only rule added to AGENTS.md
+- [ ] Step 4 CI PASS of quality, fnd001-db and admin-only-db on the SHA containing D5 — after sync (next message)
+- [ ] Step 5 production migration with preflight/postflight — waits for separate user authorization
+- [ ] Step 6 frontend: role-checked admin routes, hidden admin links, no Sign up — after step 5
+- [ ] Decisions D-e (pg_net residual) and D-f (default ACL strategy) — waits for user
 - [ ] Platform checks (Lovable workspace members, GitHub collaborators/branch protection, 2FA) — user action

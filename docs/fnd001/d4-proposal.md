@@ -1,5 +1,7 @@
 # FND-001 / M1.1 — D4: retirar a `sandbox_exec*` la escritura directa en `sec_*` (propuesta revisada)
 
+> **SUSTITUIDA (2026-11-13)** por el modelo D5, que incluye este alcance (`sec_*`) en una única estrategia de permisos: `docs/security/d5-design.md`. No aplicar D4 por separado. Se conserva como registro de la simulación de D4.
+
 Fecha: 2026-11-11 (UTC). Estado: **propuesta, NO autorizada, NO ejecutada**. Producción sin cambios.
 Sustituye a la propuesta de `d3-catalog-report.md` §6. FND-001 sigue **IN PROGRESS**; M1.1 no se cierra sin decisión explícita sobre D4.
 

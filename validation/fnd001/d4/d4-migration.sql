@@ -1,3 +1,5 @@
+-- SUPERSEDED (2026-11-13) by validation/security/d5/d5-admin-only-migration.sql, which
+-- includes this scope. Never apply this file. Kept as the record of the D4 simulation.
 -- FND-001 / D4 — PROPOSAL, NOT APPLIED. Not part of the migration chain.
 -- When D4 is authorised this exact text becomes a Drizzle custom migration
 -- (lov_database--migration) and the file is removed from here.
