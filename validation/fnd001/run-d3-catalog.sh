@@ -36,4 +36,6 @@ capture "$ROOT/validation/fnd001/sql/catalog-fingerprint.sql" "$OUT/prod-catalog
 capture "$ROOT/validation/fnd001/sql/d3-platform-roles.sql"   "$OUT/prod-platform-roles.txt"
 # Transversal admin-only audit (catalog + aggregate counts only; see the SQL header).
 capture "$ROOT/validation/security/permissions-audit.sql"       "$OUT/prod-permissions-audit.txt"
+# D5 design: identities that run DDL and platform grants on storage/net/cron (catalog only).
+capture "$ROOT/validation/security/platform-identity-probe.sql" "$OUT/prod-platform-identity.txt"
 wc -l "$OUT"/prod-*.txt
