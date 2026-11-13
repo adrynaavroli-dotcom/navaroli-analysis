@@ -38,4 +38,6 @@ capture "$ROOT/validation/fnd001/sql/d3-platform-roles.sql"   "$OUT/prod-platfor
 capture "$ROOT/validation/security/permissions-audit.sql"       "$OUT/prod-permissions-audit.txt"
 # D5 design: identities that run DDL and platform grants on storage/net/cron (catalog only).
 capture "$ROOT/validation/security/platform-identity-probe.sql" "$OUT/prod-platform-identity.txt"
+# Admin-only regression guard: before D5 it lists the open paths; after D5 it is the postflight.
+capture "$ROOT/validation/security/sql/admin-only-acl-guard.sql" "$OUT/prod-admin-only-guard.txt"
 wc -l "$OUT"/prod-*.txt

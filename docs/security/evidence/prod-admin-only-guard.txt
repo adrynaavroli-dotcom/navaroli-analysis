@@ -1,0 +1,247 @@
+violation|G3|relation analysis_workspaces|anon|DELETE
+violation|G3|relation analysis_workspaces|anon|INSERT
+violation|G3|relation analysis_workspaces|anon|MAINTAIN
+violation|G3|relation analysis_workspaces|anon|REFERENCES
+violation|G3|relation analysis_workspaces|anon|TRIGGER
+violation|G3|relation analysis_workspaces|anon|TRUNCATE
+violation|G3|relation analysis_workspaces|anon|UPDATE
+violation|G3|relation analysis_workspaces|authenticated|MAINTAIN
+violation|G3|relation analysis_workspaces|authenticated|REFERENCES
+violation|G3|relation analysis_workspaces|authenticated|TRIGGER
+violation|G3|relation analysis_workspaces|authenticated|TRUNCATE
+violation|G3|relation analysis_workspaces|sandbox_exec_<ref>|INSERT
+violation|G3|relation analysis_workspaces|sandbox_exec|INSERT
+violation|G3|relation analysis_workspaces|service_role|DELETE
+violation|G3|relation analysis_workspaces|service_role|INSERT
+violation|G3|relation analysis_workspaces|service_role|MAINTAIN
+violation|G3|relation analysis_workspaces|service_role|REFERENCES
+violation|G3|relation analysis_workspaces|service_role|TRIGGER
+violation|G3|relation analysis_workspaces|service_role|TRUNCATE
+violation|G3|relation analysis_workspaces|service_role|UPDATE
+violation|G3|relation page_content|anon|DELETE
+violation|G3|relation page_content|anon|INSERT
+violation|G3|relation page_content|anon|MAINTAIN
+violation|G3|relation page_content|anon|REFERENCES
+violation|G3|relation page_content|anon|TRIGGER
+violation|G3|relation page_content|anon|TRUNCATE
+violation|G3|relation page_content|anon|UPDATE
+violation|G3|relation page_content|authenticated|DELETE
+violation|G3|relation page_content|authenticated|MAINTAIN
+violation|G3|relation page_content|authenticated|REFERENCES
+violation|G3|relation page_content|authenticated|TRIGGER
+violation|G3|relation page_content|authenticated|TRUNCATE
+violation|G3|relation page_content|sandbox_exec_<ref>|INSERT
+violation|G3|relation page_content|sandbox_exec|INSERT
+violation|G3|relation page_content|service_role|DELETE
+violation|G3|relation page_content|service_role|INSERT
+violation|G3|relation page_content|service_role|MAINTAIN
+violation|G3|relation page_content|service_role|REFERENCES
+violation|G3|relation page_content|service_role|TRIGGER
+violation|G3|relation page_content|service_role|TRUNCATE
+violation|G3|relation page_content|service_role|UPDATE
+violation|G3|relation profiles|anon|DELETE
+violation|G3|relation profiles|anon|INSERT
+violation|G3|relation profiles|anon|MAINTAIN
+violation|G3|relation profiles|anon|REFERENCES
+violation|G3|relation profiles|anon|TRIGGER
+violation|G3|relation profiles|anon|TRUNCATE
+violation|G3|relation profiles|anon|UPDATE
+violation|G3|relation profiles|authenticated|MAINTAIN
+violation|G3|relation profiles|authenticated|REFERENCES
+violation|G3|relation profiles|authenticated|TRIGGER
+violation|G3|relation profiles|authenticated|TRUNCATE
+violation|G3|relation profiles|sandbox_exec_<ref>|INSERT
+violation|G3|relation profiles|sandbox_exec|INSERT
+violation|G3|relation profiles|service_role|DELETE
+violation|G3|relation profiles|service_role|INSERT
+violation|G3|relation profiles|service_role|MAINTAIN
+violation|G3|relation profiles|service_role|REFERENCES
+violation|G3|relation profiles|service_role|TRIGGER
+violation|G3|relation profiles|service_role|TRUNCATE
+violation|G3|relation profiles|service_role|UPDATE
+violation|G3|relation public_thesis_data_view|anon|DELETE
+violation|G3|relation public_thesis_data_view|anon|INSERT
+violation|G3|relation public_thesis_data_view|anon|MAINTAIN
+violation|G3|relation public_thesis_data_view|anon|REFERENCES
+violation|G3|relation public_thesis_data_view|anon|TRIGGER
+violation|G3|relation public_thesis_data_view|anon|TRUNCATE
+violation|G3|relation public_thesis_data_view|anon|UPDATE
+violation|G3|relation public_thesis_data_view|authenticated|DELETE
+violation|G3|relation public_thesis_data_view|authenticated|INSERT
+violation|G3|relation public_thesis_data_view|authenticated|MAINTAIN
+violation|G3|relation public_thesis_data_view|authenticated|REFERENCES
+violation|G3|relation public_thesis_data_view|authenticated|TRIGGER
+violation|G3|relation public_thesis_data_view|authenticated|TRUNCATE
+violation|G3|relation public_thesis_data_view|authenticated|UPDATE
+violation|G3|relation public_thesis_data_view|sandbox_exec_<ref>|INSERT
+violation|G3|relation public_thesis_data_view|sandbox_exec|INSERT
+violation|G3|relation public_thesis_data_view|service_role|DELETE
+violation|G3|relation public_thesis_data_view|service_role|INSERT
+violation|G3|relation public_thesis_data_view|service_role|MAINTAIN
+violation|G3|relation public_thesis_data_view|service_role|REFERENCES
+violation|G3|relation public_thesis_data_view|service_role|TRIGGER
+violation|G3|relation public_thesis_data_view|service_role|TRUNCATE
+violation|G3|relation public_thesis_data_view|service_role|UPDATE
+violation|G3|relation public_thesis_data|authenticated|MAINTAIN
+violation|G3|relation public_thesis_data|authenticated|REFERENCES
+violation|G3|relation public_thesis_data|authenticated|TRIGGER
+violation|G3|relation public_thesis_data|authenticated|TRUNCATE
+violation|G3|relation public_thesis_data|sandbox_exec_<ref>|INSERT
+violation|G3|relation public_thesis_data|sandbox_exec|INSERT
+violation|G3|relation public_thesis_data|service_role|DELETE
+violation|G3|relation public_thesis_data|service_role|INSERT
+violation|G3|relation public_thesis_data|service_role|MAINTAIN
+violation|G3|relation public_thesis_data|service_role|REFERENCES
+violation|G3|relation public_thesis_data|service_role|TRIGGER
+violation|G3|relation public_thesis_data|service_role|TRUNCATE
+violation|G3|relation public_thesis_data|service_role|UPDATE
+violation|G3|relation sec_companies|sandbox_exec_<ref>|INSERT
+violation|G3|relation sec_companies|sandbox_exec|INSERT
+violation|G3|relation sec_filings|sandbox_exec_<ref>|INSERT
+violation|G3|relation sec_filings|sandbox_exec|INSERT
+violation|G3|relation sec_ingestion_runs|sandbox_exec_<ref>|INSERT
+violation|G3|relation sec_ingestion_runs|sandbox_exec|INSERT
+violation|G3|relation sec_normalized_fact_sources|sandbox_exec_<ref>|INSERT
+violation|G3|relation sec_normalized_fact_sources|sandbox_exec|INSERT
+violation|G3|relation sec_normalized_facts|sandbox_exec_<ref>|INSERT
+violation|G3|relation sec_normalized_facts|sandbox_exec|INSERT
+violation|G3|relation sec_raw_fact_observations|sandbox_exec_<ref>|INSERT
+violation|G3|relation sec_raw_fact_observations|sandbox_exec|INSERT
+violation|G3|relation sec_raw_facts|sandbox_exec_<ref>|INSERT
+violation|G3|relation sec_raw_facts|sandbox_exec|INSERT
+violation|G3|relation sec_ticker_mappings|sandbox_exec_<ref>|INSERT
+violation|G3|relation sec_ticker_mappings|sandbox_exec|INSERT
+violation|G3|relation theses|anon|DELETE
+violation|G3|relation theses|anon|INSERT
+violation|G3|relation theses|anon|MAINTAIN
+violation|G3|relation theses|anon|REFERENCES
+violation|G3|relation theses|anon|TRIGGER
+violation|G3|relation theses|anon|TRUNCATE
+violation|G3|relation theses|anon|UPDATE
+violation|G3|relation theses|authenticated|MAINTAIN
+violation|G3|relation theses|authenticated|REFERENCES
+violation|G3|relation theses|authenticated|TRIGGER
+violation|G3|relation theses|authenticated|TRUNCATE
+violation|G3|relation theses|sandbox_exec_<ref>|INSERT
+violation|G3|relation theses|sandbox_exec|INSERT
+violation|G3|relation theses|service_role|DELETE
+violation|G3|relation theses|service_role|INSERT
+violation|G3|relation theses|service_role|MAINTAIN
+violation|G3|relation theses|service_role|REFERENCES
+violation|G3|relation theses|service_role|TRIGGER
+violation|G3|relation theses|service_role|TRUNCATE
+violation|G3|relation theses|service_role|UPDATE
+violation|G3|relation thesis_alerts|anon|DELETE
+violation|G3|relation thesis_alerts|anon|INSERT
+violation|G3|relation thesis_alerts|anon|MAINTAIN
+violation|G3|relation thesis_alerts|anon|REFERENCES
+violation|G3|relation thesis_alerts|anon|TRIGGER
+violation|G3|relation thesis_alerts|anon|TRUNCATE
+violation|G3|relation thesis_alerts|anon|UPDATE
+violation|G3|relation thesis_alerts|authenticated|INSERT
+violation|G3|relation thesis_alerts|authenticated|MAINTAIN
+violation|G3|relation thesis_alerts|authenticated|REFERENCES
+violation|G3|relation thesis_alerts|authenticated|TRIGGER
+violation|G3|relation thesis_alerts|authenticated|TRUNCATE
+violation|G3|relation thesis_alerts|sandbox_exec_<ref>|INSERT
+violation|G3|relation thesis_alerts|sandbox_exec|INSERT
+violation|G3|relation thesis_alerts|service_role|DELETE
+violation|G3|relation thesis_alerts|service_role|MAINTAIN
+violation|G3|relation thesis_alerts|service_role|REFERENCES
+violation|G3|relation thesis_alerts|service_role|TRIGGER
+violation|G3|relation thesis_alerts|service_role|TRUNCATE
+violation|G3|relation thesis_alerts|service_role|UPDATE
+violation|G3|relation thesis_purchases|anon|DELETE
+violation|G3|relation thesis_purchases|anon|INSERT
+violation|G3|relation thesis_purchases|anon|MAINTAIN
+violation|G3|relation thesis_purchases|anon|REFERENCES
+violation|G3|relation thesis_purchases|anon|TRIGGER
+violation|G3|relation thesis_purchases|anon|TRUNCATE
+violation|G3|relation thesis_purchases|anon|UPDATE
+violation|G3|relation thesis_purchases|authenticated|MAINTAIN
+violation|G3|relation thesis_purchases|authenticated|REFERENCES
+violation|G3|relation thesis_purchases|authenticated|TRIGGER
+violation|G3|relation thesis_purchases|authenticated|TRUNCATE
+violation|G3|relation thesis_purchases|sandbox_exec_<ref>|INSERT
+violation|G3|relation thesis_purchases|sandbox_exec|INSERT
+violation|G3|relation thesis_purchases|service_role|DELETE
+violation|G3|relation thesis_purchases|service_role|INSERT
+violation|G3|relation thesis_purchases|service_role|MAINTAIN
+violation|G3|relation thesis_purchases|service_role|REFERENCES
+violation|G3|relation thesis_purchases|service_role|TRIGGER
+violation|G3|relation thesis_purchases|service_role|TRUNCATE
+violation|G3|relation thesis_purchases|service_role|UPDATE
+violation|G3|relation user_roles|anon|DELETE
+violation|G3|relation user_roles|anon|INSERT
+violation|G3|relation user_roles|anon|MAINTAIN
+violation|G3|relation user_roles|anon|REFERENCES
+violation|G3|relation user_roles|anon|TRIGGER
+violation|G3|relation user_roles|anon|TRUNCATE
+violation|G3|relation user_roles|anon|UPDATE
+violation|G3|relation user_roles|authenticated|DELETE
+violation|G3|relation user_roles|authenticated|INSERT
+violation|G3|relation user_roles|authenticated|MAINTAIN
+violation|G3|relation user_roles|authenticated|REFERENCES
+violation|G3|relation user_roles|authenticated|TRIGGER
+violation|G3|relation user_roles|authenticated|TRUNCATE
+violation|G3|relation user_roles|authenticated|UPDATE
+violation|G3|relation user_roles|sandbox_exec_<ref>|INSERT
+violation|G3|relation user_roles|sandbox_exec|INSERT
+violation|G3|relation user_roles|service_role|DELETE
+violation|G3|relation user_roles|service_role|INSERT
+violation|G3|relation user_roles|service_role|MAINTAIN
+violation|G3|relation user_roles|service_role|REFERENCES
+violation|G3|relation user_roles|service_role|TRIGGER
+violation|G3|relation user_roles|service_role|TRUNCATE
+violation|G3|relation user_roles|service_role|UPDATE
+violation|G4|routine handle_new_user()|sandbox_exec_<ref>|EXECUTE
+violation|G4|routine handle_new_user()|service_role|EXECUTE
+violation|G4|routine has_role(uuid,app_role)|authenticated|EXECUTE
+violation|G4|routine has_role(uuid,app_role)|sandbox_exec_<ref>|EXECUTE
+violation|G4|routine sec_fail_run(uuid,text,jsonb)|sandbox_exec_<ref>|EXECUTE
+violation|G4|routine sec_fail_stale_runs(interval)|sandbox_exec_<ref>|EXECUTE
+violation|G4|routine sec_finalize_run(uuid,jsonb,jsonb)|sandbox_exec_<ref>|EXECUTE
+violation|G4|routine sec_guard()|sandbox_exec_<ref>|EXECUTE
+violation|G4|routine sec_insert_guard()|sandbox_exec_<ref>|EXECUTE
+violation|G4|routine sec_norm_lineage_check()|sandbox_exec_<ref>|EXECUTE
+violation|G4|routine sec_record_download(uuid,integer,text,bigint,bytea)|sandbox_exec_<ref>|EXECUTE
+violation|G4|routine sec_supersession_check()|sandbox_exec_<ref>|EXECUTE
+violation|G4|routine update_updated_at_column()|sandbox_exec_<ref>|EXECUTE
+violation|G4|routine update_updated_at_column()|service_role|EXECUTE
+violation|G6|policy analysis_workspaces.Users can create their own workspaces|public|INSERT not exactly is_admin()
+violation|G6|policy analysis_workspaces.Users can delete their own workspaces|public|DELETE not exactly is_admin()
+violation|G6|policy analysis_workspaces.Users can update their own workspaces|authenticated|UPDATE not exactly is_admin()
+violation|G6|policy analysis_workspaces.Users can view their own workspaces|public|admin-only table readable without is_admin()
+violation|G6|policy page_content.Admins can insert page content|authenticated|INSERT not exactly is_admin()
+violation|G6|policy page_content.Admins can insert page content|authenticated|uses has_role() instead of is_admin()
+violation|G6|policy page_content.Admins can update page content|authenticated|UPDATE not exactly is_admin()
+violation|G6|policy page_content.Admins can update page content|authenticated|uses has_role() instead of is_admin()
+violation|G6|policy profiles.Users can insert their own profile|authenticated|INSERT not exactly is_admin()
+violation|G6|policy profiles.Users can update their own profile|authenticated|UPDATE not exactly is_admin()
+violation|G6|policy profiles.Users can view their own profile|public|admin-only table readable without is_admin()
+violation|G6|policy public_thesis_data.Users can create their own thesis data|public|INSERT not exactly is_admin()
+violation|G6|policy public_thesis_data.Users can delete their own thesis data|public|DELETE not exactly is_admin()
+violation|G6|policy public_thesis_data.Users can update their own thesis data|authenticated|UPDATE not exactly is_admin()
+violation|G6|policy theses.Users can create their own theses|authenticated|INSERT not exactly is_admin()
+violation|G6|policy theses.Users can delete their own theses|authenticated|DELETE not exactly is_admin()
+violation|G6|policy theses.Users can update their own theses|authenticated|UPDATE not exactly is_admin()
+violation|G6|policy thesis_alerts.Users can delete their own alerts|public|DELETE not exactly is_admin()
+violation|G6|policy thesis_alerts.Users can update their own alerts|authenticated|UPDATE not exactly is_admin()
+violation|G6|policy thesis_alerts.Users can view their own alerts|public|admin-only table readable without is_admin()
+violation|G6|policy thesis_purchases.Users can create their own purchases|authenticated|INSERT not exactly is_admin()
+violation|G6|policy thesis_purchases.Users can delete their own purchases|public|DELETE not exactly is_admin()
+violation|G6|policy thesis_purchases.Users can update their own purchases|authenticated|UPDATE not exactly is_admin()
+violation|G6|policy thesis_purchases.Users can view their own purchases|authenticated|admin-only table readable without is_admin()
+violation|G6|policy user_roles.Admins can delete roles|authenticated|DELETE not exactly is_admin()
+violation|G6|policy user_roles.Admins can delete roles|authenticated|uses has_role() instead of is_admin()
+violation|G6|policy user_roles.Admins can insert roles|authenticated|INSERT not exactly is_admin()
+violation|G6|policy user_roles.Admins can insert roles|authenticated|uses has_role() instead of is_admin()
+violation|G6|policy user_roles.Admins can view all roles|authenticated|user_roles read must be own rows only
+violation|G6|policy user_roles.Admins can view all roles|authenticated|uses has_role() instead of is_admin()
+violation|G8|relation storage.buckets|sandbox_exec_<ref>|INSERT
+violation|G8|relation storage.buckets|sandbox_exec|INSERT
+violation|G8|relation storage.objects|sandbox_exec_<ref>|INSERT
+violation|G8|relation storage.objects|sandbox_exec|INSERT
+info|pg_net|sandbox_exec_<ref>|USAGE on schema net + EXECUTE net.http_post (owned by supabase_admin, not revocable by the migrator)
+info|pg_net|sandbox_exec|USAGE on schema net + EXECUTE net.http_post (owned by supabase_admin, not revocable by the migrator)
+summary|violations=244
