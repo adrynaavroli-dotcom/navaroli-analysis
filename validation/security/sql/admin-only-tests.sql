@@ -260,6 +260,100 @@ SELECT adm_t.expect('U second admin row as migrator',
 SELECT adm_t.expect('U non-admin role row as migrator (allowed)',
   $q$INSERT INTO public.user_roles (user_id, role) VALUES ('a0000000-0000-4000-8000-00000000000b', 'user')$q$, 'rows:1');
 
+-- Column-level privileges: a grant on ONE column, never on the whole table. The baseline
+-- helper must revoke every unauthorised one (table- or column-level detection alone is not
+-- enough: has_table_privilege() is false for such grants), keep the authorised
+-- service_role inventory, and abort when the caller cannot remove a path.
+CREATE FUNCTION adm_t.col_case(_label text, _grant text, _role text, _tbl text, _col text, _priv text,
+                               _must_remain boolean DEFAULT false) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE granted boolean; table_level boolean; remains boolean; err text;
+BEGIN
+  BEGIN
+    EXECUTE _grant;
+    granted := has_column_privilege(_role, _tbl, _col, _priv);
+    table_level := has_table_privilege(_role, _tbl, _priv);
+    PERFORM public.enforce_privilege_baseline();
+    remains := has_column_privilege(_role, _tbl, _col, _priv);
+    RAISE EXCEPTION 'undo' USING ERRCODE = 'AT000';
+  EXCEPTION WHEN OTHERS THEN IF SQLSTATE <> 'AT000' THEN err := SQLSTATE || ' ' || SQLERRM; END IF;
+  END;
+  INSERT INTO adm_t.results(label, ok, detail) VALUES (
+    _label || CASE WHEN _must_remain THEN ' [kept]' ELSE ' [revoked]' END,
+    err IS NULL AND granted AND NOT table_level AND remains IS NOT DISTINCT FROM _must_remain,
+    CASE WHEN err IS NULL AND granted AND NOT table_level AND remains IS NOT DISTINCT FROM _must_remain THEN NULL
+         ELSE format('granted=%s table_level=%s remains=%s err=%s', granted, table_level, remains, err) END);
+END $$;
+
+SELECT adm_t.col_case('C anon UPDATE (full_name) on profiles', 'GRANT UPDATE (full_name) ON public.profiles TO anon', 'anon', 'public.profiles', 'full_name', 'UPDATE');
+SELECT adm_t.col_case('C anon INSERT (ticker) on theses', 'GRANT INSERT (ticker) ON public.theses TO anon', 'anon', 'public.theses', 'ticker', 'INSERT');
+SELECT adm_t.col_case('C PUBLIC UPDATE (content) on page_content (seen by anon)', 'GRANT UPDATE (content) ON public.page_content TO PUBLIC', 'anon', 'public.page_content', 'content', 'UPDATE');
+SELECT adm_t.col_case('C authenticated INSERT (message) on thesis_alerts', 'GRANT INSERT (message) ON public.thesis_alerts TO authenticated', 'authenticated', 'public.thesis_alerts', 'message', 'INSERT');
+SELECT adm_t.col_case('C authenticated UPDATE (role) on user_roles', 'GRANT UPDATE (role) ON public.user_roles TO authenticated', 'authenticated', 'public.user_roles', 'role', 'UPDATE');
+SELECT adm_t.col_case('C authenticated REFERENCES (id) on theses', 'GRANT REFERENCES (id) ON public.theses TO authenticated', 'authenticated', 'public.theses', 'id', 'REFERENCES');
+SELECT adm_t.col_case('C service_role UPDATE (content) on page_content', 'GRANT UPDATE (content) ON public.page_content TO service_role', 'service_role', 'public.page_content', 'content', 'UPDATE');
+SELECT adm_t.col_case('C service_role UPDATE (company_name) on theses', 'GRANT UPDATE (company_name) ON public.theses TO service_role', 'service_role', 'public.theses', 'company_name', 'UPDATE');
+SELECT adm_t.col_case('C service_role UPDATE (tag) on sec_raw_facts', 'GRANT UPDATE (tag) ON public.sec_raw_facts TO service_role', 'service_role', 'public.sec_raw_facts', 'tag', 'UPDATE');
+SELECT adm_t.col_case('C service_role UPDATE (current_price) on theses (inventory)', 'GRANT UPDATE (current_price) ON public.theses TO service_role', 'service_role', 'public.theses', 'current_price', 'UPDATE', true);
+SELECT adm_t.col_case('C service_role UPDATE (email_sent) on thesis_alerts (inventory)', 'GRANT UPDATE (email_sent) ON public.thesis_alerts TO service_role', 'service_role', 'public.thesis_alerts', 'email_sent', 'UPDATE', true);
+SELECT adm_t.col_case(format('C %s UPDATE (role) on user_roles', CASE WHEN r ~ '^sandbox_exec_' THEN 'sandbox_exec_<ref>' ELSE r END),
+                      format('GRANT UPDATE (role) ON public.user_roles TO %I', r), r, 'public.user_roles', 'role', 'UPDATE')
+FROM unnest(ARRAY(SELECT rolname::text FROM pg_roles WHERE rolname ~ '^sandbox_exec(_[a-z0-9]+)?$' ORDER BY 1)) r;
+SELECT adm_t.col_case(format('C %s UPDATE (entity_name) on sec_companies', CASE WHEN r ~ '^sandbox_exec_' THEN 'sandbox_exec_<ref>' ELSE r END),
+                      format('GRANT UPDATE (entity_name) ON public.sec_companies TO %I', r), r, 'public.sec_companies', 'entity_name', 'UPDATE')
+FROM unnest(ARRAY(SELECT rolname::text FROM pg_roles WHERE rolname ~ '^sandbox_exec(_[a-z0-9]+)?$' ORDER BY 1)) r;
+SELECT adm_t.col_case(format('C %s %s (%s) on storage.%s', CASE WHEN r ~ '^sandbox_exec_' THEN 'sandbox_exec_<ref>' ELSE r END, s.priv, s.col, s.tbl),
+                      format('GRANT %s (%I) ON storage.%I TO %I', s.priv, s.col, s.tbl, r), r, 'storage.' || s.tbl, s.col, s.priv)
+FROM unnest(ARRAY(SELECT rolname::text FROM pg_roles WHERE rolname ~ '^sandbox_exec(_[a-z0-9]+)?$' ORDER BY 1)) r
+CROSS JOIN (VALUES ('buckets', 'name', 'UPDATE'), ('objects', 'bucket_id', 'INSERT')) s(tbl, col, priv)
+WHERE to_regclass('storage.' || s.tbl) IS NOT NULL;
+
+-- A column grant issued by ANOTHER grantor cannot be revoked by the migrator: the helper
+-- must abort (and name the path), never report success with the path still open.
+CREATE FUNCTION adm_t.abort_case() RETURNS void LANGUAGE plpgsql AS $$
+DECLARE msg text;
+BEGIN
+  BEGIN
+    CREATE ROLE zz_other_grantor NOLOGIN;
+    GRANT UPDATE (full_name) ON public.profiles TO zz_other_grantor WITH GRANT OPTION;
+    EXECUTE format('GRANT zz_other_grantor TO %I', current_user);
+    SET LOCAL ROLE zz_other_grantor;
+    GRANT UPDATE (full_name) ON public.profiles TO anon;
+    RESET ROLE;
+    PERFORM public.enforce_privilege_baseline();
+    msg := 'no exception';
+    RAISE EXCEPTION 'undo' USING ERRCODE = 'AT000';
+  EXCEPTION WHEN OTHERS THEN IF SQLSTATE <> 'AT000' THEN msg := SQLERRM; END IF;
+  END;
+  RESET ROLE;
+  INSERT INTO adm_t.results(label, ok, detail) VALUES (
+    'C baseline aborts on a column grant it cannot revoke (other grantor) [abort]',
+    msg LIKE 'enforce_privilege_baseline:%anon writes public.profiles%',
+    CASE WHEN msg LIKE 'enforce_privilege_baseline:%anon writes public.profiles%' THEN NULL ELSE 'got ' || COALESCE(msg, 'NULL') END);
+END $$;
+SELECT adm_t.abort_case();
+
+-- Overload of a read helper: same name, other signature -> no inherited allowance.
+CREATE FUNCTION adm_t.overload_case() RETURNS void LANGUAGE plpgsql AS $$
+DECLARE r text; on_overload boolean; on_helper boolean; err text;
+BEGIN
+  SELECT rolname INTO r FROM pg_roles WHERE rolname ~ '^sandbox_exec_[a-z0-9]+$' ORDER BY 1 LIMIT 1;
+  BEGIN
+    CREATE FUNCTION public.is_admin(_uid uuid) RETURNS boolean LANGUAGE sql STABLE AS 'SELECT true';
+    EXECUTE format('GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO %I', r);
+    PERFORM public.enforce_privilege_baseline();
+    on_overload := has_function_privilege(r, 'public.is_admin(uuid)', 'EXECUTE');
+    on_helper := has_function_privilege(r, 'public.is_admin()', 'EXECUTE');
+    RAISE EXCEPTION 'undo' USING ERRCODE = 'AT000';
+  EXCEPTION WHEN OTHERS THEN IF SQLSTATE <> 'AT000' THEN err := SQLSTATE || ' ' || SQLERRM; END IF;
+  END;
+  INSERT INTO adm_t.results(label, ok, detail) VALUES (
+    'O sandbox_exec_<ref> loses EXECUTE on overload is_admin(uuid), keeps is_admin() [signature]',
+    err IS NULL AND on_overload = false AND on_helper = true,
+    CASE WHEN err IS NULL AND on_overload = false AND on_helper = true THEN NULL
+         ELSE format('overload=%s helper=%s err=%s', on_overload, on_helper, err) END);
+END $$;
+SELECT adm_t.overload_case();
+
 -- ------------------------------------------------------------------ report
 SELECT CASE WHEN ok THEN 'ok' ELSE 'not ok' END || ' ' || seq || ' - ' || label || COALESCE(' # ' || detail, '')
 FROM adm_t.results ORDER BY seq;
