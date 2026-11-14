@@ -28,7 +28,8 @@ DO $$ BEGIN
     CREATE SCHEMA net;
     CREATE TABLE net.http_request_queue (id bigserial PRIMARY KEY, method text, url text, headers jsonb, body bytea, timeout_milliseconds integer);
     CREATE TABLE net._http_response (id bigint, status_code integer, content_type text, headers jsonb, content text, timed_out boolean, error_msg text, created timestamptz);
-    GRANT ALL ON net.http_request_queue, net._http_response, SEQUENCE net.http_request_queue_id_seq TO PUBLIC;
+    GRANT ALL ON net.http_request_queue, net._http_response TO PUBLIC;
+    GRANT ALL ON SEQUENCE net.http_request_queue_id_seq TO PUBLIC;
     GRANT USAGE ON SCHEMA net TO anon, authenticated, service_role, sandbox_exec, sandbox_exec_ci0mockref;
     CREATE FUNCTION net.http_get(url text, params jsonb DEFAULT '{}', headers jsonb DEFAULT '{}', timeout_milliseconds integer DEFAULT 5000)
       RETURNS bigint LANGUAGE sql AS $f$ INSERT INTO net.http_request_queue (method, url, headers) VALUES ('GET', url, headers) RETURNING id $f$;
