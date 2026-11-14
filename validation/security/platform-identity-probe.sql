@@ -117,3 +117,28 @@ ORDER BY 1, 3, 4;
 \echo '== P12. public sequences'
 SELECT c.relname FROM pg_class c WHERE c.relnamespace = 'public'::regnamespace AND c.relkind = 'S';
 \echo '== P12 end'
+
+\echo '== P13. pg_net deep dive for D-e (catalog and settings only; no queue/response rows are read)'
+-- sequences behind the queue: without USAGE a role can still INSERT rows with an explicit id
+SELECT 'sequence:' || c.oid::regclass::text, regexp_replace(x.rolname, 'sandbox_exec_[a-z0-9]+', 'sandbox_exec_<ref>'),
+       has_sequence_privilege(x.rolname, c.oid, 'USAGE') AS usage, has_sequence_privilege(x.rolname, c.oid, 'UPDATE') AS upd
+FROM pg_class c CROSS JOIN (SELECT rolname FROM pg_roles WHERE rolname LIKE 'sandbox\_exec%' OR rolname IN ('anon','authenticated','service_role')) x
+WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND c.relkind = 'S'
+ORDER BY 1, 2;
+-- what a queued request carries (column names only): headers and body sit in the queue until the worker sends them
+SELECT 'columns:' || c.oid::regclass::text, string_agg(a.attname || ' ' || format_type(a.atttypid, a.atttypmod), ', ' ORDER BY a.attnum)
+FROM pg_class c JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND c.relkind = 'r'
+GROUP BY c.oid ORDER BY 1;
+-- worker settings that bound the exposure window (NULL = not set / not visible)
+SELECT 'setting:' || n, COALESCE(current_setting(n, true), '<unset>')
+FROM unnest(ARRAY['pg_net.batch_size', 'pg_net.ttl', 'pg_net.database_name', 'pg_net.username']) n ORDER BY 1;
+-- can the platform roles read the places a scheduled request's secret could come from?
+SELECT 'schema-usage:' || s, regexp_replace(x.rolname, 'sandbox_exec_[a-z0-9]+', 'sandbox_exec_<ref>'),
+       CASE WHEN EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = s) THEN has_schema_privilege(x.rolname, s, 'USAGE')::text ELSE 'absent' END
+FROM unnest(ARRAY['cron', 'vault', 'net']) s
+CROSS JOIN (SELECT rolname FROM pg_roles WHERE rolname LIKE 'sandbox\_exec%') x
+ORDER BY 1, 2;
+SELECT 'cron-jobs-visible-to-this-session:' || has_schema_privilege('cron', 'USAGE');
+\echo '== P13 end'
+
