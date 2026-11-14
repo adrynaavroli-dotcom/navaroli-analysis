@@ -17,9 +17,9 @@
 #      inventory of the helper must equal the guard's allowlist.
 # Output directory: $1 (default /tmp/d5-sim).
 # Expected counts: change them only together with the cases they count, in the same commit.
-EXPECTED_ADMIN_ONLY_CASES=__ADMIN__
+EXPECTED_ADMIN_ONLY_CASES=237
 EXPECTED_FND001_CASES=186
-EXPECTED_PROBES=__PROBES__
+EXPECTED_PROBES=17
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 cd "$ROOT"
