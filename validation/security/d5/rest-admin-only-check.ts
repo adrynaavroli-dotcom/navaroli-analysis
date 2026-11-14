@@ -28,7 +28,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 
-const EXPECTED_CHECKS = 67;
+const EXPECTED_CHECKS = 68;
 
 const env = (k: string): string => {
   const v = process.env[k];
