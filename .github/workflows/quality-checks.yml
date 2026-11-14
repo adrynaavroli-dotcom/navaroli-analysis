@@ -116,6 +116,10 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Record checked commit
         run: echo "Checked commit $GITHUB_SHA"
+      - name: D-f static check — every post-D5 migration ends with the baseline call (+ self-test)
+        run: |
+          bash validation/security/check-baseline-call.sh --self-test
+          bash validation/security/check-baseline-call.sh
       - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1
         with:
           version: 3.0.0
@@ -128,6 +132,18 @@ jobs:
         run: |
           sleep 3
           bun validation/fnd001/access-check.ts 2>&1 | tee d5-evidence/access-check-after-d5.txt; exit ${PIPESTATUS[0]}
+      - name: Admin-only REST harness with real Auth users and JWTs (is_admin, content, roles, service_role, net)
+        if: ${{ !cancelled() }}
+        run: bun validation/security/d5/rest-admin-only-check.ts 2>&1 | tee d5-evidence/rest-admin-only.txt; exit ${PIPESTATUS[0]}
+      - name: D-e pg_net demonstration (disposable stack, loopback targets only; documents, does not gate)
+        if: ${{ !cancelled() }}
+        run: bash validation/security/d5/pgnet-demo.sh 2>&1 | tee d5-evidence/pgnet-demo.txt; exit ${PIPESTATUS[0]}
+      - name: Guard after the pg_net demonstration (0 violations, D-e risk reported)
+        if: ${{ !cancelled() }}
+        run: |
+          bash -c 'source validation/fnd001/lib/guard.sh && fnd001_require_local_db && fnd001_psql -At -f validation/security/sql/admin-only-acl-guard.sql' \
+            | sed '/^$/d' | tee d5-evidence/guard-after-pgnet.txt
+          grep -q '^summary|violations=0|risks=[1-9][0-9]*$' d5-evidence/guard-after-pgnet.txt
       - name: Upload evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
