@@ -1,0 +1,91 @@
+# PROPOSAL — NOT ACTIVE. Lives outside .github/workflows on purpose; nothing runs from here.
+# Replaces .github/workflows/deploy-pages.yml only after you approve it
+# (docs/security/deploy-gating-proposal.md).
+#
+# Deploys GitHub Pages ONLY for a commit on main whose "Quality checks" run finished with
+# success, with the three jobs quality, fnd001-db and admin-only-db green, and only if
+# that commit is still the tip of main (a newer push gets its own run).
+name: Deploy to GitHub Pages
+
+on:
+  workflow_run:
+    workflows: ["Quality checks"]
+    types: [completed]
+    branches: [main]
+  # No push and no workflow_dispatch trigger: neither can bypass the quality gate.
+
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.verify.outputs.sha }}
+    steps:
+      - id: verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          jobs=$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs" --jq '.jobs[] | "\(.name)|\(.conclusion)"')
+          echo "$jobs"
+          for name in \
+            "TypeScript, regression, VOL-003/VOL-004/VOL-005 and production build" \
+            "FND-001 M1.1 database and access tests (ephemeral Supabase stack)" \
+            "Admin-only model (D5 proposal, not applied in production) on an ephemeral Supabase stack"; do
+            echo "$jobs" | grep -qxF "$name|success" || { echo "::error::job not green: $name"; exit 1; }
+          done
+          tip=$(gh api "repos/$REPO/commits/main" --jq .sha)
+          [ "$tip" = "$SHA" ] || { echo "::notice::$SHA is no longer the tip of main ($tip); skipping"; exit 1; }
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: gate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Build
+        env:
+          GITHUB_PAGES: "true"
+          # Same publishable values as today's deploy-pages.yml (public by design).
+          VITE_SUPABASE_URL: "https://zhhagwrgufwamqvjaoip.supabase.co"
+          VITE_SUPABASE_PROJECT_ID: "zhhagwrgufwamqvjaoip"
+          VITE_SUPABASE_PUBLISHABLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoaGFnd3JndWZ3YW1xdmphb2lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1OTM3MzEsImV4cCI6MjA4MjE2OTczMX0.Q_glr9oaoIF-oS43Xel3qMzE0fx5o9IReyvqjoYZCbQ"
+        run: bun run build
+      - name: SPA fallback (404.html)
+        run: cp dist/index.html dist/404.html
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
