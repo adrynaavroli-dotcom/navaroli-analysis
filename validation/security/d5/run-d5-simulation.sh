@@ -19,7 +19,7 @@
 # Expected counts: change them only together with the cases they count, in the same commit.
 EXPECTED_ADMIN_ONLY_CASES=237
 EXPECTED_FND001_CASES=186
-EXPECTED_PROBES=17
+EXPECTED_PROBES=19
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 cd "$ROOT"
@@ -56,6 +56,10 @@ if grep '^[<>]' "$OUT/fingerprint-F0-F1.diff" | grep -E '\|sec_' | grep -vE 'san
 fi
 guard > "$OUT/guard-after.txt"
 echo "   guard after D5: $(violations "$OUT/guard-after.txt") violation(s) (expected 0); $(grep -c '^risk|' "$OUT/guard-after.txt" || true) open D-e risk line(s) (pg_net, reported, not accepted)"
+grep -q '^summary|violations=0|risks=[0-9]*$' "$OUT/guard-after.txt" || fail "guard summary line missing or malformed"
+if [ "$(fnd001_psql -At -c "SELECT to_regnamespace('net') IS NOT NULL")" = "t" ]; then
+  [ "$(grep -c '^risk|D-e|' "$OUT/guard-after.txt")" -gt 0 ] || fail "schema net exists but the D-e residual risk is not reported"
+fi
 [ "$(violations "$OUT/guard-after.txt")" -eq 0 ] || { grep '^violation' "$OUT/guard-after.txt"; fail "guard after D5"; }
 tests > "$OUT/tests-after.txt" || true
 grep '^# admin-only' "$OUT/tests-after.txt"
@@ -108,6 +112,8 @@ probe column-service "GRANT UPDATE (content) ON public.page_content TO service_r
 probe column-storage "GRANT UPDATE (name) ON storage.buckets TO sandbox_exec;" G8 "relation storage.buckets.name|sandbox_exec|UPDATE"
 # pg_net must never become reachable from public (D-e).
 probe net-routine "CREATE FUNCTION public.zz_fetch(u text) RETURNS void LANGUAGE plpgsql AS \$f\$ BEGIN PERFORM net.http_get(u); END \$f\$;" G9 "routine zz_fetch(text)"
+probe net-view "CREATE VIEW public.zz_netv AS SELECT id FROM net.http_request_queue;" G9 "relation zz_netv"
+probe net-trigger "CREATE FUNCTION public.zz_t() RETURNS trigger LANGUAGE plpgsql AS \$f\$ BEGIN RETURN NEW; END \$f\$; CREATE TRIGGER zz_net BEFORE INSERT ON net.http_request_queue FOR EACH ROW EXECUTE FUNCTION public.zz_t();" G9 "trigger zz_net on net.http_request_queue"
 [ "$probes_run" -eq "$EXPECTED_PROBES" ] || fail "probe count: $probes_run run, $EXPECTED_PROBES expected"
 echo "   ok - exactly $EXPECTED_PROBES probes ran and were caught"
 # After the baseline call a new table may only report what needs an explicit review: the

@@ -28,7 +28,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 
-const EXPECTED_CHECKS = 68;
+const EXPECTED_CHECKS = 72;
 
 const env = (k: string): string => {
   const v = process.env[k];
@@ -223,6 +223,13 @@ async function main() {
   await rows("S service_role reads notification_email", service.from("profiles").select("notification_email").eq("user_id", adminId), 1);
   await denied("S service_role assign roles", service.from("user_roles").insert({ user_id: userId, role: "admin" }), "grant");
   await denied("S service_role delete roles", service.from("user_roles").delete().eq("user_id", adminId), "grant");
+
+  // ---- pg_net is not reachable through the REST API for anyone (D-e compensating control):
+  // only the exposed schemas answer; net must be refused with PGRST106 for every identity.
+  for (const [who, c] of [["anon", anon], ["non-admin", user], ["admin", adm], ["service_role", service]] as const) {
+    const { error } = await c.schema("net" as never).from("http_request_queue").select("id").limit(1);
+    check(`N ${who} cannot reach schema net through REST [PGRST106]`, error?.code === "PGRST106", error ? `${error.code} ${error.message}` : "no error");
+  }
 
   const admins = sql("SELECT count(*) FROM public.user_roles WHERE role = 'admin'");
   check("U exactly one admin row at the end", admins === "1", admins);

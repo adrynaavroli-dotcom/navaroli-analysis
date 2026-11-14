@@ -17,12 +17,14 @@
 --   G7  inherited privileges: API and platform roles are members of no other role.
 --   G8  platform schemas: sandbox_exec* writes nothing (table- or column-level) on
 --       storage.buckets/objects; no API or platform role has USAGE on schema cron.
---   G9  pg_net (decision D-e, docs/security/d5-design.md §6): no public routine or view
---       reaches schema net (that would expose it to the REST API), and API/platform roles
---       hold nothing on net beyond the documented platform baseline (USAGE on the schema,
---       SELECT/INSERT/UPDATE/DELETE on the two queue tables, EXECUTE on its routines).
---       The baseline itself is reported as "risk|D-e|..." lines: an OPEN residual risk that
---       the migrator cannot revoke (owner supabase_admin), never a pass condition.
+--   G9  pg_net (decision D-e, docs/security/d-e-pg-net-analysis.md): the platform grants
+--       on schema net (PUBLIC holds ALL on the two queue tables and the id sequence; USAGE
+--       on the schema for API and platform roles; EXECUTE on http_get/post/delete) are owned
+--       by supabase_admin and cannot be revoked by the migrator, so they are reported as
+--       "risk|D-e|..." lines — an OPEN residual risk, never a pass condition. What the
+--       project controls is judged here: no public routine or view reaches schema net (it
+--       would put pg_net behind the REST API), no API/platform role may CREATE in net, and no
+--       user trigger may exist on a net table (it would run inside the pg_net worker).
 -- Routines are identified by their FULL signature (regprocedure), never by name, so an
 -- overload such as is_admin(uuid) is an unreviewed routine with no inherited allowance.
 -- Output: "violation|rule|object|role|privilege" lines, "risk|..." lines, then
@@ -180,17 +182,15 @@ v AS (
   JOIN pg_depend d ON d.classid = 'pg_rewrite'::regclass AND d.objid = rw.oid AND d.refclassid = 'pg_class'::regclass
   JOIN pg_class t ON t.oid = d.refobjid
   WHERE v.relnamespace = 'public'::regnamespace AND t.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net')
-  -- G9 no widening beyond the documented platform baseline on net
+  -- G9 nobody may create objects in net, and no user trigger may hang on a net table
   UNION ALL
   SELECT 'G9', 'schema net', l.name, 'CREATE'
   FROM roles ro JOIN label l ON l.oid = ro.oid
   WHERE EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'net') AND has_schema_privilege(ro.oid, 'net', 'CREATE')
   UNION ALL
-  SELECT 'G9', 'relation ' || c.oid::regclass::text, l.name, p.priv
-  FROM pg_class c CROSS JOIN roles ro JOIN label l ON l.oid = ro.oid
-  CROSS JOIN unnest(ARRAY['TRUNCATE','REFERENCES','TRIGGER','MAINTAIN']) p(priv)
-  WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND c.relkind IN ('r','p','v')
-    AND has_table_privilege(ro.oid, c.oid, p.priv)
+  SELECT 'G9', 'trigger ' || t.tgname || ' on ' || c.oid::regclass::text, pg_get_userbyid(c.relowner), 'user trigger on a pg_net table'
+  FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid
+  WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND NOT t.tgisinternal
 ),
 risk AS (
   -- D-e residual (OPEN, not accepted): demonstrated privilege paths on pg_net. Owner
@@ -205,6 +205,11 @@ risk AS (
   FROM pg_class c CROSS JOIN roles ro JOIN label l ON l.oid = ro.oid
   WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND c.relkind IN ('r','p','v')
     AND has_table_privilege(ro.oid, c.oid, 'SELECT, INSERT, UPDATE, DELETE')
+  UNION ALL
+  SELECT 'risk|D-e|relation ' || c.oid::regclass::text || '|PUBLIC|' || string_agg(a.privilege_type, ',' ORDER BY a.privilege_type)
+  FROM pg_class c CROSS JOIN LATERAL aclexplode(COALESCE(c.relacl, acldefault(CASE WHEN c.relkind = 'S' THEN 's'::"char" ELSE 'r'::"char" END, c.relowner))) a
+  WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND c.relkind IN ('r','S') AND a.grantee = 0
+  GROUP BY c.oid
   UNION ALL
   SELECT 'risk|D-e|routine ' || p.oid::regprocedure::text || '|' || l.name || '|EXECUTE'
   FROM pg_proc p CROSS JOIN roles ro JOIN label l ON l.oid = ro.oid
