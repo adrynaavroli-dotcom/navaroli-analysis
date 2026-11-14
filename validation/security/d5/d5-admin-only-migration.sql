@@ -15,6 +15,20 @@
 -- global default privileges (pg_default_acl), schemas owned by supabase_* roles (auth,
 -- net, cron, realtime) and every grant issued by supabase_storage_admin.
 
+-- ============================================================ 0. executing identity
+-- The design relies on the migrator being postgres (owner of public, issuer of every grant
+-- revoked below). Ownership evidence shows current_user = postgres for past migrations but
+-- not the session_user of the Lovable migration process (docs/security/d5-design.md §2).
+-- Assert it here, so the migration aborts under any other identity, and record both
+-- values in the migration output.
+DO $$
+BEGIN
+  IF current_user <> 'postgres' THEN
+    RAISE EXCEPTION 'D5 must run as the migrator postgres (current_user=%, session_user=%)', current_user, session_user;
+  END IF;
+  RAISE NOTICE 'D5 executing identity: current_user=%, session_user=%', current_user, session_user;
+END $$;
+
 -- ============================================================ 1. admin helper
 -- Same pattern as sec_is_admin(): no arguments (cannot probe arbitrary UUIDs), STABLE,
 -- SECURITY DEFINER owned by postgres, empty search_path, false without a JWT subject.
@@ -141,42 +155,56 @@ REVOKE EXECUTE ON FUNCTION public.handle_new_user(), public.update_updated_at_co
 
 -- ============================================================ 5. storage metadata tables
 -- sandbox_exec* received SELECT, INSERT on storage.buckets/objects from postgres through
--- postgres's default privileges in schema storage (§P5/§P6). Only those postgres-issued
--- grants are withdrawn; grants issued by supabase_storage_admin are left to the platform
--- (RLS is on with zero policies, so anon/authenticated cannot use them).
-DO $$
-DECLARE _t text; _r text;
-BEGIN
-  FOREACH _t IN ARRAY ARRAY['storage.buckets', 'storage.objects'] LOOP
-    CONTINUE WHEN pg_catalog.to_regclass(_t) IS NULL;
-    FOR _r IN SELECT rolname FROM pg_catalog.pg_roles WHERE rolname ~ '^sandbox_exec(_[a-z0-9]+)?$' LOOP
-      EXECUTE pg_catalog.format('REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN ON %s FROM %I', _t, _r);
-      IF pg_catalog.has_table_privilege(_r, _t, 'INSERT, UPDATE, DELETE, TRUNCATE') THEN
-        RAISE EXCEPTION 'D5: % still writes %', _r, _t; END IF;
-    END LOOP;
-  END LOOP;
-END $$;
+-- postgres's default privileges in schema storage (§P5/§P6). The baseline helper (6)
+-- withdraws those postgres-issued grants, table- and column-level, and verifies the
+-- effective result; grants issued by supabase_storage_admin to anon/authenticated are left
+-- to the platform (RLS is on with zero policies, so they cannot be used).
 
 -- ============================================================ 6. baseline helper (replaces D4)
--- Enforces, over EVERY object in schema public, the invariants that the default
--- privileges of postgres would otherwise break on each new object:
---   sandbox_exec*  : relations SELECT only; no sequence USAGE/UPDATE; EXECUTE only on the
---                    read helpers is_admin() and sec_is_admin();
---   anon           : no write privilege on any relation, no sequence USAGE/UPDATE;
---   all API roles  : no TRUNCATE, REFERENCES, TRIGGER, MAINTAIN;
---   PUBLIC         : nothing on relations, sequences or routines.
--- Per-table decisions for authenticated/service_role stay explicit in each migration and
+-- Enforces, over EVERY object in schema public (and the two Storage metadata tables), the
+-- invariants that the default privileges of postgres would otherwise break on each new
+-- object (d5-design.md §11, D-f):
+--   sandbox_exec*  : relations SELECT only (table AND column level); no sequence
+--                    USAGE/UPDATE; EXECUTE only on is_admin() and sec_is_admin(), matched by
+--                    full signature (an overload such as is_admin(uuid) gets nothing);
+--                    no write of any kind on storage.buckets / storage.objects;
+--   anon           : no write privilege on any relation, table or column level; no
+--                    sequence USAGE/UPDATE;
+--   authenticated  : no column-level INSERT/UPDATE (its writes are table-level and judged
+--                    by RLS is_admin());
+--   service_role   : column-level INSERT/UPDATE only on the server-function inventory
+--                    (_svc_columns, d5-design.md §4);
+--   all API roles  : no TRUNCATE, REFERENCES (table or column), TRIGGER, MAINTAIN;
+--   PUBLIC         : nothing on relations, columns, sequences or routines.
+-- Table-level decisions for authenticated/service_role stay explicit in each migration and
 -- are judged by the CI guard (validation/security/sql/admin-only-acl-guard.sql).
+-- A table-level REVOKE also clears the caller's column grants of the same type (PostgreSQL
+-- REVOKE semantics); explicit column ACL entries are still walked so that column grants to
+-- authenticated/service_role (which keep table-level privileges) are handled too.
+-- Postcondition on EFFECTIVE privileges (explicit, PUBLIC or inherited; table and column):
+-- if any path remains — typically a grant issued by a role other than the caller, which a
+-- REVOKE silently ignores — the whole transaction aborts and the offending paths are named.
 -- Every future migration that creates objects in public (M1.2 included) ends with
 --   SELECT public.enforce_privilege_baseline();
--- in the same transaction, so no other session ever sees the default grants.
+-- in the same transaction, so no other session ever sees the default grants
+-- (checked statically by validation/security/check-baseline-call.sh).
 CREATE FUNCTION public.enforce_privilege_baseline() RETURNS integer
 LANGUAGE plpgsql SECURITY INVOKER SET search_path = '' AS $$
 DECLARE
-  _o record; _r text; _n integer := 0; _left integer;
-  _read_helpers constant text[] := ARRAY['is_admin', 'sec_is_admin'];
+  _o record; _r text; _t text; _n integer := 0; _left text;
   _platform constant text := '^sandbox_exec(_[a-z0-9]+)?$';
+  _read_helpers constant regprocedure[] := ARRAY[pg_catalog.to_regprocedure('public.is_admin()'),
+                                                 pg_catalog.to_regprocedure('public.sec_is_admin()')];
+  -- Must equal the service_role column rows of allow_w in admin-only-acl-guard.sql
+  -- (compared by validation/security/d5/run-d5-simulation.sh).
+  _svc_columns constant text[] := ARRAY[
+    'theses.current_price:UPDATE', 'theses.sparkline_data:UPDATE',
+    'public_thesis_data.last_alert_sent_at:UPDATE', 'public_thesis_data.alert_type:UPDATE',
+    'public_thesis_data.needs_review:UPDATE', 'public_thesis_data.price_at_last_check:UPDATE',
+    'thesis_alerts.email_sent:UPDATE'];
+  _storage constant text[] := ARRAY['storage.buckets', 'storage.objects'];
 BEGIN
+  -- 1. relations and sequences of public: table level
   FOR _o IN SELECT c.oid, c.relkind FROM pg_catalog.pg_class c
             WHERE c.relnamespace = 'public'::regnamespace AND c.relkind IN ('r','p','v','m','f','S') ORDER BY c.oid LOOP
     IF _o.relkind = 'S' THEN
@@ -184,8 +212,8 @@ BEGIN
       EXECUTE pg_catalog.format('REVOKE USAGE, UPDATE ON SEQUENCE %s FROM anon', _o.oid::regclass);
     ELSE
       EXECUTE pg_catalog.format('REVOKE ALL ON TABLE %s FROM PUBLIC', _o.oid::regclass);
-      EXECUTE pg_catalog.format('REVOKE INSERT, UPDATE, DELETE ON TABLE %s FROM anon', _o.oid::regclass);
-      EXECUTE pg_catalog.format('REVOKE TRUNCATE, REFERENCES, TRIGGER, MAINTAIN ON TABLE %s FROM anon, authenticated, service_role', _o.oid::regclass);
+      EXECUTE pg_catalog.format('REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN ON TABLE %s FROM anon', _o.oid::regclass);
+      EXECUTE pg_catalog.format('REVOKE TRUNCATE, REFERENCES, TRIGGER, MAINTAIN ON TABLE %s FROM authenticated, service_role', _o.oid::regclass);
     END IF;
     FOR _r IN SELECT rolname FROM pg_catalog.pg_roles WHERE rolname ~ _platform ORDER BY 1 LOOP
       IF _o.relkind = 'S' THEN
@@ -196,10 +224,38 @@ BEGIN
     END LOOP;
     _n := _n + 1;
   END LOOP;
-  FOR _o IN SELECT p.oid, p.proname FROM pg_catalog.pg_proc p
+
+  -- 2. explicit column-level write grants in public (INSERT, UPDATE, REFERENCES; column
+  --    SELECT grants such as anon's curated public_thesis_data columns are untouched)
+  FOR _o IN
+    SELECT c.oid AS rel, c.relname::text AS relname, a.attname::text AS attname, x.privilege_type AS priv,
+           CASE WHEN x.grantee = 0 THEN 'PUBLIC' ELSE pg_catalog.pg_get_userbyid(x.grantee)::text END AS grantee
+    FROM pg_catalog.pg_class c
+    JOIN pg_catalog.pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped AND a.attacl IS NOT NULL
+    CROSS JOIN LATERAL pg_catalog.aclexplode(a.attacl) x
+    WHERE c.relnamespace = 'public'::regnamespace AND x.privilege_type IN ('INSERT', 'UPDATE', 'REFERENCES')
+    ORDER BY c.oid, a.attnum, x.privilege_type
+  LOOP
+    CONTINUE WHEN _o.grantee = 'service_role' AND _o.priv <> 'REFERENCES'
+                  AND (_o.relname || '.' || _o.attname || ':' || _o.priv) = ANY (_svc_columns);
+    CONTINUE WHEN _o.grantee NOT IN ('PUBLIC', 'anon', 'authenticated', 'service_role') AND _o.grantee !~ _platform;
+    EXECUTE pg_catalog.format('REVOKE %s (%I) ON TABLE %s FROM %s', _o.priv, _o.attname, _o.rel::regclass,
+                              CASE WHEN _o.grantee = 'PUBLIC' THEN 'PUBLIC' ELSE pg_catalog.quote_ident(_o.grantee) END);
+  END LOOP;
+
+  -- 3. Storage metadata tables: platform roles write nothing (table level clears columns)
+  FOREACH _t IN ARRAY _storage LOOP
+    CONTINUE WHEN pg_catalog.to_regclass(_t) IS NULL;
+    FOR _r IN SELECT rolname FROM pg_catalog.pg_roles WHERE rolname ~ _platform ORDER BY 1 LOOP
+      EXECUTE pg_catalog.format('REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN ON TABLE %s FROM %I', _t, _r);
+    END LOOP;
+  END LOOP;
+
+  -- 4. routines of public, by full signature
+  FOR _o IN SELECT p.oid FROM pg_catalog.pg_proc p
             WHERE p.pronamespace = 'public'::regnamespace AND p.prokind IN ('f','p') ORDER BY p.oid LOOP
     EXECUTE pg_catalog.format('REVOKE EXECUTE ON ROUTINE %s FROM PUBLIC', _o.oid::regprocedure);
-    IF NOT _o.proname = ANY (_read_helpers) THEN
+    IF NOT _o.oid::regprocedure = ANY (_read_helpers) THEN
       FOR _r IN SELECT rolname FROM pg_catalog.pg_roles WHERE rolname ~ _platform ORDER BY 1 LOOP
         EXECUTE pg_catalog.format('REVOKE EXECUTE ON ROUTINE %s FROM %I', _o.oid::regprocedure, _r);
       END LOOP;
@@ -207,25 +263,53 @@ BEGIN
     _n := _n + 1;
   END LOOP;
 
-  -- Postcondition on EFFECTIVE privileges (explicit, PUBLIC or inherited). A REVOKE by a
-  -- role that did not issue the grant only warns; this turns it into a rollback.
-  SELECT count(*) INTO _left FROM (
-    SELECT 1 FROM pg_catalog.pg_class c CROSS JOIN pg_catalog.pg_roles r
+  -- 5. postcondition on effective privileges
+  SELECT pg_catalog.string_agg(v.path, ', ' ORDER BY v.path) INTO _left FROM (
+    -- anon and platform roles: no write of any kind, table or column level
+    SELECT r.rolname || ' writes ' || c.oid::regclass::text AS path
+    FROM pg_catalog.pg_class c CROSS JOIN pg_catalog.pg_roles r
     WHERE c.relnamespace = 'public'::regnamespace AND c.relkind IN ('r','p','v','m','f')
-      AND ((r.rolname ~ _platform AND pg_catalog.has_table_privilege(r.oid, c.oid, 'INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN'))
-        OR (r.rolname = 'anon' AND pg_catalog.has_table_privilege(r.oid, c.oid, 'INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN'))
-        OR (r.rolname IN ('authenticated','service_role') AND pg_catalog.has_table_privilege(r.oid, c.oid, 'TRUNCATE, REFERENCES, TRIGGER, MAINTAIN')))
+      AND (r.rolname ~ _platform OR r.rolname = 'anon')
+      AND (pg_catalog.has_table_privilege(r.oid, c.oid, 'INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN')
+           OR pg_catalog.has_any_column_privilege(r.oid, c.oid, 'INSERT, UPDATE, REFERENCES'))
     UNION ALL
-    SELECT 1 FROM pg_catalog.pg_class c CROSS JOIN pg_catalog.pg_roles r
+    -- authenticated/service_role: no TRUNCATE/TRIGGER/MAINTAIN, no REFERENCES at any level
+    SELECT r.rolname || ' TRUNCATE/REFERENCES/TRIGGER/MAINTAIN on ' || c.oid::regclass::text
+    FROM pg_catalog.pg_class c CROSS JOIN pg_catalog.pg_roles r
+    WHERE c.relnamespace = 'public'::regnamespace AND c.relkind IN ('r','p','v','m','f')
+      AND r.rolname IN ('authenticated', 'service_role')
+      AND (pg_catalog.has_table_privilege(r.oid, c.oid, 'TRUNCATE, REFERENCES, TRIGGER, MAINTAIN')
+           OR pg_catalog.has_any_column_privilege(r.oid, c.oid, 'REFERENCES'))
+    UNION ALL
+    -- authenticated/service_role: column-level INSERT/UPDATE outside the inventory
+    SELECT r.rolname || ' ' || p.priv || ' (' || a.attname || ') on ' || c.oid::regclass::text
+    FROM pg_catalog.pg_class c
+    JOIN pg_catalog.pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+    CROSS JOIN pg_catalog.pg_roles r CROSS JOIN (VALUES ('INSERT'), ('UPDATE')) p(priv)
+    WHERE c.relnamespace = 'public'::regnamespace AND c.relkind IN ('r','p','v','m','f')
+      AND r.rolname IN ('authenticated', 'service_role')
+      AND NOT pg_catalog.has_table_privilege(r.oid, c.oid, p.priv)
+      AND pg_catalog.has_column_privilege(r.oid, c.oid, a.attnum, p.priv)
+      AND NOT (r.rolname = 'service_role' AND (c.relname || '.' || a.attname || ':' || p.priv) = ANY (_svc_columns))
+    UNION ALL
+    SELECT r.rolname || ' uses sequence ' || c.oid::regclass::text
+    FROM pg_catalog.pg_class c CROSS JOIN pg_catalog.pg_roles r
     WHERE c.relnamespace = 'public'::regnamespace AND c.relkind = 'S'
       AND (r.rolname ~ _platform OR r.rolname = 'anon') AND pg_catalog.has_sequence_privilege(r.oid, c.oid, 'USAGE, UPDATE')
     UNION ALL
-    SELECT 1 FROM pg_catalog.pg_proc p CROSS JOIN pg_catalog.pg_roles r
+    SELECT r.rolname || ' executes ' || p.oid::regprocedure::text
+    FROM pg_catalog.pg_proc p CROSS JOIN pg_catalog.pg_roles r
     WHERE p.pronamespace = 'public'::regnamespace AND p.prokind IN ('f','p') AND r.rolname ~ _platform
-      AND NOT p.proname = ANY (_read_helpers) AND pg_catalog.has_function_privilege(r.oid, p.oid, 'EXECUTE')
+      AND NOT p.oid::regprocedure = ANY (_read_helpers) AND pg_catalog.has_function_privilege(r.oid, p.oid, 'EXECUTE')
+    UNION ALL
+    SELECT r.rolname || ' writes ' || t.t
+    FROM pg_catalog.unnest(_storage) t(t) CROSS JOIN pg_catalog.pg_roles r
+    WHERE r.rolname ~ _platform AND pg_catalog.to_regclass(t.t) IS NOT NULL
+      AND (pg_catalog.has_table_privilege(r.oid, pg_catalog.to_regclass(t.t), 'INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN')
+           OR pg_catalog.has_any_column_privilege(r.oid, pg_catalog.to_regclass(t.t), 'INSERT, UPDATE, REFERENCES'))
   ) v;
-  IF _left > 0 THEN
-    RAISE EXCEPTION 'enforce_privilege_baseline: % privilege path(s) remain (caller must be the issuer of the grants)', _left;
+  IF _left IS NOT NULL THEN
+    RAISE EXCEPTION 'enforce_privilege_baseline: privilege path(s) remain (caller must be the issuer of the grants): %', _left;
   END IF;
   RETURN _n;
 END $$;

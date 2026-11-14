@@ -117,3 +117,47 @@ ORDER BY 1, 3, 4;
 \echo '== P12. public sequences'
 SELECT c.relname FROM pg_class c WHERE c.relnamespace = 'public'::regnamespace AND c.relkind = 'S';
 \echo '== P12 end'
+
+\echo '== P13. pg_net deep dive for D-e (catalog and settings only; no queue/response rows are read)'
+-- sequences behind the queue: without USAGE a role can still INSERT rows with an explicit id
+SELECT 'sequence:' || c.oid::regclass::text, regexp_replace(x.rolname, 'sandbox_exec_[a-z0-9]+', 'sandbox_exec_<ref>'),
+       has_sequence_privilege(x.rolname, c.oid, 'USAGE') AS usage, has_sequence_privilege(x.rolname, c.oid, 'UPDATE') AS upd
+FROM pg_class c CROSS JOIN (SELECT rolname FROM pg_roles WHERE rolname LIKE 'sandbox\_exec%' OR rolname IN ('anon','authenticated','service_role')) x
+WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND c.relkind = 'S'
+ORDER BY 1, 2;
+-- what a queued request carries (column names only): headers and body sit in the queue until the worker sends them
+SELECT 'columns:' || c.oid::regclass::text, string_agg(a.attname || ' ' || format_type(a.atttypid, a.atttypmod), ', ' ORDER BY a.attnum)
+FROM pg_class c JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND c.relkind = 'r'
+GROUP BY c.oid ORDER BY 1;
+-- worker settings that bound the exposure window (NULL = not set / not visible)
+SELECT 'setting:' || n, COALESCE(current_setting(n, true), '<unset>')
+FROM unnest(ARRAY['pg_net.batch_size', 'pg_net.ttl', 'pg_net.database_name', 'pg_net.username']) n ORDER BY 1;
+-- can the platform roles read the places a scheduled request's secret could come from?
+SELECT 'schema-usage:' || s, regexp_replace(x.rolname, 'sandbox_exec_[a-z0-9]+', 'sandbox_exec_<ref>'),
+       CASE WHEN EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = s) THEN has_schema_privilege(x.rolname, s, 'USAGE')::text ELSE 'absent' END
+FROM unnest(ARRAY['cron', 'vault', 'net']) s
+CROSS JOIN (SELECT rolname FROM pg_roles WHERE rolname LIKE 'sandbox\_exec%') x
+ORDER BY 1, 2;
+SELECT 'cron-jobs-visible-to-this-session:' || has_schema_privilege('cron', 'USAGE');
+\echo '== P13 end'
+
+\echo '== P14. code-execution prerequisites for the TRIGGER privilege on net tables (catalog only)'
+-- CREATE TRIGGER needs TRIGGER on the table and EXECUTE on a trigger function; running
+-- attacker-chosen code additionally needs a schema where the role can CREATE a function.
+SELECT 'schema-create:' || n.nspname, regexp_replace(x.rolname, 'sandbox_exec_[a-z0-9]+', 'sandbox_exec_<ref>')
+FROM pg_namespace n CROSS JOIN (SELECT rolname FROM pg_roles WHERE rolname LIKE 'sandbox\_exec%' OR rolname IN ('anon','authenticated','service_role')) x
+WHERE has_schema_privilege(x.rolname, n.oid, 'CREATE') AND n.nspname NOT LIKE 'pg\_temp\_%' AND n.nspname NOT LIKE 'pg\_toast\_temp\_%'
+ORDER BY 1, 2;
+SELECT 'database-temp:' || regexp_replace(x.rolname, 'sandbox_exec_[a-z0-9]+', 'sandbox_exec_<ref>'), has_database_privilege(x.rolname, current_database(), 'TEMP')
+FROM (SELECT rolname FROM pg_roles WHERE rolname LIKE 'sandbox\_exec%') x ORDER BY 1;
+SELECT 'trigger-functions-executable:' || regexp_replace(x.rolname, 'sandbox_exec_[a-z0-9]+', 'sandbox_exec_<ref>'), count(*)
+FROM pg_proc p CROSS JOIN (SELECT rolname FROM pg_roles WHERE rolname LIKE 'sandbox\_exec%') x
+WHERE p.prorettype = 'trigger'::regtype AND has_function_privilege(x.rolname, p.oid, 'EXECUTE')
+GROUP BY 1 ORDER BY 1;
+SELECT 'triggers-on-net:' || count(*) FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid
+WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND NOT t.tgisinternal;
+SELECT 'net-table-acl:' || c.oid::regclass::text, regexp_replace(c.relacl::text, 'sandbox_exec_[a-z0-9]+', 'sandbox_exec_<ref>', 'g')
+FROM pg_class c WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND c.relkind IN ('r','S') ORDER BY 1;
+\echo '== P14 end'
+

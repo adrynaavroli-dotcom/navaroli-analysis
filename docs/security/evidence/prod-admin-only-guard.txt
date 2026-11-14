@@ -242,6 +242,37 @@ violation|G8|relation storage.buckets|sandbox_exec_<ref>|INSERT
 violation|G8|relation storage.buckets|sandbox_exec|INSERT
 violation|G8|relation storage.objects|sandbox_exec_<ref>|INSERT
 violation|G8|relation storage.objects|sandbox_exec|INSERT
-info|pg_net|sandbox_exec_<ref>|USAGE on schema net + EXECUTE net.http_post (owned by supabase_admin, not revocable by the migrator)
-info|pg_net|sandbox_exec|USAGE on schema net + EXECUTE net.http_post (owned by supabase_admin, not revocable by the migrator)
-summary|violations=244
+risk|D-e|relation net._http_response|PUBLIC|DELETE,INSERT,MAINTAIN,REFERENCES,SELECT,TRIGGER,TRUNCATE,UPDATE
+risk|D-e|relation net._http_response|anon|SELECT,INSERT,UPDATE,DELETE
+risk|D-e|relation net._http_response|authenticated|SELECT,INSERT,UPDATE,DELETE
+risk|D-e|relation net._http_response|sandbox_exec_<ref>|SELECT,INSERT,UPDATE,DELETE
+risk|D-e|relation net._http_response|sandbox_exec|SELECT,INSERT,UPDATE,DELETE
+risk|D-e|relation net._http_response|service_role|SELECT,INSERT,UPDATE,DELETE
+risk|D-e|relation net.http_request_queue_id_seq|PUBLIC|SELECT,UPDATE,USAGE
+risk|D-e|relation net.http_request_queue|PUBLIC|DELETE,INSERT,MAINTAIN,REFERENCES,SELECT,TRIGGER,TRUNCATE,UPDATE
+risk|D-e|relation net.http_request_queue|anon|SELECT,INSERT,UPDATE,DELETE
+risk|D-e|relation net.http_request_queue|authenticated|SELECT,INSERT,UPDATE,DELETE
+risk|D-e|relation net.http_request_queue|sandbox_exec_<ref>|SELECT,INSERT,UPDATE,DELETE
+risk|D-e|relation net.http_request_queue|sandbox_exec|SELECT,INSERT,UPDATE,DELETE
+risk|D-e|relation net.http_request_queue|service_role|SELECT,INSERT,UPDATE,DELETE
+risk|D-e|routine net.http_delete(text,jsonb,jsonb,integer,jsonb)|anon|EXECUTE
+risk|D-e|routine net.http_delete(text,jsonb,jsonb,integer,jsonb)|authenticated|EXECUTE
+risk|D-e|routine net.http_delete(text,jsonb,jsonb,integer,jsonb)|sandbox_exec_<ref>|EXECUTE
+risk|D-e|routine net.http_delete(text,jsonb,jsonb,integer,jsonb)|sandbox_exec|EXECUTE
+risk|D-e|routine net.http_delete(text,jsonb,jsonb,integer,jsonb)|service_role|EXECUTE
+risk|D-e|routine net.http_get(text,jsonb,jsonb,integer)|anon|EXECUTE
+risk|D-e|routine net.http_get(text,jsonb,jsonb,integer)|authenticated|EXECUTE
+risk|D-e|routine net.http_get(text,jsonb,jsonb,integer)|sandbox_exec_<ref>|EXECUTE
+risk|D-e|routine net.http_get(text,jsonb,jsonb,integer)|sandbox_exec|EXECUTE
+risk|D-e|routine net.http_get(text,jsonb,jsonb,integer)|service_role|EXECUTE
+risk|D-e|routine net.http_post(text,jsonb,jsonb,jsonb,integer)|anon|EXECUTE
+risk|D-e|routine net.http_post(text,jsonb,jsonb,jsonb,integer)|authenticated|EXECUTE
+risk|D-e|routine net.http_post(text,jsonb,jsonb,jsonb,integer)|sandbox_exec_<ref>|EXECUTE
+risk|D-e|routine net.http_post(text,jsonb,jsonb,jsonb,integer)|sandbox_exec|EXECUTE
+risk|D-e|routine net.http_post(text,jsonb,jsonb,jsonb,integer)|service_role|EXECUTE
+risk|D-e|schema net|anon|USAGE
+risk|D-e|schema net|authenticated|USAGE
+risk|D-e|schema net|sandbox_exec_<ref>|USAGE
+risk|D-e|schema net|sandbox_exec|USAGE
+risk|D-e|schema net|service_role|USAGE
+summary|violations=244|risks=33

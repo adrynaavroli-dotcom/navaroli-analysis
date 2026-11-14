@@ -18,3 +18,25 @@ DO $$ BEGIN
 END $$;
 GRANT USAGE ON SCHEMA storage TO sandbox_exec, sandbox_exec_ci0mockref;
 GRANT SELECT, INSERT ON storage.buckets, storage.objects TO sandbox_exec, sandbox_exec_ci0mockref;
+
+-- pg_net as observed in production (evidence §P8, §P13/§P14): schema net owned by the
+-- platform, USAGE for API and platform roles, ALL on the two queue tables and the sequence
+-- granted to PUBLIC, EXECUTE on http_get/http_post/http_delete. A real Supabase stack
+-- already has it (skipped there). Here the owner is the migrator, a mock-only difference.
+DO $$ BEGIN
+  IF to_regnamespace('net') IS NULL THEN
+    CREATE SCHEMA net;
+    CREATE TABLE net.http_request_queue (id bigserial PRIMARY KEY, method text, url text, headers jsonb, body bytea, timeout_milliseconds integer);
+    CREATE TABLE net._http_response (id bigint, status_code integer, content_type text, headers jsonb, content text, timed_out boolean, error_msg text, created timestamptz);
+    GRANT ALL ON net.http_request_queue, net._http_response TO PUBLIC;
+    GRANT ALL ON SEQUENCE net.http_request_queue_id_seq TO PUBLIC;
+    GRANT USAGE ON SCHEMA net TO anon, authenticated, service_role, sandbox_exec, sandbox_exec_ci0mockref;
+    CREATE FUNCTION net.http_get(url text, params jsonb DEFAULT '{}', headers jsonb DEFAULT '{}', timeout_milliseconds integer DEFAULT 5000)
+      RETURNS bigint LANGUAGE sql AS $f$ INSERT INTO net.http_request_queue (method, url, headers) VALUES ('GET', url, headers) RETURNING id $f$;
+    CREATE FUNCTION net.http_post(url text, body jsonb DEFAULT '{}', params jsonb DEFAULT '{}', headers jsonb DEFAULT '{}', timeout_milliseconds integer DEFAULT 5000)
+      RETURNS bigint LANGUAGE sql AS $f$ INSERT INTO net.http_request_queue (method, url, headers) VALUES ('POST', url, headers) RETURNING id $f$;
+    CREATE FUNCTION net.http_delete(url text, params jsonb DEFAULT '{}', headers jsonb DEFAULT '{}', timeout_milliseconds integer DEFAULT 5000, body jsonb DEFAULT NULL)
+      RETURNS bigint LANGUAGE sql AS $f$ INSERT INTO net.http_request_queue (method, url, headers) VALUES ('DELETE', url, headers) RETURNING id $f$;
+  END IF;
+END $$;
+

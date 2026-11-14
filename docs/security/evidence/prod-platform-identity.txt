@@ -121,3 +121,33 @@ pgrst_drop_watch|sql_drop|supabase_admin|extensions.pgrst_drop_watch|O|-
 == P11 end
 == P12. public sequences
 == P12 end
+== P13. pg_net deep dive for D-e (catalog and settings only; no queue/response rows are read)
+sequence:net.http_request_queue_id_seq|anon|t|t
+sequence:net.http_request_queue_id_seq|authenticated|t|t
+sequence:net.http_request_queue_id_seq|sandbox_exec|t|t
+sequence:net.http_request_queue_id_seq|sandbox_exec_<ref>|t|t
+sequence:net.http_request_queue_id_seq|service_role|t|t
+columns:net._http_response|id bigint, status_code integer, content_type text, headers jsonb, content text, timed_out boolean, error_msg text, created timestamp with time zone
+columns:net.http_request_queue|id bigint, method net.http_method, url text, headers jsonb, body bytea, timeout_milliseconds integer
+setting:pg_net.batch_size|200
+setting:pg_net.database_name|postgres
+setting:pg_net.ttl|6 hours
+setting:pg_net.username|postgres
+schema-usage:cron|sandbox_exec|false
+schema-usage:cron|sandbox_exec_<ref>|false
+schema-usage:net|sandbox_exec|true
+schema-usage:net|sandbox_exec_<ref>|true
+schema-usage:vault|sandbox_exec|false
+schema-usage:vault|sandbox_exec_<ref>|false
+cron-jobs-visible-to-this-session:false
+== P13 end
+== P14. code-execution prerequisites for the TRIGGER privilege on net tables (catalog only)
+database-temp:sandbox_exec|t
+database-temp:sandbox_exec_<ref>|t
+trigger-functions-executable:sandbox_exec|22
+trigger-functions-executable:sandbox_exec_<ref>|28
+triggers-on-net:0
+net-table-acl:net._http_response|{supabase_admin=arwdDxtm/supabase_admin,=arwdDxtm/supabase_admin}
+net-table-acl:net.http_request_queue|{supabase_admin=arwdDxtm/supabase_admin,=arwdDxtm/supabase_admin}
+net-table-acl:net.http_request_queue_id_seq|{supabase_admin=rwU/supabase_admin,=rwU/supabase_admin}
+== P14 end

@@ -65,7 +65,7 @@ Leyenda: R lectura, C crear, U modificar, D borrar, P publicar/retirar. «propio
 | `has_role(uuid,…)` | no | **EXECUTE** (consulta si cualquier UUID es admin) | EXECUTE | EXECUTE | EXECUTE (sufijo) | solo `service_role`; políticas con helper sin argumentos |
 | `sec_is_admin()` | EXECUTE (devuelve false) | EXECUTE | EXECUTE | — | EXECUTE (sufijo) | sin cambio |
 | RPC `sec_*` de corridas | no | no | no | EXECUTE | EXECUTE (sufijo) | D4 |
-| `cron.schedule`, `net.http_post` | EXECUTE en función, pero sin USAGE en `cron`; `net` no expuesto por la API | ídem | ídem | ídem | ídem | higiene, no vía real |
+| `cron.schedule`, `net.http_post` | `cron`: EXECUTE sin USAGE (inalcanzable). `net`: PUBLIC con ALL en cola/respuestas, no expuesto por la API | ídem | ídem | ídem | ídem | `net`: **riesgo abierto D-e (medio)** para `sandbox_exec*`, ver `d-e-pg-net-analysis.md` (actualizado 2026-11-14) |
 | TRUNCATE en tablas `public` | grant presente; no invocable vía API | ídem | ídem | sí | no | revocar (defensa en profundidad) |
 | Funciones del servidor de escritura | 401 | 401 | OK (JWT + `has_role`) | — | — | sin cambio |
 | Funciones `fetch-*` (solo lectura externa) | con límite por IP | sin límite | sin límite | — | — | sin cambio |

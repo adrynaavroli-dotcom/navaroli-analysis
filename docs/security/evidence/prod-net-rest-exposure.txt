@@ -1,0 +1,17 @@
+# D-e: is pg_net reachable from the public web API? Read-only anonymous HTTP checks against the live project
+# (publishable anon key, limit=0: no rows can be returned). Captured 2026-11-14T11:16:00Z.
+== REST, schema net, table http_request_queue (Accept-Profile: net)
+{"code":"PGRST106","details":null,"hint":"Only the following schemas are exposed: public, graphql_public","message":"Invalid schema: net"}
+HTTP 406
+== REST, schema net, table _http_response (Accept-Profile: net)
+{"code":"PGRST106","details":null,"hint":"Only the following schemas are exposed: public, graphql_public","message":"Invalid schema: net"}
+HTTP 406
+== REST, schema cron (Accept-Profile: cron)
+{"code":"PGRST106","details":null,"hint":"Only the following schemas are exposed: public, graphql_public","message":"Invalid schema: cron"}
+HTTP 406
+== REST, RPC public.http_get (must not exist)
+{"code":"PGRST202","details":"Searched for the function public.http_get with parameter url, but no matches were found in the schema cache.","hint":null,"message":"Could not find the function public.http_get(url) in the schema cache"}
+HTTP 404
+== GraphQL endpoint
+{"errors": [{"message": "pg_graphql extension is not enabled."}]}
+HTTP 200

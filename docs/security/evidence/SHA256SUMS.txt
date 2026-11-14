@@ -1,3 +1,4 @@
 373fd93f6f06f4cc5482fa995261b23be3cf83463256094abba80010bf3f0843  docs/security/evidence/prod-permissions-audit.txt
-449c736b3e173a268b400ac9e945fc05e291d0211b6ae909127020e12e0d4b9c  docs/security/evidence/prod-platform-identity.txt
-4b62ddc0c80197769a1f556564a4378a97a7cd423ade6982cbd3b17f9128c199  docs/security/evidence/prod-admin-only-guard.txt
+13fdd78e81ab3e6740798a57e6ebce0e83db2e3c49ae60f09cd2274daefa616f  docs/security/evidence/prod-platform-identity.txt
+889fd23b65d28446abdbad210c92e220b8282d7ddfd1c0446606cb706129e25f  docs/security/evidence/prod-admin-only-guard.txt
+3867521869d9fc6b4cf20f9c2fdfb288142199aa3a6067ebd6aadb8954c6112e  docs/security/evidence/prod-net-rest-exposure.txt

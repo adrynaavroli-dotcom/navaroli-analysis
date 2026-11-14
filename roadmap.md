@@ -51,8 +51,13 @@
 - [x] Identity probe (read-only): migrator = postgres, agent session = sandbox_exec; storage grants issued by postgres; net/cron resolved
 - [x] Step 2 local simulation (unofficial): guard 244→0 (pre-state identical to prod), tests 216/216, T1–T33 186/186, 9/9 probes, idempotent
 - [x] Step 3 CI job `admin-only-db` + guard/tests in the repo; admin-only rule added to AGENTS.md
-- [ ] Step 4 CI PASS of quality, fnd001-db and admin-only-db on the SHA containing D5 — after sync (next message)
+- [x] Step 4 (revision 1) CI PASS on dca13189cf5cc87a1ac899eac651b389ab81175e — Quality checks run 43410417697, 3 jobs success
+- [x] Revision 2 (user review 2026-11-14): signature-based guard/helper, column privileges + Storage + abort, D-e re-analysis (OPEN, medium), REST harness 72 checks, exact coverage (237/186/19/72), deploy-gating proposal, migrator identity assertion, backups, D-f table
+- [ ] Revision 2 CI PASS of quality, fnd001-db and admin-only-db on the final SHA — after sync (next message)
 - [ ] Step 5 production migration with preflight/postflight — waits for separate user authorization
 - [ ] Step 6 frontend: role-checked admin routes, hidden admin links, no Sign up — after step 5
-- [ ] Decisions D-e (pg_net residual) and D-f (default ACL strategy) — waits for user
+- [ ] Decisions D-e (pg_net, OPEN medium: accept with controls or ask the platform to revoke) and D-f (default ACL; open until migrations, guards and deploy gating align) — waits for user
+- [ ] Deploy gating (docs/security/deploy-gating-proposal.md) and GitHub settings — waits for user approval/action
+- [ ] Migrator session_user — NOT VERIFIED (no disposable run of the real Lovable mechanism); asserted at D5 apply time
+- [ ] page_content DELETE for admin — deliberately closed; waits for user decision
 - [ ] Platform checks (Lovable workspace members, GitHub collaborators/branch protection, 2FA) — user action

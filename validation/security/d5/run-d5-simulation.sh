@@ -11,8 +11,15 @@
 #      tests all pass; FND-001 T1–T33 suite still passes;
 #   4. regression probes: a new object without review, an owner-based write policy, a
 #      has_role() policy and an unreviewed SECURITY DEFINER function must each fail the guard;
-#   5. idempotence: a second baseline call changes nothing.
+#   5. idempotence: a second baseline call changes nothing;
+#   6. coverage: the number of behaviour cases, FND-001 cases and probes is asserted
+#      exactly, so a silently shrunk suite cannot report PASS; the service_role column
+#      inventory of the helper must equal the guard's allowlist.
 # Output directory: $1 (default /tmp/d5-sim).
+# Expected counts: change them only together with the cases they count, in the same commit.
+EXPECTED_ADMIN_ONLY_CASES=237
+EXPECTED_FND001_CASES=186
+EXPECTED_PROBES=19
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 cd "$ROOT"
@@ -48,24 +55,40 @@ if grep '^[<>]' "$OUT/fingerprint-F0-F1.diff" | grep -E '\|sec_' | grep -vE 'san
   fail "D5 changed sec_* catalog lines (see $OUT/sec-changes.txt); M1.1 canonical ACLs must stay"
 fi
 guard > "$OUT/guard-after.txt"
-echo "   guard after D5: $(violations "$OUT/guard-after.txt") violation(s) (expected 0); $(grep -c '^info|' "$OUT/guard-after.txt" || true) info line(s)"
+echo "   guard after D5: $(violations "$OUT/guard-after.txt") violation(s) (expected 0); $(grep -c '^risk|' "$OUT/guard-after.txt" || true) open D-e risk line(s) (pg_net, reported, not accepted)"
+grep -q '^summary|violations=0|risks=[0-9]*$' "$OUT/guard-after.txt" || fail "guard summary line missing or malformed"
+if [ "$(fnd001_psql -At -c "SELECT to_regnamespace('net') IS NOT NULL")" = "t" ]; then
+  [ "$(grep -c '^risk|D-e|' "$OUT/guard-after.txt")" -gt 0 ] || fail "schema net exists but the D-e residual risk is not reported"
+fi
 [ "$(violations "$OUT/guard-after.txt")" -eq 0 ] || { grep '^violation' "$OUT/guard-after.txt"; fail "guard after D5"; }
 tests > "$OUT/tests-after.txt" || true
 grep '^# admin-only' "$OUT/tests-after.txt"
 grep -q '^ADMIN-ONLY-PASS' "$OUT/tests-after.txt" || { grep '^not ok' "$OUT/tests-after.txt"; fail "behaviour tests after D5"; }
+# Coverage: PASS alone is not enough — the exact number of cases must have run and passed.
+summary=$(grep -E '^# admin-only tests: [0-9]+/[0-9]+ passed$' "$OUT/tests-after.txt" || true)
+[ "$summary" = "# admin-only tests: $EXPECTED_ADMIN_ONLY_CASES/$EXPECTED_ADMIN_ONLY_CASES passed" ] \
+  || fail "behaviour case count: got '${summary:-no summary}', expected $EXPECTED_ADMIN_ONLY_CASES/$EXPECTED_ADMIN_ONLY_CASES"
+[ "$(grep -c '^ok [0-9]* - ' "$OUT/tests-after.txt")" -eq "$EXPECTED_ADMIN_ONLY_CASES" ] || fail "behaviour 'ok' line count differs from $EXPECTED_ADMIN_ONLY_CASES"
+echo "   ok - behaviour cases: exactly $EXPECTED_ADMIN_ONLY_CASES ran and passed"
 bash "$ROOT/validation/fnd001/run-db-tests.sh" > "$OUT/fnd001-db-tests-after-d5.txt" 2>&1 || { tail -20 "$OUT/fnd001-db-tests-after-d5.txt"; fail "FND-001 suite after D5"; }
 grep -E '^# |rollback' "$OUT/fnd001-db-tests-after-d5.txt" | tail -2
+grep -qx "# total=$EXPECTED_FND001_CASES passed=$EXPECTED_FND001_CASES failed=0" "$OUT/fnd001-db-tests-after-d5.txt" \
+  || fail "FND-001 case count differs from $EXPECTED_FND001_CASES"
+echo "   ok - FND-001 T1–T33: exactly $EXPECTED_FND001_CASES ran and passed"
 
 echo "== 4. regression probes (each must produce violations; all rolled back)"
-probe() { # $1 name, $2 SQL, $3 rule that must appear
+probes_run=0
+probe() { # $1 name, $2 SQL, $3 rule that must appear, $4 optional fixed string the line must contain
   fnd001_psql -At > "$OUT/probe-$1.txt" 2>&1 <<SQL
 BEGIN;
 $2
 \i validation/security/sql/admin-only-acl-guard.sql
 ROLLBACK;
 SQL
-  grep -q "^violation|$3|" "$OUT/probe-$1.txt" || { cat "$OUT/probe-$1.txt"; fail "probe $1 not caught by $3"; }
-  echo "   ok - probe $1 caught ($3: $(grep -c "^violation|$3|" "$OUT/probe-$1.txt"))"
+  grep "^violation|$3|" "$OUT/probe-$1.txt" | grep -qF -- "${4:-|}" \
+    || { cat "$OUT/probe-$1.txt"; fail "probe $1 not caught by $3${4:+ on '$4'}"; }
+  probes_run=$((probes_run + 1))
+  echo "   ok - probe $1 caught ($3: $(grep -c "^violation|$3|" "$OUT/probe-$1.txt"))${4:+ on '$4'}"
 }
 probe new-table-defaults "CREATE TABLE public.zz_probe (id int PRIMARY KEY);" G3
 probe new-table-baseline "CREATE TABLE public.zz_probe (id int PRIMARY KEY); ALTER TABLE public.zz_probe ENABLE ROW LEVEL SECURITY; SELECT public.enforce_privilege_baseline();" G1
@@ -76,6 +99,23 @@ probe execute-grant "GRANT EXECUTE ON FUNCTION public.sec_finalize_run(uuid, jso
 probe sandbox-insert "GRANT INSERT ON public.user_roles TO sandbox_exec;" G3
 probe storage-insert "GRANT INSERT ON storage.objects TO sandbox_exec;" G8
 probe membership "GRANT service_role TO anon;" G7
+# Signature, not name: an overload of an allowed helper is an unreviewed routine. The
+# second probe is the worst case (SECURITY DEFINER, pinned search_path, PUBLIC revoked,
+# EXECUTE to anon only) that a name-based inventory accepted with 0 violations.
+probe overload-invoker "CREATE FUNCTION public.is_admin(_uid uuid) RETURNS boolean LANGUAGE sql STABLE AS 'SELECT true';" G1 "routine is_admin(uuid)"
+probe overload-secdef "CREATE FUNCTION public.is_admin(_uid uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS 'SELECT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = _uid)'; REVOKE ALL ON FUNCTION public.is_admin(uuid) FROM PUBLIC, service_role, sandbox_exec_ci0mockref; GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO anon, authenticated;" G5 "routine is_admin(uuid)"
+probe overload-execute "CREATE FUNCTION public.is_admin(_uid uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS 'SELECT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = _uid)'; REVOKE ALL ON FUNCTION public.is_admin(uuid) FROM PUBLIC, service_role, sandbox_exec_ci0mockref; GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO anon, authenticated;" G4 "routine is_admin(uuid)|anon|EXECUTE"
+# Column-level grants (one column, not the table) must be seen by the guard.
+probe column-anon "GRANT UPDATE (full_name) ON public.profiles TO anon;" G3 "relation profiles.full_name|anon|UPDATE"
+probe column-authenticated "GRANT INSERT (message) ON public.thesis_alerts TO authenticated;" G3 "relation thesis_alerts.message|authenticated|INSERT"
+probe column-service "GRANT UPDATE (content) ON public.page_content TO service_role;" G3 "relation page_content.content|service_role|UPDATE"
+probe column-storage "GRANT UPDATE (name) ON storage.buckets TO sandbox_exec;" G8 "relation storage.buckets.name|sandbox_exec|UPDATE"
+# pg_net must never become reachable from public (D-e).
+probe net-routine "CREATE FUNCTION public.zz_fetch(u text) RETURNS void LANGUAGE plpgsql AS \$f\$ BEGIN PERFORM net.http_get(u); END \$f\$;" G9 "routine zz_fetch(text)"
+probe net-view "CREATE VIEW public.zz_netv AS SELECT id FROM net.http_request_queue;" G9 "relation zz_netv"
+probe net-trigger "CREATE FUNCTION public.zz_t() RETURNS trigger LANGUAGE plpgsql AS \$f\$ BEGIN RETURN NEW; END \$f\$; CREATE TRIGGER zz_net BEFORE INSERT ON net.http_request_queue FOR EACH ROW EXECUTE FUNCTION public.zz_t();" G9 "trigger zz_net on net.http_request_queue"
+[ "$probes_run" -eq "$EXPECTED_PROBES" ] || fail "probe count: $probes_run run, $EXPECTED_PROBES expected"
+echo "   ok - exactly $EXPECTED_PROBES probes ran and were caught"
 # After the baseline call a new table may only report what needs an explicit review: the
 # inventory (G1) and the authenticated/service_role writes inherited from the default ACL
 # (G3), which each migration must keep or revoke on purpose. Nothing for anon, PUBLIC or
@@ -90,6 +130,14 @@ fnd001_psql -At -c "SELECT 'baseline objects=' || public.enforce_privilege_basel
 bash "$ROOT/validation/fnd001/catalog-fingerprint.sh" > "$OUT/F2-fingerprint.txt"
 cmp -s "$OUT/F1-fingerprint.txt" "$OUT/F2-fingerprint.txt" || fail "second baseline call changed the catalog"
 echo "   ok - second call leaves the catalog byte-identical"
+
+echo "== 6. single inventory: helper _svc_columns == guard service_role column allowlist"
+guard_cols=$(grep -oE "\('service_role', '[a-z_]+', '(INSERT|UPDATE)', '[a-z_]+'\)" "$SEC/admin-only-acl-guard.sql" \
+  | sed -E "s/\('service_role', '([a-z_]+)', '([A-Z]+)', '([a-z_]+)'\)/\1.\3:\2/" | sort)
+helper_cols=$(sed -n '/_svc_columns constant text\[\] := ARRAY\[/,/\];/p' "$ROOT/validation/security/d5/d5-admin-only-migration.sql" \
+  | grep -oE "'[a-z_]+\.[a-z_]+:(INSERT|UPDATE)'" | tr -d "'" | sort)
+[ -n "$guard_cols" ] && [ "$guard_cols" = "$helper_cols" ] || { diff <(echo "$guard_cols") <(echo "$helper_cols"); fail "service_role column inventory differs between guard and helper"; }
+echo "   ok - $(echo "$guard_cols" | wc -l | tr -d ' ') service_role column grant(s), identical in guard and helper"
 # Let PostgREST (CI stack) see the new functions/policies before the REST checks.
 fnd001_psql -c "NOTIFY pgrst, 'reload schema'"
 echo "== D5 simulation: all steps passed"
