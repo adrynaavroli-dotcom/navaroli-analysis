@@ -327,8 +327,8 @@ BEGIN
   RESET ROLE;
   INSERT INTO adm_t.results(label, ok, detail) VALUES (
     'C baseline aborts on a column grant it cannot revoke (other grantor) [abort]',
-    msg LIKE 'enforce_privilege_baseline:%anon writes public.profiles%',
-    CASE WHEN msg LIKE 'enforce_privilege_baseline:%anon writes public.profiles%' THEN NULL ELSE 'got ' || COALESCE(msg, 'NULL') END);
+    msg LIKE 'enforce_privilege_baseline:%anon UPDATE (full_name) on public.profiles%',
+    CASE WHEN msg LIKE 'enforce_privilege_baseline:%anon UPDATE (full_name) on public.profiles%' THEN NULL ELSE 'got ' || COALESCE(msg, 'NULL') END);
 END $$;
 SELECT adm_t.abort_case();
 
@@ -353,6 +353,115 @@ BEGIN
          ELSE format('overload=%s helper=%s err=%s', on_overload, on_helper, err) END);
 END $$;
 SELECT adm_t.overload_case();
+
+-- ------------------------------------------------------------------ H: baseline helper on NEW objects
+-- What a future migration (M1.2 or later) leaves behind after its final
+-- SELECT public.enforce_privilege_baseline(): the object is created with the platform's
+-- default privileges (ALL to anon/authenticated/service_role, SELECT/INSERT and EXECUTE to
+-- sandbox_exec*), the helper runs, and only then each role tries to use it. Every case
+-- runs in a sub-transaction that is always rolled back. "grant" = SQL privilege layer
+-- (42501 permission denied), so RLS is never what stops it.
+CREATE FUNCTION adm_t.after_baseline(_label text, _setup text, _role text, _sql text, _want text)
+RETURNS void LANGUAGE plpgsql AS $$
+DECLARE st text := '00000'; m text; n bigint; good boolean;
+BEGIN
+  BEGIN
+    EXECUTE _setup;
+    PERFORM public.enforce_privilege_baseline();
+    IF _role IS NOT NULL THEN EXECUTE format('SET LOCAL ROLE %I', _role); END IF;
+    EXECUTE _sql;
+    GET DIAGNOSTICS n = ROW_COUNT;
+    RAISE EXCEPTION 'undo' USING ERRCODE = 'AT000';
+  EXCEPTION WHEN OTHERS THEN IF SQLSTATE <> 'AT000' THEN st := SQLSTATE; m := SQLERRM; n := NULL; END IF;
+  END;
+  good := CASE
+    WHEN _want = 'ok'    THEN st = '00000'
+    WHEN _want = 'grant' THEN st = '42501' AND m LIKE 'permission denied%'
+    WHEN _want LIKE 'abort:%' THEN st = 'P0001' AND m LIKE 'enforce_privilege_baseline:%' || substr(_want, 7) || '%'
+    ELSE false END;
+  INSERT INTO adm_t.results(label, ok, detail) VALUES ('H ' || _label || ' [' || _want || ']', good,
+    CASE WHEN good THEN NULL ELSE format('got %s rows=%s %s', st, n, m) END);
+END $$;
+
+CREATE TABLE adm_t.h_roles (role text PRIMARY KEY, label text NOT NULL);
+INSERT INTO adm_t.h_roles
+SELECT r, CASE WHEN r ~ '^sandbox_exec_' THEN 'sandbox_exec_<ref>' ELSE r END
+FROM unnest(ARRAY['anon', 'authenticated', 'service_role']
+            || ARRAY(SELECT rolname::text FROM pg_roles WHERE rolname ~ '^sandbox_exec(_[a-z0-9]+)?$' ORDER BY 1)) r;
+
+-- H1 new table (RLS on, default grants): no write of any kind for any API/platform role
+SELECT adm_t.after_baseline(format('%s %s on new table', h.label, s.verb),
+  'CREATE TABLE public.zz_new (id int PRIMARY KEY, v text); ALTER TABLE public.zz_new ENABLE ROW LEVEL SECURITY;',
+  h.role, s.stmt, 'grant')
+FROM adm_t.h_roles h CROSS JOIN (VALUES
+  ('INSERT', $q$INSERT INTO public.zz_new VALUES (1, 'x')$q$),
+  ('UPDATE', $q$UPDATE public.zz_new SET v = 'y'$q$),
+  ('DELETE', $q$DELETE FROM public.zz_new$q$),
+  ('TRUNCATE', $q$TRUNCATE public.zz_new$q$)) s(verb, stmt)
+ORDER BY h.role, s.verb;
+-- H2 explicit grants added by the migration author without review are withdrawn too
+SELECT adm_t.after_baseline('service_role INSERT on new table after explicit GRANT ALL',
+  'CREATE TABLE public.zz_new (id int PRIMARY KEY, v text); ALTER TABLE public.zz_new ENABLE ROW LEVEL SECURITY; GRANT ALL ON public.zz_new TO service_role;',
+  'service_role', $q$INSERT INTO public.zz_new VALUES (1, 'x')$q$, 'grant');
+SELECT adm_t.after_baseline('service_role UPDATE (v) on new table after explicit column GRANT',
+  'CREATE TABLE public.zz_new (id int PRIMARY KEY, v text); ALTER TABLE public.zz_new ENABLE ROW LEVEL SECURITY; REVOKE UPDATE ON public.zz_new FROM service_role; GRANT UPDATE (v) ON public.zz_new TO service_role;',
+  'service_role', $q$UPDATE public.zz_new SET v = 'y'$q$, 'grant');
+SELECT adm_t.after_baseline('authenticated INSERT (v) on new table after explicit column GRANT',
+  'CREATE TABLE public.zz_new (id int PRIMARY KEY, v text); ALTER TABLE public.zz_new ENABLE ROW LEVEL SECURITY; REVOKE INSERT ON public.zz_new FROM authenticated; GRANT INSERT (v) ON public.zz_new TO authenticated;',
+  'authenticated', $q$INSERT INTO public.zz_new (v) VALUES ('x')$q$, 'grant');
+-- H3 new sequence (bigserial): no nextval for any API/platform role
+SELECT adm_t.after_baseline(format('%s nextval on new sequence', h.label),
+  'CREATE TABLE public.zz_seq (id bigserial PRIMARY KEY); ALTER TABLE public.zz_seq ENABLE ROW LEVEL SECURITY;',
+  h.role, $q$SELECT nextval('public.zz_seq_id_seq')$q$, 'grant')
+FROM adm_t.h_roles h ORDER BY h.role;
+-- H4 new routines (default EXECUTE): invoker function, SECURITY DEFINER function, procedure
+SELECT adm_t.after_baseline(format('%s EXECUTE new %s', h.label, f.kind), f.setup, h.role, f.call, 'grant')
+FROM adm_t.h_roles h CROSS JOIN (VALUES
+  ('function', $q$CREATE FUNCTION public.zz_fn() RETURNS int LANGUAGE sql AS 'SELECT 1';$q$, 'SELECT public.zz_fn()'),
+  ('SECURITY DEFINER function', $q$CREATE FUNCTION public.zz_fn() RETURNS int LANGUAGE sql SECURITY DEFINER SET search_path = '' AS 'SELECT 1';$q$, 'SELECT public.zz_fn()'),
+  ('procedure', $q$CREATE PROCEDURE public.zz_proc() LANGUAGE sql AS 'SELECT 1';$q$, 'CALL public.zz_proc()')) f(kind, setup, call)
+ORDER BY h.role, f.kind;
+SELECT adm_t.after_baseline(format('%s EXECUTE new function after explicit GRANT', h.label),
+  $q$CREATE FUNCTION public.zz_fn() RETURNS int LANGUAGE sql AS 'SELECT 1'; GRANT EXECUTE ON FUNCTION public.zz_fn() TO anon, authenticated, service_role, sandbox_exec;$q$,
+  h.role, 'SELECT public.zz_fn()', 'grant')
+FROM adm_t.h_roles h WHERE h.role IN ('anon', 'authenticated', 'service_role', 'sandbox_exec') ORDER BY h.role;
+-- H5 a new trigger function is executable by nobody: no API/platform role can attach it,
+-- even holding TRIGGER on the table (CREATE TRIGGER = TRIGGER on table + EXECUTE on function)
+SELECT adm_t.after_baseline(format('%s CREATE TRIGGER with new trigger function', h.label),
+  $q$CREATE TABLE public.zz_new (id int PRIMARY KEY, v text); ALTER TABLE public.zz_new ENABLE ROW LEVEL SECURITY;
+     CREATE FUNCTION public.zz_tf() RETURNS trigger LANGUAGE plpgsql AS 'BEGIN RETURN NEW; END';
+     CREATE SCHEMA zz_h5; CREATE TABLE zz_h5.t (id int); GRANT USAGE ON SCHEMA zz_h5 TO PUBLIC; GRANT TRIGGER ON zz_h5.t TO PUBLIC;$q$,
+  h.role, 'CREATE TRIGGER zz_t BEFORE INSERT ON zz_h5.t FOR EACH ROW EXECUTE FUNCTION public.zz_tf()', 'grant')
+FROM adm_t.h_roles h ORDER BY h.role;
+-- H6 RLS is mandatory: the helper aborts instead of leaving a table without RLS
+SELECT adm_t.after_baseline('new table without RLS', 'CREATE TABLE public.zz_norls (id int);', NULL, 'SELECT 1', 'abort:RLS disabled on public.zz_norls');
+SELECT adm_t.after_baseline('new partitioned table without RLS', 'CREATE TABLE public.zz_part (id int) PARTITION BY RANGE (id);', NULL, 'SELECT 1', 'abort:RLS disabled on public.zz_part');
+-- H7 narrowing: a table-level UPDATE re-granted to service_role on theses collapses to the
+-- reviewed columns — the server function keeps current_price, loses everything else
+SELECT adm_t.after_baseline('service_role UPDATE current_price on theses after table-level re-GRANT',
+  'GRANT UPDATE ON public.theses TO service_role;', 'service_role',
+  $q$UPDATE public.theses SET current_price = current_price WHERE id = '10000000-0000-4000-8000-000000000001'$q$, 'ok');
+SELECT adm_t.after_baseline('service_role UPDATE company_name on theses after table-level re-GRANT',
+  'GRANT UPDATE ON public.theses TO service_role;', 'service_role',
+  $q$UPDATE public.theses SET company_name = 'x' WHERE id = '10000000-0000-4000-8000-000000000001'$q$, 'grant');
+-- H8 reviewed exceptions survive the helper (with new objects present)
+SELECT adm_t.after_baseline(format('%s %s kept', h.label, x.what),
+  $q$CREATE TABLE public.zz_new (id int PRIMARY KEY); ALTER TABLE public.zz_new ENABLE ROW LEVEL SECURITY; CREATE FUNCTION public.zz_fn() RETURNS int LANGUAGE sql AS 'SELECT 1';$q$,
+  h.role, x.call, 'ok')
+FROM adm_t.h_roles h CROSS JOIN (VALUES ('is_admin()', 'SELECT public.is_admin()'), ('sec_is_admin()', 'SELECT public.sec_is_admin()')) x(what, call)
+WHERE h.role <> 'service_role' ORDER BY h.role, x.what;
+SELECT adm_t.after_baseline('service_role has_role() kept', 'CREATE TABLE public.zz_new (id int PRIMARY KEY); ALTER TABLE public.zz_new ENABLE ROW LEVEL SECURITY;',
+  'service_role', $q$SELECT public.has_role('a0000000-0000-4000-8000-00000000000a', 'admin')$q$, 'ok');
+SELECT adm_t.eq(format('H service_role EXECUTE %s kept', s), has_function_privilege('service_role', s, 'EXECUTE')::text, 'true')
+FROM unnest(ARRAY['public.sec_record_download(uuid,integer,text,bigint,bytea)', 'public.sec_fail_run(uuid,text,jsonb)',
+                  'public.sec_fail_stale_runs(interval)', 'public.sec_finalize_run(uuid,jsonb,jsonb)']) s ORDER BY s;
+-- the two automatic functions: executable by no API/platform role, and still firing
+SELECT adm_t.eq(format('H %s EXECUTE %s (trigger only)', h.label, f), has_function_privilege(h.role, f, 'EXECUTE')::text, 'false')
+FROM adm_t.h_roles h CROSS JOIN unnest(ARRAY['public.handle_new_user()', 'public.update_updated_at_column()']) f ORDER BY h.role, f;
+SELECT adm_t.eq('H handle_new_user() still creates the profile (empty search_path)',
+  (SELECT count(*)::text FROM public.profiles WHERE user_id = 'a0000000-0000-4000-8000-00000000000b'), '1');
+SELECT adm_t.eq('H has_role() still answers with empty search_path',
+  adm_t.val($q$SELECT public.has_role('a0000000-0000-4000-8000-00000000000a', 'admin')::text$q$, 'service_role'), 'true');
 
 -- ------------------------------------------------------------------ report
 SELECT CASE WHEN ok THEN 'ok' ELSE 'not ok' END || ' ' || seq || ' - ' || label || COALESCE(' # ' || detail, '')
