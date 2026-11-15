@@ -101,14 +101,14 @@ for r in $roles; do
   for t in net.http_request_queue net._http_response; do
     echo "trigger-priv|$lbl|$t|TRIGGER=$(q "SELECT has_table_privilege('$r', '$t', 'TRIGGER')")"
   done
-  echo "trigger-fns|$lbl|executable=$(q "SELECT count(*) FROM pg_proc WHERE prorettype = 'trigger'::regtype AND has_function_privilege('$r', oid, 'EXECUTE')")|total=$(q "SELECT count(*) FROM pg_proc WHERE prorettype = 'trigger'::regtype")"
+  echo "trigger-fns|$lbl|executable=$(q "SELECT count(*) FROM pg_proc WHERE prorettype = 'trigger'::regtype AND pronargs = 0 AND has_function_privilege('$r', oid, 'EXECUTE')")|total=$(q "SELECT count(*) FROM pg_proc WHERE prorettype = 'trigger'::regtype AND pronargs = 0")"
 done
 ref=$(q "SELECT rolname FROM pg_roles WHERE rolname ~ '^sandbox_exec_[a-z0-9]+\$' ORDER BY 1 LIMIT 1")
 q "SELECT 'trigger-fn|' || n.nspname || '|' || p.oid::regprocedure::text || '|secdef=' || p.prosecdef || '|owner=' || pg_get_userbyid(p.proowner)
           || '|sandbox_exec=' || has_function_privilege('sandbox_exec', p.oid, 'EXECUTE')
           || '|sandbox_exec_<ref>=' || COALESCE(has_function_privilege(NULLIF('$ref', ''), p.oid, 'EXECUTE')::text, 'n/a')
    FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-   WHERE p.prorettype = 'trigger'::regtype ORDER BY 1"
+   WHERE p.prorettype = 'trigger'::regtype AND p.pronargs = 0 ORDER BY 1"
 
 # 5a. attach EXISTING pg_catalog trigger functions as sandbox_exec, then write the rows the
 #     way the worker (response) and every caller (queue) do. One transaction, rolled back.

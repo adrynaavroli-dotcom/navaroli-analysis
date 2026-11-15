@@ -253,12 +253,12 @@ risk AS (
   UNION ALL
   -- attachable code: TRIGGER on a net table + EXECUTE on existing trigger functions
   SELECT 'risk|D-e|trigger-attach ' || c.oid::regclass::text || '|' || l.name || '|TRIGGER + EXECUTE on ' ||
-         (SELECT count(*) FROM pg_proc p WHERE p.prorettype = 'trigger'::regtype AND has_function_privilege(ro.oid, p.oid, 'EXECUTE')) ||
+         (SELECT count(*) FROM pg_proc p WHERE p.prorettype = 'trigger'::regtype AND p.pronargs = 0 AND has_function_privilege(ro.oid, p.oid, 'EXECUTE')) ||
          ' existing trigger function(s)'
   FROM pg_class c CROSS JOIN roles ro JOIN label l ON l.oid = ro.oid
   WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND c.relkind IN ('r','p')
     AND has_table_privilege(ro.oid, c.oid, 'TRIGGER')
-    AND EXISTS (SELECT 1 FROM pg_proc p WHERE p.prorettype = 'trigger'::regtype AND has_function_privilege(ro.oid, p.oid, 'EXECUTE'))
+    AND EXISTS (SELECT 1 FROM pg_proc p WHERE p.prorettype = 'trigger'::regtype AND p.pronargs = 0 AND has_function_privilege(ro.oid, p.oid, 'EXECUTE'))
   UNION ALL
   SELECT 'risk|D-e|relation ' || c.oid::regclass::text || '|PUBLIC|' || string_agg(a.privilege_type, ',' ORDER BY a.privilege_type)
   FROM pg_class c CROSS JOIN LATERAL aclexplode(COALESCE(c.relacl, acldefault(CASE WHEN c.relkind = 'S' THEN 's'::"char" ELSE 'r'::"char" END, c.relowner))) a
