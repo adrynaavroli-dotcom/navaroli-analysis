@@ -449,7 +449,8 @@ SELECT adm_t.after_baseline(format('%s %s kept', h.label, x.what),
   $q$CREATE TABLE public.zz_new (id int PRIMARY KEY); ALTER TABLE public.zz_new ENABLE ROW LEVEL SECURITY; CREATE FUNCTION public.zz_fn() RETURNS int LANGUAGE sql AS 'SELECT 1';$q$,
   h.role, x.call, 'ok')
 FROM adm_t.h_roles h CROSS JOIN (VALUES ('is_admin()', 'SELECT public.is_admin()'), ('sec_is_admin()', 'SELECT public.sec_is_admin()')) x(what, call)
-WHERE h.role <> 'service_role' ORDER BY h.role, x.what;
+-- (sandbox_exec itself never held EXECUTE on them: the inventory allows, it does not grant)
+WHERE h.role NOT IN ('service_role', 'sandbox_exec') ORDER BY h.role, x.what;
 SELECT adm_t.after_baseline('service_role has_role() kept', 'CREATE TABLE public.zz_new (id int PRIMARY KEY); ALTER TABLE public.zz_new ENABLE ROW LEVEL SECURITY;',
   'service_role', $q$SELECT public.has_role('a0000000-0000-4000-8000-00000000000a', 'admin')$q$, 'ok');
 SELECT adm_t.eq(format('H service_role EXECUTE %s kept', s), has_function_privilege('service_role', s, 'EXECUTE')::text, 'true')
