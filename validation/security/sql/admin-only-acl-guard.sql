@@ -11,9 +11,16 @@
 --       of anon, authenticated, service_role and sandbox_exec* are a subset of the
 --       reviewed allowlist below. anon and sandbox_exec*: none at all.
 --   G4  effective EXECUTE of the same roles on public routines is a subset of the allowlist.
---   G5  SECURITY DEFINER routines: reviewed, owned by postgres, search_path pinned.
+--   G5  SECURITY DEFINER routines: reviewed, owned by postgres, search_path pinned AND
+--       safe. Safe = empty (''), or every entry is pg_catalog or an existing schema that no
+--       API/platform role nor PUBLIC can CREATE in and that none of them owns, with no
+--       "$user", and pg_temp listed explicitly as the LAST entry (otherwise PostgreSQL
+--       searches the caller-writable temporary schema first for relations and types).
 --   G6  RLS: every INSERT/UPDATE/DELETE/ALL policy on a non-sec_* table is exactly
---       is_admin() in USING and WITH CHECK; admin-only tables have only is_admin() reads.
+--       is_admin() in USING and WITH CHECK; every PERMISSIVE SELECT policy on any public
+--       table (sec_* included) has a reviewed USING expression (allow_read): published
+--       rows only, own user_roles rows, or the admin helper. Permissive policies are OR-ed,
+--       so one extra policy such as USING (true) on theses would expose drafts.
 --   G7  inherited privileges: API and platform roles are members of no other role.
 --   G8  platform schemas: sandbox_exec* writes nothing (table- or column-level) on
 --       storage.buckets/objects; no API or platform role has USAGE on schema cron.
@@ -25,6 +32,10 @@
 --       project controls is judged here: no public routine or view reaches schema net (it
 --       would put pg_net behind the REST API), no API/platform role may CREATE in net, and no
 --       user trigger may exist on a net table (it would run inside the pg_net worker).
+--       CREATE TRIGGER needs only the TRIGGER privilege on the table plus EXECUTE on an
+--       EXISTING trigger function (PostgreSQL docs, CREATE TRIGGER) — no CREATE on any
+--       schema — so "risk|D-e|trigger-attach ..." reports, per role and net table, how many
+--       existing trigger functions (any schema) that role could attach there.
 -- Routines are identified by their FULL signature (regprocedure), never by name, so an
 -- overload such as is_admin(uuid) is an unreviewed routine with no inherited allowance.
 -- Output: "violation|rule|object|role|privilege" lines, "risk|..." lines, then
@@ -81,11 +92,41 @@ allow_x(who, sig) AS (VALUES
   ('service_role', 'has_role(uuid,app_role)'), ('service_role', 'sec_record_download(uuid,integer,text,bigint,bytea)'),
   ('service_role', 'sec_fail_run(uuid,text,jsonb)'), ('service_role', 'sec_fail_stale_runs(interval)'),
   ('service_role', 'sec_finalize_run(uuid,jsonb,jsonb)')),
-admin_only_read(tbl) AS (VALUES ('analysis_workspaces'), ('thesis_purchases'), ('thesis_alerts'), ('profiles')),
+-- Reviewed USING expressions of PERMISSIVE SELECT policies (whitespace-normalised, rendered
+-- with search_path pg_catalog, public). Any table may additionally have the admin read
+-- is_admin() (sec_* tables: sec_is_admin()); admin-only tables have nothing else.
+allow_read(tbl, qual) AS (VALUES
+  ('theses', '((is_published = true) OR is_admin())'),
+  ('public_thesis_data', '((published_at IS NOT NULL) OR is_admin())'),
+  ('page_content', 'true'),
+  ('user_roles', '(auth.uid() = user_id)'),
+  ('sec_companies', '(is_published OR sec_is_admin())'),
+  ('sec_filings', '((EXISTS ( SELECT 1 FROM sec_companies c WHERE ((c.cik = sec_filings.cik) AND c.is_published))) OR sec_is_admin())'),
+  ('sec_ticker_mappings', '((EXISTS ( SELECT 1 FROM sec_companies c WHERE ((c.cik = sec_ticker_mappings.cik) AND c.is_published))) OR sec_is_admin())'),
+  ('sec_normalized_facts', '((is_current AND (EXISTS ( SELECT 1 FROM sec_companies c WHERE ((c.cik = sec_normalized_facts.cik) AND c.is_published)))) OR sec_is_admin())')),
+untrusted AS (SELECT oid FROM roles),
 rels AS (SELECT c.oid, c.relname::text AS name, c.relkind, c.relrowsecurity, c.relacl, c.relowner
          FROM pg_class c WHERE c.relnamespace = 'public'::regnamespace AND c.relkind IN ('r','p','v','m','f','S')),
 fns AS (SELECT p.oid, p.prosecdef, p.proowner, p.proconfig, p.proacl, p.prosrc, p.oid::regprocedure::text AS sig
         FROM pg_proc p WHERE p.pronamespace = 'public'::regnamespace AND p.prokind IN ('f','p')),
+-- pinned search_path of every SECURITY DEFINER routine, one row per entry (n = count)
+sp AS (SELECT f.oid, f.sig, c.c AS setting, e.ord, btrim(e.e, ' "') AS e, count(*) OVER (PARTITION BY f.oid) AS n
+       FROM fns f CROSS JOIN LATERAL unnest(f.proconfig) c(c)
+       CROSS JOIN LATERAL regexp_split_to_table(substr(c.c, 13), ',') WITH ORDINALITY e(e, ord)
+       WHERE f.prosecdef AND c.c LIKE 'search\_path=%'),
+sp_bad AS (
+  SELECT sp.oid, sp.sig, sp.setting FROM sp
+  WHERE sp.e = '$user'
+     OR (sp.e LIKE 'pg\_temp%' AND sp.ord <> sp.n)
+     OR (sp.e <> '' AND sp.e <> 'pg_catalog' AND sp.e NOT LIKE 'pg\_temp%' AND NOT EXISTS (
+           SELECT 1 FROM pg_namespace n WHERE n.nspname = sp.e
+             AND NOT EXISTS (SELECT 1 FROM untrusted u WHERE has_schema_privilege(u.oid, n.oid, 'CREATE') OR n.nspowner = u.oid)
+             AND NOT EXISTS (SELECT 1 FROM aclexplode(COALESCE(n.nspacl, acldefault('n'::"char", n.nspowner))) a
+                             WHERE a.grantee = 0 AND a.privilege_type = 'CREATE')))
+  UNION
+  -- a non-empty list must end with an explicit pg_temp
+  SELECT sp.oid, sp.sig, sp.setting FROM sp
+  WHERE sp.ord = sp.n AND NOT (sp.n = 1 AND sp.e = '') AND sp.e NOT LIKE 'pg\_temp%'),
 v AS (
   -- G1 inventory and RLS
   SELECT 'G1' AS rule, 'relation ' || r.name AS obj, '-' AS role, 'not in reviewed inventory' AS priv
@@ -121,11 +162,16 @@ v AS (
     AND NOT EXISTS (SELECT 1 FROM allow_x x WHERE x.who = ro.who AND x.sig = f.sig)
   -- G5 SECURITY DEFINER
   UNION ALL
-  SELECT 'G5', 'routine ' || f.sig, pg_get_userbyid(f.proowner), 'SECURITY DEFINER not reviewed / owner / search_path'
-  FROM fns f WHERE f.prosecdef AND (
-    NOT EXISTS (SELECT 1 FROM inv_fn i WHERE i.sig = f.sig AND i.secdef)
-    OR f.proowner <> 'postgres'::regrole
-    OR NOT EXISTS (SELECT 1 FROM unnest(f.proconfig) c WHERE c LIKE 'search\_path=%'))
+  SELECT 'G5', 'routine ' || f.sig, pg_get_userbyid(f.proowner), 'SECURITY DEFINER not reviewed'
+  FROM fns f WHERE f.prosecdef AND NOT EXISTS (SELECT 1 FROM inv_fn i WHERE i.sig = f.sig AND i.secdef)
+  UNION ALL
+  SELECT 'G5', 'routine ' || f.sig, pg_get_userbyid(f.proowner), 'SECURITY DEFINER owner is not postgres'
+  FROM fns f WHERE f.prosecdef AND f.proowner <> 'postgres'::regrole
+  UNION ALL
+  SELECT 'G5', 'routine ' || f.sig, pg_get_userbyid(f.proowner), 'SECURITY DEFINER search_path not pinned'
+  FROM fns f WHERE f.prosecdef AND NOT EXISTS (SELECT 1 FROM unnest(f.proconfig) c WHERE c LIKE 'search\_path=%')
+  UNION ALL
+  SELECT DISTINCT 'G5', 'routine ' || b.sig, '-', 'SECURITY DEFINER search_path unsafe: ' || b.setting FROM sp_bad b
   UNION ALL
   SELECT 'G5', 'routine ' || f.sig, '-', 'reviewed as SECURITY DEFINER but is INVOKER'
   FROM fns f JOIN inv_fn i ON i.sig = f.sig WHERE i.secdef AND NOT f.prosecdef
@@ -138,13 +184,12 @@ v AS (
           OR (p.cmd = 'DELETE' AND p.qual = 'is_admin()' AND p.with_check IS NULL)
           OR (p.cmd IN ('UPDATE','ALL') AND p.qual = 'is_admin()' AND p.with_check = 'is_admin()'))
   UNION ALL
-  SELECT 'G6', 'policy ' || p.tablename || '.' || p.policyname, array_to_string(p.roles, ','), 'admin-only table readable without is_admin()'
-  FROM pg_policies p JOIN admin_only_read a ON a.tbl = p.tablename
-  WHERE p.schemaname = 'public' AND p.cmd = 'SELECT' AND p.qual IS DISTINCT FROM 'is_admin()'
-  UNION ALL
-  SELECT 'G6', 'policy ' || p.tablename || '.' || p.policyname, array_to_string(p.roles, ','), 'user_roles read must be own rows only'
-  FROM pg_policies p WHERE p.schemaname = 'public' AND p.tablename = 'user_roles' AND p.cmd = 'SELECT'
-    AND p.qual IS DISTINCT FROM '(auth.uid() = user_id)'
+  -- reads: a PERMISSIVE SELECT policy must have a reviewed USING expression
+  SELECT 'G6', 'policy ' || p.tablename || '.' || p.policyname, array_to_string(p.roles, ','), 'SELECT USING not reviewed: ' || COALESCE(regexp_replace(p.qual, '\s+', ' ', 'g'), '<none>')
+  FROM pg_policies p
+  WHERE p.schemaname = 'public' AND p.cmd = 'SELECT' AND p.permissive = 'PERMISSIVE'
+    AND COALESCE(regexp_replace(p.qual, '\s+', ' ', 'g'), '') <> CASE WHEN p.tablename LIKE 'sec\_%' THEN 'sec_is_admin()' ELSE 'is_admin()' END
+    AND NOT EXISTS (SELECT 1 FROM allow_read a WHERE a.tbl = p.tablename AND a.qual = regexp_replace(p.qual, '\s+', ' ', 'g'))
   UNION ALL
   SELECT 'G6', 'policy ' || p.tablename || '.' || p.policyname, array_to_string(p.roles, ','), 'uses has_role() instead of is_admin()'
   FROM pg_policies p WHERE p.schemaname = 'public' AND (p.qual LIKE '%has_role(%' OR p.with_check LIKE '%has_role(%')
@@ -200,11 +245,20 @@ risk AS (
   WHERE EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'net') AND has_schema_privilege(ro.oid, 'net', 'USAGE')
   UNION ALL
   SELECT 'risk|D-e|relation ' || c.oid::regclass::text || '|' || l.name || '|' ||
-         (SELECT string_agg(p, ',' ORDER BY o) FROM unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE']) WITH ORDINALITY q(p, o)
+         (SELECT string_agg(p, ',' ORDER BY o) FROM unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','TRIGGER']) WITH ORDINALITY q(p, o)
           WHERE has_table_privilege(ro.oid, c.oid, p))
   FROM pg_class c CROSS JOIN roles ro JOIN label l ON l.oid = ro.oid
   WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND c.relkind IN ('r','p','v')
-    AND has_table_privilege(ro.oid, c.oid, 'SELECT, INSERT, UPDATE, DELETE')
+    AND has_table_privilege(ro.oid, c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, TRIGGER')
+  UNION ALL
+  -- attachable code: TRIGGER on a net table + EXECUTE on existing trigger functions
+  SELECT 'risk|D-e|trigger-attach ' || c.oid::regclass::text || '|' || l.name || '|TRIGGER + EXECUTE on ' ||
+         (SELECT count(*) FROM pg_proc p WHERE p.prorettype = 'trigger'::regtype AND p.pronargs = 0 AND has_function_privilege(ro.oid, p.oid, 'EXECUTE')) ||
+         ' existing trigger function(s)'
+  FROM pg_class c CROSS JOIN roles ro JOIN label l ON l.oid = ro.oid
+  WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'net') AND c.relkind IN ('r','p')
+    AND has_table_privilege(ro.oid, c.oid, 'TRIGGER')
+    AND EXISTS (SELECT 1 FROM pg_proc p WHERE p.prorettype = 'trigger'::regtype AND p.pronargs = 0 AND has_function_privilege(ro.oid, p.oid, 'EXECUTE'))
   UNION ALL
   SELECT 'risk|D-e|relation ' || c.oid::regclass::text || '|PUBLIC|' || string_agg(a.privilege_type, ',' ORDER BY a.privilege_type)
   FROM pg_class c CROSS JOIN LATERAL aclexplode(COALESCE(c.relacl, acldefault(CASE WHEN c.relkind = 'S' THEN 's'::"char" ELSE 'r'::"char" END, c.relowner))) a

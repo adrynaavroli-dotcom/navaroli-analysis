@@ -143,8 +143,9 @@ SELECT 'cron-jobs-visible-to-this-session:' || has_schema_privilege('cron', 'USA
 \echo '== P13 end'
 
 \echo '== P14. code-execution prerequisites for the TRIGGER privilege on net tables (catalog only)'
--- CREATE TRIGGER needs TRIGGER on the table and EXECUTE on a trigger function; running
--- attacker-chosen code additionally needs a schema where the role can CREATE a function.
+-- CREATE TRIGGER needs only TRIGGER on the table and EXECUTE on an EXISTING trigger
+-- function (PostgreSQL docs); CREATE on a schema is needed only to add NEW code.
+-- (Correction 2026-11-15: the earlier comment treated CREATE as a prerequisite.)
 SELECT 'schema-create:' || n.nspname, regexp_replace(x.rolname, 'sandbox_exec_[a-z0-9]+', 'sandbox_exec_<ref>')
 FROM pg_namespace n CROSS JOIN (SELECT rolname FROM pg_roles WHERE rolname LIKE 'sandbox\_exec%' OR rolname IN ('anon','authenticated','service_role')) x
 WHERE has_schema_privilege(x.rolname, n.oid, 'CREATE') AND n.nspname NOT LIKE 'pg\_temp\_%' AND n.nspname NOT LIKE 'pg\_toast\_temp\_%'

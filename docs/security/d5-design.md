@@ -308,3 +308,36 @@ puerta de paso.
 | 7 Migrador y backups | `current_user` demostrado; `session_user` **NO VERIFICADO** + aserción en D5; backups fuera de D5 | §2, §7.2 |
 | 8 D-f y `page_content` | Tabla de default ACL y controles; D-f abierta; borrado de `page_content` deliberadamente cerrado | §11, §7.1 |
 
+
+## 14. Revisión 3 — cuatro correcciones (2026-11-15)
+
+Resultados locales, NO oficiales (PostgreSQL 17.11 + `local-shim.sql`, `net` simulado). Oficial: CI en el SHA final.
+
+1. **`enforce_privilege_baseline()` deniega por defecto.** El helper aplica ahora el inventario completo
+   (`_allow_w`, `_allow_x`), no solo a anon/`sandbox_exec*`: revoca a anon, authenticated, service_role y
+   `sandbox_exec*` cualquier escritura (tabla, columna, secuencia) y cualquier EXECUTE fuera de inventario, y
+   **aborta si una tabla de `public` no tiene RLS**. Un GRANT a nivel de tabla sobre un privilegio que el
+   inventario solo concede por columnas se reduce a esas columnas (único GRANT del helper; solo reduce).
+   Excepciones mantenidas: `is_admin()`, `sec_is_admin()`, `has_role` y los cuatro RPC SEC para service_role.
+   `handle_new_user()` y `update_updated_at_column()` siguen en el inventario, disparándose, sin EXECUTE para nadie.
+   La simulación exige que ambos inventarios coincidan con `allow_w`/`allow_x` de la guarda (38 + 11 entradas).
+   Pruebas: 79 casos nuevos `H` en `admin-only-tests.sql`; con el helper de la revisión 2 fallan 27
+   (escrituras de authenticated/service_role, nextval, EXECUTE de funciones/procedimientos nuevos, CREATE
+   TRIGGER, RLS ausente, reducción a columnas). Sonda `new-table-explicit-grants`: tras GRANT ALL / GRANT
+   EXECUTE explícitos y el helper, solo queda el aviso de inventario (G1), 0 G3/G4.
+2. **G6 lecturas.** Toda política SELECT PERMISSIVE de `public` (incluido `sec_*`) debe tener un USING revisado
+   (`allow_read`: publicado, filas propias de `user_roles`, o el helper admin). Sondas `USING (true)` en `theses`
+   y `public_thesis_data`, y `auth.uid() IS NOT NULL` en `theses`: rechazadas. Las lecturas públicas y de
+   administración actuales pasan.
+3. **pg_net / CREATE TRIGGER.** Ver `d-e-pg-net-analysis.md` §4: adjuntar funciones trigger existentes está
+   demostrado (local, mock) y permite bloquear la cola y las respuestas. G9 añade `risk|D-e|trigger-attach …`.
+   Sonda `net-trigger-existing-fn`. Efecto sobre el worker real: NO VERIFICADO.
+4. **G5 search_path seguro.** Vacío, o esquemas de confianza (sin CREATE ni propiedad de roles API/plataforma
+   ni PUBLIC), sin `$user`, con `pg_temp` explícito al final. Consecuencia: `has_role` y `handle_new_user`
+   (`search_path=public`, sin `pg_temp` al final) fallan G5; la propuesta D5 les fija `search_path = ''` (sus
+   cuerpos ya usan nombres cualificados; casos H comprueban que siguen funcionando). Sondas `public`,
+   `pg_temp` primero y esquema con CREATE para authenticated: rechazadas; control `pg_catalog, public, pg_temp`:
+   aceptado.
+
+Recuentos: guarda antes de D5 251 (244 + 2 G5 + 5 G6 sobre el esquema reconstruido; **producción no re-ejecutada**
+en este turno), después 0; 316/316 casos; FND-001 186/186; 27/27 sondas; idempotencia; 43 líneas `risk|D-e`.

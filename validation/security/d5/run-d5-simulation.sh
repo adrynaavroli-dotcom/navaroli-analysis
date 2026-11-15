@@ -13,13 +13,13 @@
 #      has_role() policy and an unreviewed SECURITY DEFINER function must each fail the guard;
 #   5. idempotence: a second baseline call changes nothing;
 #   6. coverage: the number of behaviour cases, FND-001 cases and probes is asserted
-#      exactly, so a silently shrunk suite cannot report PASS; the service_role column
-#      inventory of the helper must equal the guard's allowlist.
+#      exactly, so a silently shrunk suite cannot report PASS; the write and EXECUTE
+#      inventories of the helper must equal the guard's allow_w / allow_x.
 # Output directory: $1 (default /tmp/d5-sim).
 # Expected counts: change them only together with the cases they count, in the same commit.
-EXPECTED_ADMIN_ONLY_CASES=237
+EXPECTED_ADMIN_ONLY_CASES=316
 EXPECTED_FND001_CASES=186
-EXPECTED_PROBES=19
+EXPECTED_PROBES=27
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 cd "$ROOT"
@@ -114,16 +114,39 @@ probe column-storage "GRANT UPDATE (name) ON storage.buckets TO sandbox_exec;" G
 probe net-routine "CREATE FUNCTION public.zz_fetch(u text) RETURNS void LANGUAGE plpgsql AS \$f\$ BEGIN PERFORM net.http_get(u); END \$f\$;" G9 "routine zz_fetch(text)"
 probe net-view "CREATE VIEW public.zz_netv AS SELECT id FROM net.http_request_queue;" G9 "relation zz_netv"
 probe net-trigger "CREATE FUNCTION public.zz_t() RETURNS trigger LANGUAGE plpgsql AS \$f\$ BEGIN RETURN NEW; END \$f\$; CREATE TRIGGER zz_net BEFORE INSERT ON net.http_request_queue FOR EACH ROW EXECUTE FUNCTION public.zz_t();" G9 "trigger zz_net on net.http_request_queue"
+# Reads (G6): one more PERMISSIVE SELECT policy is OR-ed with the reviewed ones, so any
+# policy that is not "published rows / own roles / admin" must fail the guard.
+probe select-open-theses "CREATE POLICY zz_open ON public.theses FOR SELECT USING (true);" G6 "policy theses.zz_open"
+probe select-open-ptd "CREATE POLICY zz_open ON public.public_thesis_data FOR SELECT USING (true);" G6 "policy public_thesis_data.zz_open"
+probe select-drafts-authenticated "CREATE POLICY zz_signed_in ON public.theses FOR SELECT TO authenticated USING (auth.uid() IS NOT NULL);" G6 "policy theses.zz_signed_in"
+# search_path of reviewed SECURITY DEFINER routines must be safe, not merely present (G5).
+probe secdef-path-public "ALTER FUNCTION public.is_admin() SET search_path = public;" G5 "routine is_admin()|-|SECURITY DEFINER search_path unsafe"
+probe secdef-path-pgtemp-first "ALTER FUNCTION public.sec_is_admin() SET search_path = pg_temp, pg_catalog;" G5 "routine sec_is_admin()|-|SECURITY DEFINER search_path unsafe"
+probe secdef-path-writable "CREATE SCHEMA zz_w; GRANT CREATE ON SCHEMA zz_w TO authenticated; ALTER FUNCTION public.is_admin() SET search_path = zz_w, pg_temp;" G5 "routine is_admin()|-|SECURITY DEFINER search_path unsafe"
+# pg_net: a platform role attaches an EXISTING trigger function (no CREATE needed) (G9).
+probe net-trigger-existing-fn "SET LOCAL ROLE sandbox_exec; CREATE TRIGGER zz_net2 BEFORE UPDATE ON net._http_response FOR EACH ROW EXECUTE FUNCTION pg_catalog.suppress_redundant_updates_trigger(); RESET ROLE;" G9 "trigger zz_net2 on net._http_response"
+# H-level probe: a new table is clean after the helper except for its inventory entry.
+probe new-table-explicit-grants "CREATE TABLE public.zz_probe (id int PRIMARY KEY); ALTER TABLE public.zz_probe ENABLE ROW LEVEL SECURITY; GRANT ALL ON public.zz_probe TO service_role, authenticated, anon; CREATE FUNCTION public.zz_f() RETURNS int LANGUAGE sql AS 'SELECT 1'; GRANT EXECUTE ON FUNCTION public.zz_f() TO anon, authenticated, service_role; SELECT public.enforce_privilege_baseline();" G1 "relation zz_probe"
 [ "$probes_run" -eq "$EXPECTED_PROBES" ] || fail "probe count: $probes_run run, $EXPECTED_PROBES expected"
 echo "   ok - exactly $EXPECTED_PROBES probes ran and were caught"
-# After the baseline call a new table may only report what needs an explicit review: the
-# inventory (G1) and the authenticated/service_role writes inherited from the default ACL
-# (G3), which each migration must keep or revoke on purpose. Nothing for anon, PUBLIC or
-# sandbox_exec* may remain.
-if grep '^violation|' "$OUT/probe-new-table-baseline.txt" \
-   | grep -vE '^violation\|(G1\||G3\|relation zz_probe\|(authenticated|service_role)\|)' | grep -q .; then
-  grep '^violation|' "$OUT/probe-new-table-baseline.txt"; fail "baseline call left anon/PUBLIC/platform paths on a new table"; fi
-echo "   ok - after the baseline call a new table keeps only review items (inventory + explicit authenticated/service_role decisions)"
+# After the baseline call a new table or routine may only report its missing inventory
+# entry (G1): no write (G3) or EXECUTE (G4) path for anon, authenticated, service_role,
+# PUBLIC or sandbox_exec* survives, even after explicit GRANT ALL / GRANT EXECUTE.
+for pr in new-table-baseline new-table-explicit-grants; do
+  if grep '^violation|' "$OUT/probe-$pr.txt" | grep -vE '^violation\|G1\|' | grep -q .; then
+    grep '^violation|' "$OUT/probe-$pr.txt"; fail "baseline call left a privilege path on a new object ($pr)"; fi
+done
+echo "   ok - after the baseline call new objects keep only their inventory item (G1); 0 G3/G4 paths"
+# Control: a safe non-empty search_path (trusted schemas, explicit trailing pg_temp) is NOT
+# reported, so G5 judges safety rather than rejecting every non-empty value.
+fnd001_psql -At > "$OUT/control-safe-search-path.txt" 2>&1 <<SQL
+BEGIN;
+ALTER FUNCTION public.is_admin() SET search_path = pg_catalog, public, pg_temp;
+\i validation/security/sql/admin-only-acl-guard.sql
+ROLLBACK;
+SQL
+grep -q '^summary|violations=0|' "$OUT/control-safe-search-path.txt" || { grep '^violation' "$OUT/control-safe-search-path.txt"; fail "G5 flagged a safe search_path"; }
+echo "   ok - control: search_path = pg_catalog, public, pg_temp accepted (0 violations)"
 
 echo "== 5. idempotence"
 fnd001_psql -At -c "SELECT 'baseline objects=' || public.enforce_privilege_baseline()"
@@ -131,13 +154,17 @@ bash "$ROOT/validation/fnd001/catalog-fingerprint.sh" > "$OUT/F2-fingerprint.txt
 cmp -s "$OUT/F1-fingerprint.txt" "$OUT/F2-fingerprint.txt" || fail "second baseline call changed the catalog"
 echo "   ok - second call leaves the catalog byte-identical"
 
-echo "== 6. single inventory: helper _svc_columns == guard service_role column allowlist"
-guard_cols=$(grep -oE "\('service_role', '[a-z_]+', '(INSERT|UPDATE)', '[a-z_]+'\)" "$SEC/admin-only-acl-guard.sql" \
-  | sed -E "s/\('service_role', '([a-z_]+)', '([A-Z]+)', '([a-z_]+)'\)/\1.\3:\2/" | sort)
-helper_cols=$(sed -n '/_svc_columns constant text\[\] := ARRAY\[/,/\];/p' "$ROOT/validation/security/d5/d5-admin-only-migration.sql" \
-  | grep -oE "'[a-z_]+\.[a-z_]+:(INSERT|UPDATE)'" | tr -d "'" | sort)
-[ -n "$guard_cols" ] && [ "$guard_cols" = "$helper_cols" ] || { diff <(echo "$guard_cols") <(echo "$helper_cols"); fail "service_role column inventory differs between guard and helper"; }
-echo "   ok - $(echo "$guard_cols" | wc -l | tr -d ' ') service_role column grant(s), identical in guard and helper"
+echo "== 6. single inventory: helper _allow_w/_allow_x == guard allow_w/allow_x"
+MIG="$ROOT/validation/security/d5/d5-admin-only-migration.sql"
+guard_w=$(grep -oE "\('(anon|authenticated|service_role|sandbox)', '[a-z_]+', '[A-Z]+', '[a-z_*]+'\)" "$SEC/admin-only-acl-guard.sql" \
+  | sed -E "s/\('([a-z_]+)', '([a-z_]+)', '([A-Z]+)', '([a-z_*]+)'\)/\1|\2|\3|\4/" | sort)
+helper_w=$(sed -n '/_allow_w constant text\[\] := ARRAY\[/,/\];/p' "$MIG" | grep -oE "'[a-z_]+\|[a-z_]+\|[A-Z]+\|[a-z_*]+'" | tr -d "'" | sort)
+[ -n "$guard_w" ] && [ "$guard_w" = "$helper_w" ] || { diff <(echo "$guard_w") <(echo "$helper_w"); fail "write inventory differs between guard and helper"; }
+guard_x=$(grep -oE "\('(anon|authenticated|service_role|sandbox)', '[a-z_]+\([a-z_,]*\)'\)" "$SEC/admin-only-acl-guard.sql" \
+  | sed -E "s/\('([a-z_]+)', '([^']+)'\)/\1|\2/" | sort)
+helper_x=$(sed -n '/_allow_x constant text\[\] := ARRAY\[/,/\];/p' "$MIG" | grep -oE "'[a-z_]+\|public\.[^']+'" | tr -d "'" | sed 's/public\.//g' | sort)
+[ -n "$guard_x" ] && [ "$guard_x" = "$helper_x" ] || { diff <(echo "$guard_x") <(echo "$helper_x"); fail "EXECUTE inventory differs between guard and helper"; }
+echo "   ok - $(echo "$guard_w" | wc -l | tr -d ' ') write and $(echo "$guard_x" | wc -l | tr -d ' ') EXECUTE inventory entries, identical in guard and helper"
 # Let PostgREST (CI stack) see the new functions/policies before the REST checks.
 fnd001_psql -c "NOTIFY pgrst, 'reload schema'"
 echo "== D5 simulation: all steps passed"

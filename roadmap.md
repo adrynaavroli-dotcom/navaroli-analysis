@@ -53,7 +53,9 @@
 - [x] Step 3 CI job `admin-only-db` + guard/tests in the repo; admin-only rule added to AGENTS.md
 - [x] Step 4 (revision 1) CI PASS on dca13189cf5cc87a1ac899eac651b389ab81175e — Quality checks run 43410417697, 3 jobs success
 - [x] Revision 2 (user review 2026-11-14): signature-based guard/helper, column privileges + Storage + abort, D-e re-analysis (OPEN, medium), REST harness 72 checks, exact coverage (237/186/19/72), deploy-gating proposal, migrator identity assertion, backups, D-f table
-- [ ] Revision 2 CI PASS of quality, fnd001-db and admin-only-db on the final SHA — after sync (next message)
+- [x] Revision 2 CI PASS on 9ba77a3d7c — Quality checks run 43589501422, 3 jobs success (pg_net demo ran on the mock)
+- [x] Revision 3 (user review 2026-11-15): default-deny baseline helper (+RLS abort), G6 read allowlist, pg_net CREATE TRIGGER with existing functions (D-e §4), G5 safe search_path; local 316/186/27
+- [ ] Revision 3 CI PASS of quality, fnd001-db and admin-only-db on the final SHA — after sync (next message)
 - [ ] Step 5 production migration with preflight/postflight — waits for separate user authorization
 - [ ] Step 6 frontend: role-checked admin routes, hidden admin links, no Sign up — after step 5
 - [ ] Decisions D-e (pg_net, OPEN medium: accept with controls or ask the platform to revoke) and D-f (default ACL; open until migrations, guards and deploy gating align) — waits for user
