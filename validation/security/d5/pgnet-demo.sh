@@ -108,7 +108,7 @@ q "SELECT 'trigger-fn|' || n.nspname || '|' || p.oid::regprocedure::text || '|se
           || '|sandbox_exec=' || has_function_privilege('sandbox_exec', p.oid, 'EXECUTE')
           || '|sandbox_exec_<ref>=' || COALESCE(has_function_privilege(NULLIF('$ref', ''), p.oid, 'EXECUTE')::text, 'n/a')
    FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-   WHERE p.prorettype = 'trigger'::regtype ORDER BY n.nspname, p.proname, 3"
+   WHERE p.prorettype = 'trigger'::regtype ORDER BY 1"
 
 # 5a. attach EXISTING pg_catalog trigger functions as sandbox_exec, then write the rows the
 #     way the worker (response) and every caller (queue) do. One transaction, rolled back.
@@ -148,8 +148,8 @@ else line trigger-attach "NOT DEMONSTRATED" "$(echo "$att" | grep -m1 -i error)"
 if echo "$att" | grep -q 'not of tsvector type' && ! echo "$att" | grep -q '^response-insert=allowed$'; then
   line trigger-blocks-response-write DEMONSTRATED "with that trigger an INSERT into net._http_response (what the worker does after each request) fails: $(echo "$att" | grep -m1 'tsvector type')"
 else line trigger-blocks-response-write "NOT DEMONSTRATED" "$(echo "$att" | grep -m1 -E 'response-insert|ERROR')"; fi
-if ! echo "$att" | grep -q '^http_get='; then
-  line trigger-blocks-enqueue DEMONSTRATED "with that trigger net.http_get fails for every caller (scheduled server-function calls included): $(echo "$att" | grep -E 'ERROR' | sed -n 2p)"
+if ! echo "$att" | grep -q '^http_get=' && echo "$att" | grep -q 'column "url" is not of tsvector type'; then
+  line trigger-blocks-enqueue DEMONSTRATED "with that trigger net.http_get fails for every caller (scheduled server-function calls included): $(echo "$att" | grep -m1 'column "url" is not of tsvector type')"
 else line trigger-blocks-enqueue "NOT DEMONSTRATED" "$(echo "$att" | grep -m1 '^http_get=')"; fi
 if echo "$att" | grep -q '^drop-by-sandbox=allowed$' || echo "$att" | grep -q '^disable-by-sandbox=allowed$'; then
   line trigger-persistence "NOT DEMONSTRATED" "sandbox_exec could also drop/disable the trigger"
