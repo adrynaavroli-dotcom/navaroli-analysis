@@ -51,9 +51,9 @@ el sandbox. Demostrado en el stack desechable que el worker ejecuta lo que encol
   (precios, sparkline, campos de revisión y alertas): no hay vía a contenido, configuración ni roles.
 - Hipotético: leer durante 6 h el contenido de las respuestas de peticiones de otros (resultado de funciones
   del servidor llamadas por cron).
-- Hipotético, bajo: `TRIGGER` sobre la cola permitiría colgar un trigger que se ejecutaría en la sesión del
-  worker (`postgres`), pero solo con funciones `trigger` ya existentes porque `sandbox_exec*` no puede crear
-  funciones en ningún esquema persistente. La guarda G9 falla si aparece cualquier trigger de usuario en `net`.
+- **Corregido 2026-11-15 (revisión 3) — `TRIGGER` sí permite colgar código existente.** La versión anterior
+  suponía que hacía falta CREATE en un esquema. Falso: PostgreSQL exige solo el privilegio TRIGGER sobre la
+  tabla y EXECUTE sobre una función trigger **ya existente** (documentación de CREATE TRIGGER). Ver §4.
 - Disponibilidad (demostrado por privilegios): borrar o truncar la cola anula las tareas programadas
   pendientes.
 
@@ -62,7 +62,9 @@ el sandbox. Demostrado en el stack desechable que el worker ejecuta lo que encol
    con `rest-admin-only-check.ts`, comprobaciones `N`). anon/authenticated solo existen detrás de PostgREST, así
    que sus privilegios SQL en `net` no son alcanzables desde la web.
 2. G9 (CI y postflight): ninguna función o vista de `public` puede alcanzar `net`; nadie puede CREATE en `net`;
-   ningún trigger de usuario en tablas `net`.
+   ningún trigger de usuario en tablas `net` (detecta el ataque de §4 a posteriori, no lo impide); líneas
+   `risk|D-e|trigger-attach …` con el número de funciones trigger existentes que cada rol podría colgar.
+   D5 retira EXECUTE de todas las funciones trigger de `public` a roles API y de plataforma.
 3. `sandbox_exec*` sin USAGE en `vault` ni `cron` (vigilado por G8 para `cron`).
 4. D5 reduce el impacto de un `CRON_SECRET` filtrado al inventario por columnas de `service_role`.
 5. Higiene recomendable (fuera de D5, decisión tuya): rotar `CRON_SECRET` periódicamente.
@@ -78,3 +80,29 @@ el sandbox. Demostrado en el stack desechable que el worker ejecuta lo que encol
 La guarda deja de emitir `info|pg_net…` y emite `risk|D-e|…` (33 líneas en producción). Nunca cuentan como PASS.
 La decisión D-e (aceptar temporalmente con los controles anteriores o pedir la retirada a la plataforma) sigue
 pendiente de ti.
+
+## 4. Revisión 3 (2026-11-15): CREATE TRIGGER con funciones existentes
+
+Ejecutado solo en la base desechable local (PostgreSQL 17.11, esquema `net` **simulado**:
+`validation/security/sql/d5-platform-mock.sql`, sin worker) con `validation/security/d5/pgnet-demo.sh` §5. En CI
+el mismo script intenta cambiar el mock por la extensión `pg_net` real del stack; el resultado oficial es el
+artefacto `d5-evidence/pgnet-demo.txt` del job `admin-only-db`. El run anterior (43589501422) se ejecutó también
+sobre el mock (`net owner = postgres`, sin `extversion`), así que **ningún resultado de pg_net real existe aún**.
+
+| Comprobación | Resultado (local, mock) |
+|---|---|
+| TRIGGER efectivo de `sandbox_exec` y `sandbox_exec_<ref>` en `net.http_request_queue` y `net._http_response` | **Sí** en las cuatro combinaciones (PUBLIC ALL, como en producción §P14) |
+| Funciones trigger existentes (sin argumentos) ejecutables | 16 de 22 para ambos roles: las 16 de `pg_catalog` (`RI_FKey_*`, `suppress_redundant_updates_trigger`, `tsvector_update_trigger[_column]`, `unique_key_recheck`); las 6 de `public` no, tras D5. Producción hoy (sin D5): 22 y 28 (§P14; nombres NO VERIFICADOS) |
+| `sandbox_exec` crea un trigger en ambas tablas con `pg_catalog.tsvector_update_trigger` (sin CREATE en ningún esquema) | **DEMOSTRADO** (transacción revertida) |
+| Con ese trigger, el INSERT en `net._http_response` (la escritura que hace el worker tras cada petición) | **Falla** (`column "content" is not of tsvector type`) |
+| Con ese trigger, `net.http_get` para cualquier llamante (incluidas las tareas programadas) | **Falla** (`column "url" is not of tsvector type`) |
+| `sandbox_exec` puede DROP / DISABLE el trigger | **No** (`must be owner`): solo el dueño de la tabla lo retira; en producción es `supabase_admin`, no el migrador |
+| Efecto sobre el worker real | **NO VERIFICADO**: no hay worker en el mock. En CI se ejecuta solo si la extensión es real y la sesión puede retirar el trigger después |
+
+Conclusión: `sandbox_exec*` puede, con privilegios ya presentes en producción, **bloquear todas las peticiones
+salientes de `pg_net`** (cola) y **las escrituras de respuestas del worker**, de forma persistente y sin poder
+deshacerlo ni el migrador. No da acceso a datos, contenido, configuración ni roles: las funciones disponibles son de
+`pg_catalog` y se ejecutan con los datos de la fila. Una función SECURITY DEFINER de `public` (p. ej.
+`handle_new_user`) colgada así hoy correría como `postgres`; D5 lo cierra retirando EXECUTE de todas las
+funciones trigger de `public` (casos H5 de `admin-only-tests.sql`). Clasificación: sigue **ABIERTO, severidad
+media**, con la disponibilidad como impacto demostrado. La decisión D-e sigue siendo tuya.
