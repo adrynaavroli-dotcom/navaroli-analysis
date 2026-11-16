@@ -339,6 +339,15 @@ BEGIN
            pg_catalog.acldefault(CASE WHEN rel.relkind = 'S' THEN 's'::"char" ELSE 'r'::"char" END, rel.relowner))) a
     WHERE a.grantee = 0
     UNION ALL
+    -- column ACLs granted directly to PUBLIC (any privilege, SELECT included). Step 1's
+    -- REVOKE ALL ON TABLE ... FROM PUBLIC also clears the column grants it issued; a column
+    -- grant to PUBLIC made by another grantor (WITH GRANT OPTION chain) survives it and
+    -- must abort here instead of passing silently.
+    SELECT 'PUBLIC holds column ' || x.privilege_type || ' (' || a.attname::text || ') on ' || rel.oid::regclass::text
+    FROM rel JOIN pg_catalog.pg_attribute a ON a.attrelid = rel.oid AND a.attnum > 0 AND NOT a.attisdropped AND a.attacl IS NOT NULL
+    CROSS JOIN LATERAL pg_catalog.aclexplode(a.attacl) x
+    WHERE x.grantee = 0
+    UNION ALL
     -- table level
     SELECT ro.rolname || ' ' || p.p || ' on ' || rel.oid::regclass::text
     FROM rel CROSS JOIN ro CROSS JOIN pg_catalog.unnest(_wprivs) p(p)
