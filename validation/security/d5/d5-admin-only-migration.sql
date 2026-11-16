@@ -180,7 +180,7 @@ ALTER FUNCTION public.handle_new_user() SET search_path = '';
 --              MAINTAIN, table or column level; sequence USAGE/UPDATE — is revoked.
 --   _allow_x : EXECUTE ('who|routine', full signature). Everything else is revoked, so a
 --              new routine (overloads included) is executable by nobody but its owner.
---   PUBLIC   : nothing on relations, columns, sequences or routines.
+--   PUBLIC   : nothing on relations, columns (column ACLs included), sequences or routines.
 --   Storage  : sandbox_exec* write nothing on storage.buckets / storage.objects.
 -- Both lists MUST equal allow_w / allow_x of validation/security/sql/admin-only-acl-guard.sql
 -- (compared by validation/security/d5/run-d5-simulation.sh step 6). A migration that needs
