@@ -11,6 +11,8 @@
 #      tests all pass; FND-001 T1–T33 suite still passes;
 #   4. regression probes: a new object without review, an owner-based write policy, a
 #      has_role() policy and an unreviewed SECURITY DEFINER function must each fail the guard;
+#   4b. PUBLIC column ACLs (G2 + helper postcondition): column grants to PUBLIC are seen by
+#      the guard, removed by the helper, and one the helper cannot revoke aborts it;
 #   5. idempotence: a second baseline call changes nothing;
 #   6. coverage: the number of behaviour cases, FND-001 cases and probes is asserted
 #      exactly, so a silently shrunk suite cannot report PASS; the write and EXECUTE
@@ -20,6 +22,7 @@
 EXPECTED_ADMIN_ONLY_CASES=316
 EXPECTED_FND001_CASES=186
 EXPECTED_PROBES=27
+EXPECTED_PUBLIC_COLUMN_CHECKS=11
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 cd "$ROOT"
@@ -147,6 +150,84 @@ ROLLBACK;
 SQL
 grep -q '^summary|violations=0|' "$OUT/control-safe-search-path.txt" || { grep '^violation' "$OUT/control-safe-search-path.txt"; fail "G5 flagged a safe search_path"; }
 echo "   ok - control: search_path = pg_catalog, public, pg_temp accepted (0 violations)"
+
+echo "== 4b. column ACLs granted directly to PUBLIC (G2 + helper postcondition; all rolled back)"
+col_checks=0
+colok() { col_checks=$((col_checks + 1)); echo "   ok - $1"; }
+section() { awk -v s="#$2" '/^#/{on=($0==s); next} on' "$1"; }
+# anon's column ACLs (the approved curated SELECT columns) must be identical before and after.
+ANONCOLS="SELECT 'anoncol|' || c.relname || '.' || a.attname || '|' || x.privilege_type || '|' || x.is_grantable
+  FROM pg_class c JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped AND a.attacl IS NOT NULL
+  CROSS JOIN LATERAL aclexplode(a.attacl) x WHERE c.relnamespace = 'public'::regnamespace AND x.grantee = 'anon'::regrole ORDER BY 1;"
+PUBCOLS="SELECT 'public-column-acl=' || count(*) FROM pg_class c
+  JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped AND a.attacl IS NOT NULL
+  CROSS JOIN LATERAL aclexplode(a.attacl) x WHERE c.relnamespace = 'public'::regnamespace AND x.grantee = 0;"
+# Lifecycle: one column grant to PUBLIC per column privilege (SELECT, INSERT, UPDATE,
+# REFERENCES); zz_nobody is a role without any grant, so it sees only what PUBLIC holds.
+fnd001_psql -At > "$OUT/public-column-lifecycle.txt" 2>&1 <<SQL
+BEGIN;
+CREATE ROLE zz_nobody NOLOGIN;
+\echo '#anon-before'
+$ANONCOLS
+GRANT SELECT (full_name) ON public.profiles TO PUBLIC;
+GRANT INSERT (content), UPDATE (content) ON public.page_content TO PUBLIC;
+GRANT REFERENCES (id) ON public.theses TO PUBLIC;
+\echo '#granted'
+$PUBCOLS
+SELECT 'nobody-select-full_name=' || has_column_privilege('zz_nobody', 'public.profiles', 'full_name', 'SELECT');
+\echo '#guard-granted'
+\i validation/security/sql/admin-only-acl-guard.sql
+\echo '#helper'
+SELECT 'baseline objects=' || public.enforce_privilege_baseline();
+$PUBCOLS
+SELECT 'nobody-select-full_name=' || has_column_privilege('zz_nobody', 'public.profiles', 'full_name', 'SELECT');
+\echo '#anon-after'
+$ANONCOLS
+\echo '#guard-after'
+\i validation/security/sql/admin-only-acl-guard.sql
+ROLLBACK;
+SQL
+L="$OUT/public-column-lifecycle.txt"
+grep -q '^ERROR' "$L" && { cat "$L"; fail "PUBLIC column lifecycle script errored"; }
+section "$L" granted | grep -qx 'public-column-acl=4' || { cat "$L"; fail "setup: expected 4 PUBLIC column ACL entries"; }
+section "$L" granted | grep -qx 'nobody-select-full_name=true' || { cat "$L"; fail "setup: PUBLIC column SELECT not effective"; }
+colok "setup: 4 column ACL entries granted to PUBLIC, effective for a role without grants"
+for want in 'column profiles.full_name|PUBLIC|SELECT' 'column page_content.content|PUBLIC|INSERT' \
+            'column page_content.content|PUBLIC|UPDATE' 'column theses.id|PUBLIC|REFERENCES'; do
+  section "$L" guard-granted | grep -qxF "violation|G2|$want" || { cat "$L"; fail "guard (before helper) missed G2 $want"; }
+  colok "guard before helper: G2 $want"
+done
+section "$L" helper | grep -qx 'public-column-acl=0' || { cat "$L"; fail "helper left a PUBLIC column ACL"; }
+colok "helper: 0 column ACL entries granted to PUBLIC remain in public"
+section "$L" helper | grep -qx 'nobody-select-full_name=false' || { cat "$L"; fail "PUBLIC column SELECT still effective after helper"; }
+colok "helper: PUBLIC column SELECT no longer effective (role without grants)"
+cmp -s <(section "$L" anon-before) <(section "$L" anon-after) || { cat "$L"; fail "anon column ACLs changed"; }
+[ "$(section "$L" anon-before | grep -c '^anoncol|')" -gt 0 ] || { cat "$L"; fail "no anon column ACLs found to compare"; }
+colok "anon column ACLs unchanged ($(section "$L" anon-before | grep -c '^anoncol|') entries)"
+section "$L" guard-after | grep -q '^summary|violations=0|' || { section "$L" guard-after | grep '^violation'; fail "guard after helper not at 0"; }
+colok "guard after helper: 0 violations"
+# Postcondition: a PUBLIC column grant issued by another grantor survives the owner's
+# REVOKE, so the helper must abort and name it (it may never pass silently).
+fnd001_psql -At > "$OUT/public-column-other-grantor.txt" 2>&1 <<SQL || true
+BEGIN;
+GRANT SELECT (full_name) ON public.profiles TO authenticated WITH GRANT OPTION;
+SET LOCAL ROLE authenticated;
+GRANT SELECT (full_name) ON public.profiles TO PUBLIC;
+RESET ROLE;
+\echo '#guard'
+\i validation/security/sql/admin-only-acl-guard.sql
+\echo '#helper'
+SELECT 'baseline objects=' || public.enforce_privilege_baseline();
+ROLLBACK;
+SQL
+G="$OUT/public-column-other-grantor.txt"
+section "$G" guard | grep -qxF 'violation|G2|column profiles.full_name|PUBLIC|SELECT' || { cat "$G"; fail "guard missed other-grantor PUBLIC column SELECT"; }
+colok "guard: other-grantor PUBLIC column SELECT detected"
+grep -q 'enforce_privilege_baseline: privilege path(s) remain.*PUBLIC holds column SELECT (full_name) on public.profiles' "$G" \
+  && ! grep -q '^baseline objects=' "$G" || { cat "$G"; fail "helper did not abort on a surviving PUBLIC column grant"; }
+colok "helper postcondition aborts on surviving PUBLIC column SELECT and names it"
+[ "$col_checks" -eq "$EXPECTED_PUBLIC_COLUMN_CHECKS" ] || fail "PUBLIC column checks: $col_checks run, $EXPECTED_PUBLIC_COLUMN_CHECKS expected"
+echo "   ok - exactly $EXPECTED_PUBLIC_COLUMN_CHECKS PUBLIC column checks ran and passed"
 
 echo "== 5. idempotence"
 fnd001_psql -At -c "SELECT 'baseline objects=' || public.enforce_privilege_baseline()"

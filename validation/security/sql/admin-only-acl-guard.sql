@@ -6,7 +6,9 @@
 -- It judges SQL PRIVILEGES and RLS POLICIES separately:
 --   G1  inventory: every relation/routine in public is a reviewed object (new tables or
 --       functions fail until they are reviewed and added here); every table has RLS on.
---   G2  PUBLIC holds nothing on any public relation, sequence or routine.
+--   G2  PUBLIC holds nothing on any public relation, sequence or routine, and no column of a
+--       public relation carries a column ACL granted directly to PUBLIC (pg_attribute.attacl:
+--       SELECT, INSERT, UPDATE, REFERENCES), reported as "column <table>.<column>|PUBLIC|<priv>".
 --   G3  effective write privileges (table- and column-level, explicit, PUBLIC or inherited)
 --       of anon, authenticated, service_role and sandbox_exec* are a subset of the
 --       reviewed allowlist below. anon and sandbox_exec*: none at all.
@@ -139,6 +141,11 @@ v AS (
   WHERE a.grantee = 0
   UNION ALL SELECT 'G2', 'routine ' || f.sig, 'PUBLIC', a.privilege_type
   FROM fns f CROSS JOIN LATERAL aclexplode(COALESCE(f.proacl, acldefault('f'::"char", f.proowner))) a WHERE a.grantee = 0
+  -- G2 PUBLIC, column ACLs: relacl does not show column grants, so walk attacl explicitly
+  -- (a column has no default ACL, so NULL means no column grant at all)
+  UNION ALL SELECT 'G2', 'column ' || r.name || '.' || a.attname::text, 'PUBLIC', x.privilege_type
+  FROM rels r JOIN pg_attribute a ON a.attrelid = r.oid AND a.attnum > 0 AND NOT a.attisdropped AND a.attacl IS NOT NULL
+  CROSS JOIN LATERAL aclexplode(a.attacl) x WHERE x.grantee = 0
   -- G3a table-level and column-level writes on relations
   UNION ALL
   SELECT 'G3', 'relation ' || r.name || CASE WHEN x.col = '*' THEN '' ELSE '.' || x.col END, l.name, x.priv

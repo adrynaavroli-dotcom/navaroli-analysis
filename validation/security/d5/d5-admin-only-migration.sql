@@ -180,7 +180,7 @@ ALTER FUNCTION public.handle_new_user() SET search_path = '';
 --              MAINTAIN, table or column level; sequence USAGE/UPDATE — is revoked.
 --   _allow_x : EXECUTE ('who|routine', full signature). Everything else is revoked, so a
 --              new routine (overloads included) is executable by nobody but its owner.
---   PUBLIC   : nothing on relations, columns, sequences or routines.
+--   PUBLIC   : nothing on relations, columns (column ACLs included), sequences or routines.
 --   Storage  : sandbox_exec* write nothing on storage.buckets / storage.objects.
 -- Both lists MUST equal allow_w / allow_x of validation/security/sql/admin-only-acl-guard.sql
 -- (compared by validation/security/d5/run-d5-simulation.sh step 6). A migration that needs
@@ -338,6 +338,15 @@ BEGIN
     FROM rel CROSS JOIN LATERAL pg_catalog.aclexplode(COALESCE(rel.relacl,
            pg_catalog.acldefault(CASE WHEN rel.relkind = 'S' THEN 's'::"char" ELSE 'r'::"char" END, rel.relowner))) a
     WHERE a.grantee = 0
+    UNION ALL
+    -- column ACLs granted directly to PUBLIC (any privilege, SELECT included). Step 1's
+    -- REVOKE ALL ON TABLE ... FROM PUBLIC also clears the column grants it issued; a column
+    -- grant to PUBLIC made by another grantor (WITH GRANT OPTION chain) survives it and
+    -- must abort here instead of passing silently.
+    SELECT 'PUBLIC holds column ' || x.privilege_type || ' (' || a.attname::text || ') on ' || rel.oid::regclass::text
+    FROM rel JOIN pg_catalog.pg_attribute a ON a.attrelid = rel.oid AND a.attnum > 0 AND NOT a.attisdropped AND a.attacl IS NOT NULL
+    CROSS JOIN LATERAL pg_catalog.aclexplode(a.attacl) x
+    WHERE x.grantee = 0
     UNION ALL
     -- table level
     SELECT ro.rolname || ' ' || p.p || ' on ' || rel.oid::regclass::text
