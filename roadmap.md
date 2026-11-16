@@ -56,6 +56,8 @@
 - [x] Revision 2 CI PASS on 9ba77a3d7c — Quality checks run 43589501422, 3 jobs success (pg_net demo ran on the mock)
 - [x] Revision 3 (user review 2026-11-15): default-deny baseline helper (+RLS abort), G6 read allowlist, pg_net CREATE TRIGGER with existing functions (D-e §4), G5 safe search_path; local 316/186/27
 - [ ] Revision 3 CI PASS of quality, fnd001-db and admin-only-db on the final SHA — after sync (next message)
+- [x] Revision 3a (2026-11-16): G2 + helper postcondition cover column ACLs granted to PUBLIC; local sim PASS 316/186/27 + 11/11 PUBLIC-column checks; sensitivity shown
+- [ ] Revision 3a CI PASS of quality, fnd001-db and admin-only-db on the final SHA — after sync
 - [ ] Step 5 production migration with preflight/postflight — waits for separate user authorization
 - [ ] Step 6 frontend: role-checked admin routes, hidden admin links, no Sign up — after step 5
 - [ ] Decisions D-e (pg_net, OPEN medium: accept with controls or ask the platform to revoke) and D-f (default ACL; open until migrations, guards and deploy gating align) — waits for user

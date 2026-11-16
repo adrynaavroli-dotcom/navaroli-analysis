@@ -163,7 +163,7 @@ que ningún objeto de `public` pueda suplantar una función del catálogo) separ
 | Regla | Comprueba |
 |---|---|
 | G1 | Inventario revisado de tablas y de funciones **por firma completa** (`regprocedure`); RLS activo en toda tabla |
-| G2 | PUBLIC sin privilegios en `public` |
+| G2 | PUBLIC sin privilegios en `public`: `relacl`, `proacl` **y ACL de columna** (`pg_attribute.attacl`: SELECT, INSERT, UPDATE, REFERENCES), diagnóstico `column <tabla>.<columna>|PUBLIC|<privilegio>` |
 | G3 | Escrituras **efectivas** (tabla y columna, explícitas, por PUBLIC o heredadas) ⊆ lista permitida; `anon` y `sandbox_exec*`: ninguna |
 | G4 | EXECUTE efectivo ⊆ lista permitida, **por firma** |
 | G5 | SECURITY DEFINER revisadas **por firma**, dueño `postgres`, `search_path` fijado |
@@ -341,3 +341,25 @@ Resultados locales, NO oficiales (PostgreSQL 17.11 + `local-shim.sql`, `net` sim
 
 Recuentos: guarda antes de D5 251 (244 + 2 G5 + 5 G6 sobre el esquema reconstruido; **producción no re-ejecutada**
 en este turno), después 0; 316/316 casos; FND-001 186/186; 27/27 sondas; idempotencia; 43 líneas `risk|D-e`.
+
+### Revisión 3a (2026-11-16): ACL de columna concedidas a PUBLIC
+
+Hueco residual: G2 recorría `relacl`/`proacl` pero no `pg_attribute.attacl`, así que un
+`GRANT SELECT (col) ... TO PUBLIC` no aparecía como violación G2 (las escrituras de columna sí las veía G3
+a través de `anon`; SELECT de columna no lo veía ninguna regla).
+
+- **G2** recorre ahora `attacl` de toda relación de `public` y reporta cada entrada con grantee PUBLIC.
+- **Postcondición de `enforce_privilege_baseline()`**: aborta si queda cualquier ACL de columna concedida a
+  PUBLIC en `public`. El `REVOKE ALL ON TABLE … FROM PUBLIC` del paso 1 elimina las concedidas por el dueño
+  (PostgreSQL revoca también los privilegios de columna correspondientes); una concedida por otro grantor
+  (cadena WITH GRANT OPTION) sobrevive y ahora aborta en vez de pasar en silencio.
+- Sin cambios en allowlists ni en los SELECT de columna de `anon` (26 entradas idénticas antes/después).
+- `run-d5-simulation.sh` paso 4b (11 comprobaciones, recuento exacto): SELECT/INSERT/UPDATE/REFERENCES de
+  columna a PUBLIC detectados por G2 antes del helper; helper deja 0 ACL de columna PUBLIC y un rol sin
+  grants deja de ver la columna; guarda vuelve a 0; ACL de columna de `anon` sin cambios; grant PUBLIC de
+  otro grantor detectado por G2 y la postcondición aborta nombrándolo.
+
+Ejecutado en PostgreSQL 17.11 local desechable (no oficial): simulación completa PASS — guarda 251→0
+(0 líneas G2 de columna antes de D5), 316/316, 186/186, 27/27 sondas, 11/11 comprobaciones 4b,
+idempotencia, inventarios iguales. Sensibilidad: sin la nueva cláusula de postcondición el helper devuelve
+éxito con el grant de otro grantor vivo y la comprobación 4b falla. Producción no tocada.
