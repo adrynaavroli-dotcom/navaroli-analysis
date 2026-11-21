@@ -7,8 +7,14 @@
  *   - At origin t the covariance is estimated with returns up to and including
  *     index t only: sample → trailing window of `window` returns ending at t;
  *     EWMA → the ex-ante EWMA estimate at t+1 (which uses returns ≤ t).
- *   - The weights are held fixed over the next `rebalance` returns (t+1..t+R)
- *     and the realized portfolio volatility is measured on that block.
+ *   - Capital is allocated to the target weights at t and held buy-and-hold
+ *     (no intra-block rebalancing) over returns t+1..t+R. Daily simple portfolio
+ *     returns r_p = Σ w_drift·(exp(r_log)−1) are computed with weights drifting
+ *     each day; realized volatility is the sample std (n−1) × √252 of those
+ *     simple returns. (≤ v1.0.0 used Σ w·r_log with fixed weights, an
+ *     approximation of a daily constant-mix portfolio.)
+ *   - Actual one-way turnover at each rebalance compares the new target with
+ *     the previous portfolio's drifted end-of-block weights.
  *   - Origins whose optimization fails are recorded with their status and
  *     excluded from the summary means — never silently skipped.
  *
@@ -20,7 +26,7 @@ import { rollingCovariance, type Matrix } from '../correlation';
 import { ewmaCovariance } from '../correlation/ewma';
 import { TRADING_DAYS } from '../volatility/types';
 import { gmvClosedForm, gmvLongOnly, type MinVarianceStatus } from './min-variance';
-import { equalWeights, hhi, turnover } from './metrics';
+import { driftWeights, equalWeights, hhi, turnover } from './metrics';
 
 export interface WalkForwardOptions {
   /** Estimation window in returns (sample estimator). */
@@ -48,7 +54,13 @@ export interface WalkForwardOrigin {
   /** Equal-weight realized volatility over the same holding block (benchmark). */
   ewRealizedVol: number | null;
   hhi: number | null;
+  /** GMV weights at the end of the holding block after buy-and-hold drift. */
+  driftedWeights: number[] | null;
+  /** Equal-weight drifted weights at the end of the holding block. */
+  ewDriftedWeights: number[] | null;
 }
+
+export interface TurnoverStats { mean: number; median: number; min: number; max: number; n: number }
 
 export interface WalkForwardSummary {
   origins: number;
@@ -59,7 +71,11 @@ export interface WalkForwardSummary {
   /** gmvMeanRealizedVol / ewMeanRealizedVol (< 1 means lower realized risk than equal weight). */
   volRatio: number | null;
   gmvMeanHhi: number | null;
-  gmvMeanTurnover: number | null;
+  /** Mean one-way change between consecutive TARGET weights (ignores drift; not actual turnover). */
+  gmvMeanTargetWeightChange: number | null;
+  /** Actual one-way turnover: new target vs previous drifted weights. */
+  gmvActualTurnover: TurnoverStats | null;
+  ewActualTurnover: TurnoverStats | null;
 }
 
 export interface WalkForwardResult {
@@ -69,19 +85,33 @@ export interface WalkForwardResult {
   summary: WalkForwardSummary;
 }
 
-/** Sample standard deviation (n−1) of portfolio returns over a block, annualized (√252). */
-function realizedVol(panel: AlignedPanel, w: number[], from: number, to: number): number {
+/**
+ * Buy-and-hold block: start at target weights, drift daily, collect simple
+ * portfolio returns over returns [from, to). Panel values are log returns from
+ * the Returns Engine; they are converted to simple returns here because a
+ * portfolio's return is the weighted sum of SIMPLE asset returns.
+ * Returns annualized sample volatility (n−1, √252) and end-of-block weights.
+ */
+function buyAndHoldBlock(panel: AlignedPanel, target: number[], from: number, to: number): { vol: number; drifted: number[] } {
   const n = to - from;
-  if (n < 2) return NaN;
+  if (n < 2) return { vol: NaN, drifted: target.slice() };
+  let w = target.slice();
   const pr: number[] = [];
   for (let t = from; t < to; t++) {
-    let r = 0;
-    for (let j = 0; j < w.length; j++) r += w[j] * panel.values[t][j];
-    pr.push(r);
+    const d = driftWeights(w, panel.values[t].map((x) => Math.exp(x) - 1));
+    pr.push(d.portfolioReturn);
+    w = d.weights;
   }
   const mu = pr.reduce((a, v) => a + v, 0) / n;
   const v = pr.reduce((a, r) => a + (r - mu) * (r - mu), 0) / (n - 1);
-  return Math.sqrt(v * TRADING_DAYS);
+  return { vol: Math.sqrt(v * TRADING_DAYS), drifted: w };
+}
+
+function stats(xs: number[]): TurnoverStats | null {
+  if (!xs.length) return null;
+  const s = xs.slice().sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return { mean: xs.reduce((a, v) => a + v, 0) / xs.length, median: s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2, min: s[0], max: s[s.length - 1], n: xs.length };
 }
 
 export function walkForward(panel: AlignedPanel, o: WalkForwardOptions = DEFAULT_WALKFORWARD): WalkForwardResult {
@@ -105,18 +135,22 @@ export function walkForward(panel: AlignedPanel, o: WalkForwardOptions = DEFAULT
     if (!S) continue; // warm-up: no estimate available yet
     const res = o.longOnly ? gmvLongOnly(S, o.maxWeight) : gmvClosedForm(S);
     if (res.status !== 'OK' || !res.weights) {
-      origins.push({ date: panel.dates[t], index: t, status: res.status, weights: null, conditionNumber: res.conditionNumber, realizedVol: null, ewRealizedVol: null, hhi: null });
+      origins.push({ date: panel.dates[t], index: t, status: res.status, weights: null, conditionNumber: res.conditionNumber, realizedVol: null, ewRealizedVol: null, hhi: null, driftedWeights: null, ewDriftedWeights: null });
       continue;
     }
+    const g = buyAndHoldBlock(panel, res.weights, t + 1, t + 1 + o.rebalance);
+    const e = buyAndHoldBlock(panel, ew, t + 1, t + 1 + o.rebalance);
     origins.push({
       date: panel.dates[t],
       index: t,
       status: 'OK',
       weights: res.weights,
       conditionNumber: res.conditionNumber,
-      realizedVol: realizedVol(panel, res.weights, t + 1, t + 1 + o.rebalance),
-      ewRealizedVol: realizedVol(panel, ew, t + 1, t + 1 + o.rebalance),
+      realizedVol: g.vol,
+      ewRealizedVol: e.vol,
       hhi: hhi(res.weights),
+      driftedWeights: g.drifted,
+      ewDriftedWeights: e.drifted,
     });
   }
 
@@ -124,8 +158,14 @@ export function walkForward(panel: AlignedPanel, o: WalkForwardOptions = DEFAULT
   const mean = (xs: number[]) => (xs.length ? xs.reduce((a, v) => a + v, 0) / xs.length : null);
   const gmvVols = ok.map((x) => x.realizedVol!);
   const ewVols = ok.map((x) => x.ewRealizedVol!).filter(Number.isFinite);
-  const turns: number[] = [];
-  for (let i = 1; i < ok.length; i++) turns.push(turnover(ok[i - 1].weights!, ok[i].weights!));
+  // Transitions only between consecutive converged origins: after a failed
+  // origin there is no well-defined held portfolio to compare against.
+  const targetChange: number[] = [], gmvActual: number[] = [], ewActual: number[] = [];
+  for (let i = 1; i < ok.length; i++) {
+    targetChange.push(turnover(ok[i - 1].weights!, ok[i].weights!));
+    gmvActual.push(turnover(ok[i - 1].driftedWeights!, ok[i].weights!));
+    ewActual.push(turnover(ok[i - 1].ewDriftedWeights!, ew));
+  }
 
   const gmvMean = mean(gmvVols);
   const ewMean = mean(ewVols);
@@ -141,7 +181,9 @@ export function walkForward(panel: AlignedPanel, o: WalkForwardOptions = DEFAULT
       ewMeanRealizedVol: ewMean,
       volRatio: gmvMean !== null && ewMean ? gmvMean / ewMean : null,
       gmvMeanHhi: mean(ok.map((x) => x.hhi!)),
-      gmvMeanTurnover: mean(turns),
+      gmvMeanTargetWeightChange: mean(targetChange),
+      gmvActualTurnover: stats(gmvActual),
+      ewActualTurnover: stats(ewActual),
     },
   };
 }

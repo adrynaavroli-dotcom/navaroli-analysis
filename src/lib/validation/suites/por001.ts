@@ -3,7 +3,7 @@ import { effectiveN, hhi } from '../../portfolio/metrics';
 import { compareExact, compareNumeric, type CompareMeta } from '../compare';
 import type { ValidationResult } from '../types';
 
-export const POR001_IMPLEMENTATION_VERSION = 'quant-engine/por001-min-variance@1.0.0';
+export const POR001_IMPLEMENTATION_VERSION = 'quant-engine/por001-min-variance@1.1.0';
 
 interface ClosedCase { weights: number[]; variance: number }
 interface ConstrainedCase extends ClosedCase { kktResidual: number }

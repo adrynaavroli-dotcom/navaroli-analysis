@@ -48,12 +48,34 @@ choice, not an omission.
 
 Non-overlapping blocks of 21 trading days. At origin t the covariance uses
 returns ≤ t only (sample: trailing W returns ending at t; EWMA: the ex-ante
-estimate at t+1, which uses returns ≤ t). Weights are held over returns
-t+1..t+21 and the realized annualized volatility (sample std, n−1, √252) is
-measured on that block. Failed origins are recorded with their status and
-excluded from the summary means. Turnover is reported (Σ|Δw| between
-rebalances) but transaction costs are out of scope (POR-006). Exact
-rebalancing to target weights is assumed.
+estimate at t+1, which uses returns ≤ t). Capital is allocated to the target
+weights at t and held **buy-and-hold** over returns t+1..t+21 (no intra-block
+rebalancing). Daily simple portfolio returns use drifting weights:
+
+    r_s,i,t = exp(r_log,i,t) − 1
+    r_p,t   = Σ_i w_i,t · r_s,i,t
+    w_i,t+1 = w_i,t · (1 + r_s,i,t) / (1 + r_p,t)
+
+Realized annualized volatility is the sample std (n−1) of the 21 simple
+portfolio returns × √252. Failed origins are recorded with their status and
+excluded from the summary means.
+
+**Turnover.** Actual one-way turnover at each rebalance is
+½·Σ|w_new_target − w_previous_drifted_end_of_block|, reported for GMV and
+equal weight (mean, median, min, max). The separate *target weight change*
+(½·Σ|Δw_target|) ignores drift and is not actual turnover. Transaction costs
+are out of scope (POR-006); exact rebalancing to target is assumed.
+
+**Data limitation.** The snapshot uses split-adjusted closes **without
+dividend adjustment**, so returns are price-only (relevant for TLT and SPY).
+
+**Methodology history.** `@1.0.0` measured block volatility on Σ w·r_log with
+fixed weights (a weighted-log-return approximation of daily constant-mix) and
+reported `gmvMeanTurnover` = Σ|Δw_target| (two-way target change, 0.116,
+mislabelled one-way). `@1.1.0` (F0) replaced both. On the observed snapshot:
+GMV / EW mean vol 8.8867% / 12.0764% (ratio 0.7359) → 8.8717% / 12.0866%
+(ratio 0.7340); actual one-way turnover GMV mean 6.20%, EW mean 1.69%. Values
+were reconciled against an independent recalculation before regeneration.
 
 ## Validation
 

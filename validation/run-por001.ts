@@ -41,7 +41,21 @@ results.push(
 const OBSERVED_PATH = 'src/lib/validation/evidence/por001-observed.json';
 let saved: unknown = null;
 try { saved = JSON.parse(readFileSync(OBSERVED_PATH, 'utf8')); } catch { /* first run */ }
-if (saved) {
+// Controlled regeneration: allowed ONLY with an explicit flag AND when the
+// persisted record was produced by a different implementation version, so a
+// same-version mismatch can never be blessed by overwriting.
+const regen = process.argv.includes('--regenerate-observed');
+const savedVersion = (saved as { implementationVersion?: string } | null)?.implementationVersion;
+if (saved && regen && savedVersion !== POR001_IMPLEMENTATION_VERSION) {
+  results.push({
+    modelId: 'POR-001', validationType: 'unit', testName: 'Observed record regenerated under new implementation version',
+    expectedResult: `explicit regeneration ${savedVersion} → ${POR001_IMPLEMENTATION_VERSION}`, actualResult: 'regenerated',
+    tolerance: 'exact', maxAbsError: 0, maxRelError: 0, n: 1, passed: true,
+    evidence: { reference: 'docs/quant/minimum-variance.md §Methodology history', dataset: 'OBSERVED MARKET DATA — por001-snapshot.json' },
+    validationDate: date, implementationVersion: POR001_IMPLEMENTATION_VERSION,
+    notes: 'F0: buy-and-hold simple returns and actual one-way turnover; reconciled with an independent recalculation.',
+  });
+} else if (saved) {
   const differences = por001ObservedDifferences(observed, saved);
   results.push({
     modelId: 'POR-001', validationType: 'unit', testName: 'Complete observed record reproduces persisted evidence',

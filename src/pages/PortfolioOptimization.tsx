@@ -156,7 +156,9 @@ export default function PortfolioOptimization() {
                 <div><div className="text-xs text-muted-foreground">Origins (converged)</div><div className="font-mono text-lg">{a.wf.summary.converged}/{a.wf.summary.origins}</div></div>
                 <div><div className="text-xs text-muted-foreground">GMV realized vol</div><div className="font-mono text-lg">{pct(a.wf.summary.gmvMeanRealizedVol)}</div></div>
                 <div><div className="text-xs text-muted-foreground">Equal-weight realized vol</div><div className="font-mono text-lg">{pct(a.wf.summary.ewMeanRealizedVol)}</div></div>
-                <div><div className="text-xs text-muted-foreground">Vol ratio GMV/EW · turnover</div><div className="font-mono text-lg">{a.wf.summary.volRatio?.toFixed(3) ?? '—'} · {a.wf.summary.gmvMeanTurnover?.toFixed(2) ?? '—'}</div></div>
+                <div><div className="text-xs text-muted-foreground">Vol ratio GMV/EW</div><div className="font-mono text-lg">{a.wf.summary.volRatio?.toFixed(3) ?? '—'}</div></div>
+                <div><div className="text-xs text-muted-foreground">Actual one-way turnover (GMV · EW, mean)</div><div className="font-mono text-lg">{pct(a.wf.summary.gmvActualTurnover?.mean ?? null)} · {pct(a.wf.summary.ewActualTurnover?.mean ?? null)}</div></div>
+                <div><div className="text-xs text-muted-foreground">Target weight change (GMV, one-way mean)</div><div className="font-mono text-lg">{pct(a.wf.summary.gmvMeanTargetWeightChange)}</div></div>
               </div>
               <ResponsiveContainer width="100%" height={240}>
                 <LineChart data={wfChart}><CartesianGrid strokeDasharray="3 3" className="stroke-muted" /><XAxis dataKey="date" fontSize={10} minTickGap={40} /><YAxis fontSize={11} unit="%" /><Tooltip /><Legend />
