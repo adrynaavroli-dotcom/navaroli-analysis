@@ -65,3 +65,5 @@
 - [ ] Migrator session_user — NOT VERIFIED (no disposable run of the real Lovable mechanism); asserted at D5 apply time
 - [ ] page_content DELETE for admin — deliberately closed; waits for user decision
 - [ ] Platform checks (Lovable workspace members, GitHub collaborators/branch protection, 2FA) — user action
+
+- POR-001 F0 (2026-11-21): buy-and-hold simple returns + actual one-way turnover implemented (@1.1.0), evidence regenerated, Vitest 293/293. CI on final SHA pending separate authorisation. F1 (/projects) not started.

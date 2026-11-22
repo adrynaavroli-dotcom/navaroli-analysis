@@ -14,8 +14,8 @@
    "reference": "numpy.linalg.solve",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -35,8 +35,8 @@
    "reference": "numpy.linalg.solve(Σ, 1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -56,8 +56,8 @@
    "reference": "numpy 1/(1ᵀΣ⁻¹1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -77,8 +77,8 @@
    "reference": "numpy.linalg.cond",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -95,8 +95,8 @@
    "reference": "scipy SLSQP",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -116,8 +116,8 @@
    "reference": "scipy.optimize.minimize SLSQP (ftol 1e-15) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -137,8 +137,8 @@
    "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -155,8 +155,8 @@
    "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0",
   "notes": "Δσ² = 0.00e+0"
  },
  {
@@ -174,8 +174,8 @@
    "reference": "KKT conditions (budget, bounds, stationarity)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0",
   "notes": "residual = 0.00e+0"
  },
  {
@@ -196,8 +196,8 @@
    "reference": "numpy on SLSQP weights",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -214,8 +214,8 @@
    "reference": "numpy.linalg.solve",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -235,8 +235,8 @@
    "reference": "numpy.linalg.solve(Σ, 1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -256,8 +256,8 @@
    "reference": "numpy 1/(1ᵀΣ⁻¹1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -277,8 +277,8 @@
    "reference": "numpy.linalg.cond",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -295,8 +295,8 @@
    "reference": "scipy SLSQP",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -316,8 +316,8 @@
    "reference": "scipy.optimize.minimize SLSQP (ftol 1e-15) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -337,8 +337,8 @@
    "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -355,8 +355,8 @@
    "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0",
   "notes": "Δσ² = 0.00e+0"
  },
  {
@@ -374,8 +374,8 @@
    "reference": "KKT conditions (budget, bounds, stationarity)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0",
   "notes": "residual = 1.11e-16"
  },
  {
@@ -396,8 +396,8 @@
    "reference": "numpy on SLSQP weights",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -414,8 +414,8 @@
    "reference": "numpy.linalg.solve",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -435,8 +435,8 @@
    "reference": "numpy.linalg.solve(Σ, 1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -456,8 +456,8 @@
    "reference": "numpy 1/(1ᵀΣ⁻¹1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -477,8 +477,8 @@
    "reference": "numpy.linalg.cond",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -495,8 +495,8 @@
    "reference": "scipy SLSQP",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -516,8 +516,8 @@
    "reference": "scipy.optimize.minimize SLSQP (ftol 1e-15) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -537,8 +537,8 @@
    "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -555,8 +555,8 @@
    "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0",
   "notes": "Δσ² = 4.34e-19"
  },
  {
@@ -574,8 +574,8 @@
    "reference": "KKT conditions (budget, bounds, stationarity)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0",
   "notes": "residual = 0.00e+0"
  },
  {
@@ -596,8 +596,8 @@
    "reference": "numpy on SLSQP weights",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -614,8 +614,8 @@
    "reference": "numpy.linalg.solve",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -635,8 +635,8 @@
    "reference": "numpy.linalg.solve(Σ, 1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -656,8 +656,8 @@
    "reference": "numpy 1/(1ᵀΣ⁻¹1) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -677,8 +677,8 @@
    "reference": "numpy.linalg.cond",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -695,8 +695,8 @@
    "reference": "scipy SLSQP",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -716,8 +716,8 @@
    "reference": "scipy.optimize.minimize SLSQP (ftol 1e-15) (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -737,8 +737,8 @@
    "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -755,8 +755,8 @@
    "reference": "scipy SLSQP objective (Python 3.13.12 · numpy 2.4.3 · scipy 1.18.0)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0",
   "notes": "Δσ² = -1.24e-14"
  },
  {
@@ -774,8 +774,8 @@
    "reference": "KKT conditions (budget, bounds, stationarity)",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0",
   "notes": "residual = 0.00e+0"
  },
  {
@@ -796,8 +796,8 @@
    "reference": "numpy on SLSQP weights",
    "dataset": "SYNTHETIC TEST DATA — por001-benchmark@1.0.0, seed 20261031"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -814,8 +814,8 @@
    "reference": "Walk-forward protocol (window 120, rebalance 21, no look-ahead)",
    "dataset": "OBSERVED MARKET DATA — AAPL/MSFT/SPY/TLT, 2024-10-31→2026-10-30"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
@@ -832,15 +832,15 @@
    "reference": "Walk-forward protocol (window 120, rebalance 21, no look-ahead)",
    "dataset": "OBSERVED MARKET DATA — AAPL/MSFT/SPY/TLT, 2024-10-31→2026-10-30"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  },
  {
   "modelId": "POR-001",
   "validationType": "out-of-sample",
   "testName": "Realized GMV and equal-weight volatilities are finite and positive",
   "expectedResult": "both > 0",
-  "actualResult": "GMV 8.89% vs EW 12.08% (ratio 0.736)",
+  "actualResult": "GMV 8.87% vs EW 12.09% (ratio 0.734)",
   "tolerance": "exact",
   "maxAbsError": 0,
   "maxRelError": 0,
@@ -850,8 +850,8 @@
    "reference": "Walk-forward protocol (window 120, rebalance 21, no look-ahead)",
    "dataset": "OBSERVED MARKET DATA — AAPL/MSFT/SPY/TLT, 2024-10-31→2026-10-30"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0",
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0",
   "notes": "Descriptive: no superiority claim; ratio reported as observed."
  },
  {
@@ -869,7 +869,7 @@
    "reference": "Persisted por001-observed.json; only runtimeMs/evaluatedAt volatile",
    "dataset": "OBSERVED MARKET DATA — por001-snapshot.json"
   },
-  "validationDate": "2026-10-31",
-  "implementationVersion": "quant-engine/por001-min-variance@1.0.0"
+  "validationDate": "2026-11-22",
+  "implementationVersion": "quant-engine/por001-min-variance@1.1.0"
  }
 ]

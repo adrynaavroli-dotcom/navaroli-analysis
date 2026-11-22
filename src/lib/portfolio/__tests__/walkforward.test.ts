@@ -83,14 +83,15 @@ describe('walkForward', () => {
 
 describe('walkForward — buy-and-hold returns and actual turnover (F0 regression)', () => {
   it('matches a hand-computed buy-and-hold block and drifted weights', () => {
-    // 2 assets, window 3, rebalance 3. Origin t=2, block = returns 3..5.
-    const L = [[0.01, -0.02], [0.03, 0.01], [-0.01, 0.02], [0.02, -0.01], [-0.03, 0.04], [0.01, 0.005]];
+    // 2 assets, window 3, rebalance 3; block = returns index+1 .. index+3.
+    const L = [[0.01, -0.02], [0.03, 0.01], [-0.01, 0.02], [0.02, -0.01], [-0.03, 0.04], [0.01, 0.005], [0.004, -0.006]];
     const panel: AlignedPanel = { dates: L.map((_, i) => `2024-01-0${i + 1}`), tickers: ['A', 'B'], values: L, dropped: {} };
     const r = walkForward(panel, { window: 3, rebalance: 3, estimator: 'sample', maxWeight: 1, longOnly: true });
     const o = r.origins[0];
+    expect(o.status).toBe('OK');
     // Independent recomputation of the definition (EW leg, fixed weights 0.5/0.5).
     let w = [0.5, 0.5]; const rp: number[] = [];
-    for (let t = 3; t < 6; t++) {
+    for (let t = o.index + 1; t <= o.index + 3; t++) {
       const s = L[t].map(Math.exp).map((x) => x - 1);
       const p = w[0] * s[0] + w[1] * s[1];
       rp.push(p); w = [w[0] * (1 + s[0]) / (1 + p), w[1] * (1 + s[1]) / (1 + p)];

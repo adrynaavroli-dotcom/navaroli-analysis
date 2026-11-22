@@ -2,9 +2,11 @@
 export interface ReproductionDifference { path: string; expected: unknown; actual: unknown }
 
 /**
- * The GMV engine uses only IEEE arithmetic (+−×÷, √) with fixed summation
- * order, so results are expected to be bit-identical across JavaScriptCore and
- * V8: every leaf is compared exactly. Only run metadata ($.evaluatedAt,
+ * The GMV engine uses IEEE arithmetic (+−×÷, √) with fixed summation order.
+ * Since @1.1.0 the walk-forward also calls Math.exp (log → simple returns),
+ * which is libm-dependent: exact equality is guaranteed only within the same
+ * runtime (the Bun runner writes and re-reads the record). Every leaf is still
+ * compared exactly; add named tolerances here if a cross-runtime check is added. Only run metadata ($.evaluatedAt,
  * $.runtimeMs) is volatile. If a future engine change introduces libm calls,
  * name explicit tolerances here instead of weakening the comparison.
  */
