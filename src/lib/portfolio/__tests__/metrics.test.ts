@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { annualizedVol, driftWeights, effectiveN, equalWeights, hhi, portfolioVariance, turnover } from '../metrics';
+import { annualizedVol, driftGross, effectiveN, equalWeights, hhi, portfolioVariance, turnover } from '../metrics';
 
 describe('portfolio metrics', () => {
   const S = [[0.04, 0.006], [0.006, 0.01]];
@@ -28,12 +28,12 @@ describe('portfolio metrics', () => {
 
   it('driftWeights: hand case and weights still sum to 1', () => {
     // w=[0.5,0.5], r=[0.1,−0.1] → r_p=0, w'=[0.55,0.45]
-    const d = driftWeights([0.5, 0.5], [0.1, -0.1]);
+    const d = driftGross([0.5, 0.5], [Math.log(1.1), Math.log(0.9)]);
     expect(d.portfolioReturn).toBeCloseTo(0, 15);
-    expect(d.weights[0]).toBeCloseTo(0.55, 15);
-    const e = driftWeights([0.2, 0.3, 0.5], [0.05, -0.02, 0.01]);
-    expect(e.weights.reduce((a, v) => a + v, 0)).toBeCloseTo(1, 15);
-    expect(() => driftWeights([1], [-1])).toThrow(/wiped out/);
+    expect(d.weights![0]).toBeCloseTo(0.55, 15);
+    const e = driftGross([0.2, 0.3, 0.5], [0.05, -0.02, 0.01]);
+    expect(e.weights!.reduce((a, v) => a + v, 0)).toBeCloseTo(1, 15);
+    expect(driftGross([1], [-800]).status).toBe('NUMERICALLY_UNSTABLE');
   });
 
   it('equalWeights sums to 1', () => {

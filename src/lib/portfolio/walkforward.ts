@@ -26,7 +26,7 @@ import { rollingCovariance, type Matrix } from '../correlation';
 import { ewmaCovariance } from '../correlation/ewma';
 import { TRADING_DAYS } from '../volatility/types';
 import { gmvClosedForm, gmvLongOnly, type MinVarianceStatus } from './min-variance';
-import { driftWeights, equalWeights, hhi, turnover } from './metrics';
+import { driftGross, equalWeights, hhi, turnover } from './metrics';
 
 export interface WalkForwardOptions {
   /** Estimation window in returns (sample estimator). */
@@ -98,9 +98,10 @@ function buyAndHoldBlock(panel: AlignedPanel, target: number[], from: number, to
   let w = target.slice();
   const pr: number[] = [];
   for (let t = from; t < to; t++) {
-    const d = driftWeights(w, panel.values[t].map((x) => Math.exp(x) - 1));
-    pr.push(d.portfolioReturn);
-    w = d.weights;
+    const d = driftGross(w, panel.values[t]);
+    if (d.status !== 'OK') throw new Error(`Buy-and-hold drift ${d.status} (failure-aware handling pending F0.1)`);
+    pr.push(d.portfolioReturn!);
+    w = d.weights!;
   }
   const mu = pr.reduce((a, v) => a + v, 0) / n;
   const v = pr.reduce((a, r) => a + (r - mu) * (r - mu), 0) / (n - 1);
